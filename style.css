@@ -135,7 +135,7 @@ header.site {
   max-width: var(--container);
   margin: 0 auto;
 }
-.brand img { height: 50px; width: auto; max-width: 240px; object-fit: contain; border-radius: 6px; }
+.brand img { height: 68px; width: auto; max-width: 320px; object-fit: contain; border-radius: 6px; }
 
 .nav-links {
   display: flex;
