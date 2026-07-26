@@ -103,6 +103,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -221,6 +222,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+emailjs.init({ publicKey: "NJxFDw-frdjZmQFCD" });
 
 let authMode = 'login';
 let pendingCheckout = false;
@@ -438,6 +440,15 @@ function submitOrder() {
     estado: 'pendente',
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
+    const itemsText = items.map(it => `${it.quantidade}x ${it.nome} — ${(it.preco * it.quantidade).toFixed(2)}€`).join('\n');
+    emailjs.send('service_309ip3s', 'template_9enl1od', {
+      from_name: user.displayName || user.email,
+      from_email: user.email,
+      from_phone: phone,
+      order_items: itemsText,
+      order_total: total.toFixed(2)
+    }).catch(err => console.error('Falha ao enviar notificação por e-mail:', err));
+
     alert('Pedido enviado! Vamos avisar-vos quando estiver pronto para levantamento.');
     cart = {};
     saveCart();
