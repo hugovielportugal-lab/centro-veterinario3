@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de Pedidos | Centro Veterinário Linda-a-Velha</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+<style>
+  .admin-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .admin-login { max-width: 380px; margin: 80px auto; text-align: center; }
+  .admin-login input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; font-family: var(--font); }
+  .admin-error { color: #c0392b; font-size: 0.88rem; margin-bottom: 10px; display: none; }
+  .admin-error.show { display: block; }
+
+  .order-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .order-client { font-weight: 700; color: var(--ink); }
+  .order-meta { font-size: 0.85rem; color: var(--gray); }
+  .status-badge { padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 700; }
+  .status-pendente { background: #fef3e0; color: #b8720a; }
+  .status-pronto { background: #e3f3e8; color: #1e7a3d; }
+  .status-entregue { background: var(--bg-alt); color: var(--gray); }
+
+  .order-items { margin: 12px 0; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .order-item-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; color: var(--gray); }
+  .order-total { text-align: right; font-weight: 700; color: var(--navy); font-family: var(--font-display); margin-top: 8px; }
+
+  .order-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .order-actions button {
+    padding: 9px 16px; border-radius: var(--radius-pill); border: 1.5px solid var(--border);
+    background: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--gray);
+  }
+  .order-actions button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-bar button { padding: 9px 18px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.88rem; cursor: pointer; color: var(--gray); }
+  .filter-bar button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .empty-state { text-align: center; color: var(--gray); padding: 60px 20px; }
+  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="index.html" class="brand">
+      <img src="logo.png" alt="Centro Veterinário Linda-a-Velha">
+    </a>
+  </nav>
+</header>
+
+<div class="admin-wrap">
+
+  <div class="admin-login" id="loginBox">
+    <h2>Gestão de Pedidos</h2>
+    <p>Acesso restrito à equipa do Centro Veterinário Linda-a-Velha.</p>
+    <div class="admin-error" id="loginError"></div>
+    <input type="email" id="adminEmail" placeholder="E-mail" value="cvlindaavelha@outlook.com">
+    <input type="password" id="adminPassword" placeholder="Senha">
+    <button class="btn btn-navy" style="width:100%; justify-content:center;" onclick="doLogin()">Entrar</button>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <div class="top-actions">
+      <h1 style="margin:0; font-size:1.6rem;">Pedidos</h1>
+      <button class="btn btn-outline-navy" onclick="auth.signOut()">Sair</button>
+    </div>
+    <div class="filter-bar">
+      <button class="active" data-f="todos" onclick="setFilter('todos', this)">Todos</button>
+      <button data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
+      <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
+      <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+    </div>
+    <div id="ordersList"></div>
+  </div>
+
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAiw1gMQBpE7kwLsrIFIxOmpsG0623z7gA",
+  authDomain: "centro-veterinario-lindaavelha.firebaseapp.com",
+  projectId: "centro-veterinario-lindaavelha",
+  storageBucket: "centro-veterinario-lindaavelha.firebasestorage.app",
+  messagingSenderId: "283697163487",
+  appId: "1:283697163487:web:03d5a7df648fca759a8d6a"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
+let allOrders = [];
+let currentFilter = 'todos';
+
+function doLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.remove('show');
+
+  if (email.toLowerCase() !== ADMIN_EMAIL) {
+    errEl.textContent = 'Este e-mail não tem acesso à gestão de pedidos.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => {
+      errEl.textContent = 'E-mail ou senha incorretos.';
+      errEl.classList.add('show');
+    });
+}
+
+auth.onAuthStateChanged(user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    loadOrders();
+  } else {
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('panel').style.display = 'none';
+  }
+});
+
+function loadOrders() {
+  db.collection('pedidos').orderBy('criadoEm', 'desc').onSnapshot(snap => {
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOrders();
+  }, err => {
+    document.getElementById('ordersList').innerHTML =
+      '<div class="empty-state">Não foi possível carregar os pedidos. (' + err.message + ')</div>';
+  });
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+function statusLabel(s) {
+  return { pendente: 'Pendente', pronto: 'Pronto para levantar', entregue: 'Entregue' }[s] || s;
+}
+
+function renderOrders() {
+  const list = currentFilter === 'todos' ? allOrders : allOrders.filter(o => o.estado === currentFilter);
+  const container = document.getElementById('ordersList');
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sem pedidos nesta categoria.</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(o => {
+    const data = o.criadoEm ? o.criadoEm.toDate().toLocaleString('pt-PT') : '—';
+    const itemsHtml = (o.items || []).map(it => `
+      <div class="order-item-row"><span>${it.quantidade}x ${it.nome}</span><span>${(it.preco * it.quantidade).toFixed(2)}€</span></div>
+    `).join('');
+
+    let actions = '';
+    if (o.estado === 'pendente') {
+      actions = `<button class="primary" onclick="updateStatus('${o.id}','pronto')">Marcar como pronto</button>`;
+    } else if (o.estado === 'pronto') {
+      actions = `<button class="primary" onclick="updateStatus('${o.id}','entregue')">Marcar como entregue</button>
+                 <button onclick="updateStatus('${o.id}','pendente')">Voltar a pendente</button>`;
+    } else {
+      actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>`;
+    }
+
+    return `
+      <div class="order-card">
+        <div class="order-top">
+          <div>
+            <div class="order-client">${o.nome || o.email}</div>
+            <div class="order-meta">${o.email} · ${o.telefone || 'sem telefone'} · ${data}</div>
+          </div>
+          <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
+        </div>
+        <div class="order-items">${itemsHtml}</div>
+        <div class="order-total">Total: ${(o.total || 0).toFixed(2)}€</div>
+        <div class="order-actions">${actions}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStatus(id, novoEstado) {
+  db.collection('pedidos').doc(id).update({ estado: novoEstado });
+}
+</script>
+
+</body>
+</html>
