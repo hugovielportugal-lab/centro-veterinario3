@@ -153,10 +153,9 @@
   <div class="wrap">
     <div class="store-tabs">
       <button class="store-tab active" data-filter="todos">Todos</button>
-      <button class="store-tab" data-filter="rc-loja">Royal Canin — Loja</button>
-      <button class="store-tab" data-filter="rc-vet">Royal Canin — Veterinário</button>
-      <button class="store-tab" data-filter="ownat">Ownat</button>
-      <button class="store-tab" data-filter="acessorios">Acessórios</button>
+      <button class="store-tab" data-filter="racoes">Rações</button>
+      <button class="store-tab" data-filter="racoes-vet">Rações Veterinárias</button>
+      <button class="store-tab" data-filter="farmacia">Farmácia</button>
     </div>
     <div class="product-grid" id="productGrid"></div>
   </div>
@@ -303,39 +302,40 @@ auth.onAuthStateChanged(user => {
 
 // ---------- Products / cart (as before) ----------
 const products = [
-  // Royal Canin — Loja (Size / Breed Health Nutrition)
-  { id: 1, name: "Royal Canin Mini Adult 2kg", desc: "Para cães adultos de raças pequenas (até 10kg).", price: 19.90, type: "rc-loja", icon: "food" },
-  { id: 2, name: "Royal Canin Medium Adult 4kg", desc: "Para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "rc-loja", icon: "food" },
-  { id: 3, name: "Royal Canin Maxi Adult 4kg", desc: "Para cães adultos de porte grande (26 a 44kg).", price: 34.90, type: "rc-loja", icon: "food" },
-  { id: 4, name: "Royal Canin Mini Puppy 2kg", desc: "Para cachorros de raças pequenas em crescimento.", price: 21.90, type: "rc-loja", icon: "food" },
-  { id: 5, name: "Royal Canin Medium Puppy 4kg", desc: "Para cachorros de porte médio em crescimento.", price: 33.90, type: "rc-loja", icon: "food" },
-  { id: 6, name: "Royal Canin Indoor Sterilised 2kg", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "rc-loja", icon: "food" },
-  { id: 7, name: "Royal Canin Kitten 2kg", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "rc-loja", icon: "food" },
-  { id: 8, name: "Royal Canin Persian Adult 2kg", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "rc-loja", icon: "food" },
+  // Rações (gama normal / loja)
+  { id: 1, name: "Royal Canin Mini Adult 2kg", desc: "Para cães adultos de raças pequenas (até 10kg).", price: 19.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 2, name: "Royal Canin Medium Adult 4kg", desc: "Para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 3, name: "Royal Canin Maxi Adult 4kg", desc: "Para cães adultos de porte grande (26 a 44kg).", price: 34.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 4, name: "Royal Canin Mini Puppy 2kg", desc: "Para cachorros de raças pequenas em crescimento.", price: 21.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 5, name: "Royal Canin Medium Puppy 4kg", desc: "Para cachorros de porte médio em crescimento.", price: 33.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 6, name: "Royal Canin Indoor Sterilised 2kg", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 7, name: "Royal Canin Kitten 2kg", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 8, name: "Royal Canin Persian Adult 2kg", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 17, name: "Ownat Prestige Puppy 3kg", desc: "Para cachorros em crescimento, todas as raças.", price: 19.90, type: "racoes", brand: "Ownat", icon: "food" },
+  { id: 18, name: "Ownat Prestige Adult Medium 15kg", desc: "Para cães adultos de porte médio.", price: 45.00, type: "racoes", brand: "Ownat", icon: "food" },
+  { id: 19, name: "Ownat Just Cat Sterilized 1.5kg", desc: "Para gatos esterilizados, controlo de peso.", price: 15.90, type: "racoes", brand: "Ownat", icon: "food" },
+  { id: 20, name: "Ownat Just Cat Kitten 1.5kg", desc: "Para gatinhos em crescimento.", price: 16.90, type: "racoes", brand: "Ownat", icon: "food" },
+  { id: 21, name: "Ownat Grain Free Salmon Adult 3kg", desc: "Fórmula sem cereais, à base de salmão.", price: 22.90, type: "racoes", brand: "Ownat", icon: "food" },
+  { id: 22, name: "Ownat Prestige Senior 12kg", desc: "Para cães seniores, articulações e vitalidade.", price: 38.90, type: "racoes", brand: "Ownat", icon: "food" },
 
-  // Royal Canin — Veterinário (Veterinary Diets)
-  { id: 9, name: "Royal Canin Veterinary Renal 2kg", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "rc-vet", icon: "drop" },
-  { id: 10, name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "rc-vet", icon: "drop" },
-  { id: 11, name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "rc-vet", icon: "drop" },
-  { id: 12, name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "rc-vet", icon: "drop" },
-  { id: 13, name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "rc-vet", icon: "drop" },
-  { id: 14, name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "rc-vet", icon: "drop" },
-  { id: 15, name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "rc-vet", icon: "drop" },
-  { id: 16, name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "rc-vet", icon: "drop" },
+  // Rações Veterinárias (dietas prescritas)
+  { id: 9, name: "Royal Canin Veterinary Renal 2kg", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 10, name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 11, name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 12, name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 13, name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 14, name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 15, name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 16, name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
 
-  // Ownat
-  { id: 17, name: "Ownat Prestige Puppy 3kg", desc: "Para cachorros em crescimento, todas as raças.", price: 19.90, type: "ownat", icon: "food" },
-  { id: 18, name: "Ownat Prestige Adult Medium 15kg", desc: "Para cães adultos de porte médio.", price: 45.00, type: "ownat", icon: "food" },
-  { id: 19, name: "Ownat Just Cat Sterilized 1.5kg", desc: "Para gatos esterilizados, controlo de peso.", price: 15.90, type: "ownat", icon: "food" },
-  { id: 20, name: "Ownat Just Cat Kitten 1.5kg", desc: "Para gatinhos em crescimento.", price: 16.90, type: "ownat", icon: "food" },
-  { id: 21, name: "Ownat Grain Free Salmon Adult 3kg", desc: "Fórmula sem cereais, à base de salmão.", price: 22.90, type: "ownat", icon: "food" },
-  { id: 22, name: "Ownat Prestige Senior 12kg", desc: "Para cães seniores, articulações e vitalidade.", price: 38.90, type: "ownat", icon: "food" },
-
-  // Acessórios
-  { id: 23, name: "Coleira Ajustável Média", desc: "Coleira em nylon resistente, ajustável.", price: 8.90, type: "acessorios", icon: "collar" },
-  { id: 24, name: "Brinquedo Corda Resistente", desc: "Brinquedo de corda para mastigar, cães médios/grandes.", price: 6.50, type: "acessorios", icon: "toy" },
-  { id: 25, name: "Champô Hipoalergénico 250ml", desc: "Para peles sensíveis, sem perfume.", price: 11.90, type: "acessorios", icon: "bottle" },
-  { id: 26, name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "acessorios", icon: "drop" },
+  // Farmácia (higiene, prevenção, suplementos)
+  { id: 23, name: "Champô Hipoalergénico Veterinário 250ml", desc: "Para peles sensíveis, sem perfume, uso veterinário.", price: 11.90, type: "farmacia", brand: "", icon: "bottle" },
+  { id: 24, name: "Champô Dermatológico 250ml", desc: "Ação calmante para peles irritadas ou com dermatite.", price: 13.50, type: "farmacia", brand: "", icon: "bottle" },
+  { id: 25, name: "Coleira Desparasitante", desc: "Proteção contínua contra pulgas e carraças, até 8 meses.", price: 16.90, type: "farmacia", brand: "", icon: "collar" },
+  { id: 26, name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "farmacia", brand: "", icon: "drop" },
+  { id: 27, name: "Suplemento Articulações (60 comp.)", desc: "Glucosamina e condroitina para saúde articular.", price: 21.90, type: "farmacia", brand: "", icon: "drop" },
+  { id: 28, name: "Suplemento Calmante (30 comp.)", desc: "Apoio em situações de stress e ansiedade.", price: 18.50, type: "farmacia", brand: "", icon: "drop" },
+  { id: 29, name: "Desparasitante Interno (comprimido)", desc: "Desparasitação interna, cães e gatos.", price: 6.90, type: "farmacia", brand: "", icon: "drop" },
 ];
 
 const icons = {
@@ -353,7 +353,7 @@ let currentFilter = 'todos';
 
 function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
 
-const categoryLabels = { 'rc-loja': 'Royal Canin — Loja', 'rc-vet': 'Royal Canin — Veterinário', 'ownat': 'Ownat', 'acessorios': 'Acessórios' };
+const categoryLabels = { 'racoes': 'Rações', 'racoes-vet': 'Ração Veterinária', 'farmacia': 'Farmácia' };
 
 function renderProducts() {
   const grid = document.getElementById('productGrid');
@@ -362,7 +362,7 @@ function renderProducts() {
     <div class="product-card">
       <div class="product-thumb">${icons[p.icon]}</div>
       <div class="product-body">
-        <span class="category-tag">${categoryLabels[p.type]}</span>
+        <span class="category-tag">${p.brand || categoryLabels[p.type]}</span>
         <h3>${p.name}</h3>
         <p>${p.desc}</p>
         <div class="product-footer">
