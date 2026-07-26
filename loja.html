@@ -81,7 +81,28 @@
   .checkout-form.open { display: flex; }
   .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
   .checkout-note { font-size: 0.8rem; color: var(--gray-light); margin-top: 6px; }
+
+  /* Account / auth */
+  .account-btn {
+    position: fixed; bottom: 24px; right: 158px; z-index: 70;
+    background: #fff; color: var(--navy); border: 1.5px solid var(--border); border-radius: var(--radius-pill);
+    padding: 14px 20px; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(15,59,96,0.12); display: flex; align-items: center; gap: 8px;
+  }
+  @media (max-width: 620px) {
+    .account-btn { position: static; box-shadow: none; width: 100%; justify-content: center; margin-bottom: 16px; }
+  }
+
+  .auth-drawer { max-width: 100%; }
+  .auth-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+  .auth-tab { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-weight: 600; cursor: pointer; color: var(--gray); }
+  .auth-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .auth-error { color: #c0392b; font-size: 0.85rem; margin-top: 4px; display: none; }
+  .auth-error.show { display: block; }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -137,10 +158,32 @@
   </div>
 </section>
 
+<button class="account-btn" id="accountBtn" onclick="openAuth()">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+  <span id="accountLabel">Entrar</span>
+</button>
+
 <button class="cart-fab" onclick="openCart()">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 002 1.6h8.4a2 2 0 002-1.6L21 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
   Carrinho <span class="count" id="cartCount">0</span>
 </button>
+
+<div class="cart-backdrop" id="authBackdrop" onclick="closeAuth()"></div>
+<div class="cart-drawer auth-drawer" id="authDrawer">
+  <button class="cart-close" onclick="closeAuth()">✕</button>
+  <h2 id="authTitle">Entrar</h2>
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">Já tenho conta</button>
+    <button class="auth-tab" id="tabRegister" onclick="setAuthMode('register')">Criar conta</button>
+  </div>
+  <div class="checkout-form open" style="margin-top:0;">
+    <input type="text" id="authName" placeholder="O seu nome" style="display:none;">
+    <input type="email" id="authEmail" placeholder="E-mail">
+    <input type="password" id="authPassword" placeholder="Senha">
+    <div class="auth-error" id="authError"></div>
+    <button class="btn btn-navy" style="justify-content:center;" onclick="submitAuth()" id="authSubmitBtn">Entrar</button>
+  </div>
+</div>
 
 <div class="cart-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cartDrawer">
@@ -151,10 +194,9 @@
   <button class="btn btn-navy" id="goCheckoutBtn" style="display:none; justify-content:center;" onclick="showCheckout()">Pedir para levantar na loja</button>
 
   <div class="checkout-form" id="checkoutForm">
-    <input type="text" id="ckName" placeholder="O seu nome">
     <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
-    <p class="checkout-note">⚠️ Esta é uma pré-visualização do funcionamento. Os pedidos ainda não ficam guardados de verdade — essa parte (login e gestão de encomendas) é a próxima fase.</p>
+    <p class="checkout-note">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento na loja.</p>
   </div>
 </div>
 
@@ -167,16 +209,106 @@
 </footer>
 
 <script>
+// ---------- Firebase setup ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyAiw1gMQBpE7kwLsrIFIxOmpsG0623z7gA",
+  authDomain: "centro-veterinario-lindaavelha.firebaseapp.com",
+  projectId: "centro-veterinario-lindaavelha",
+  storageBucket: "centro-veterinario-lindaavelha.firebasestorage.app",
+  messagingSenderId: "283697163487",
+  appId: "1:283697163487:web:03d5a7df648fca759a8d6a"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let authMode = 'login';
+let pendingCheckout = false;
+
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+  document.getElementById('authName').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authTitle').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
+  document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
+  document.getElementById('authError').classList.remove('show');
+}
+
+function openAuth() {
+  if (auth.currentUser) {
+    auth.signOut();
+    return;
+  }
+  document.getElementById('authDrawer').classList.add('open');
+  document.getElementById('authBackdrop').classList.add('open');
+}
+function closeAuth() {
+  document.getElementById('authDrawer').classList.remove('open');
+  document.getElementById('authBackdrop').classList.remove('open');
+  pendingCheckout = false;
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function submitAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+
+  if (!email || !password) { showAuthError('Preencha e-mail e senha.'); return; }
+
+  if (authMode === 'register') {
+    if (!name) { showAuthError('Preencha o seu nome.'); return; }
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(cred => cred.user.updateProfile({ displayName: name }))
+      .then(() => { closeAuth(); if (pendingCheckout) showCheckout(); })
+      .catch(err => showAuthError(traduzErro(err.code)));
+  } else {
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => { closeAuth(); if (pendingCheckout) showCheckout(); })
+      .catch(err => showAuthError(traduzErro(err.code)));
+  }
+}
+
+function traduzErro(code) {
+  const map = {
+    'auth/email-already-in-use': 'Este e-mail já tem conta. Tente entrar em vez de criar.',
+    'auth/invalid-email': 'E-mail inválido.',
+    'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
+    'auth/user-not-found': 'Não existe conta com este e-mail.',
+    'auth/wrong-password': 'Senha incorreta.',
+    'auth/invalid-credential': 'E-mail ou senha incorretos.'
+  };
+  return map[code] || 'Ocorreu um erro. Tente novamente.';
+}
+
+auth.onAuthStateChanged(user => {
+  const label = document.getElementById('accountLabel');
+  if (user) {
+    label.textContent = (user.displayName || user.email.split('@')[0]) + ' · Sair';
+  } else {
+    label.textContent = 'Entrar';
+  }
+});
+
+// ---------- Products / cart (as before) ----------
 const products = [
-  { id: 1, name: "Ração Adulto Frango 3kg", desc: "Alimento seco completo para cães adultos.", price: 24.90, type: "produto", icon: "food" },
-  { id: 2, name: "Ração Gato Esterilizado 1.5kg", desc: "Fórmula para gatos esterilizados, controlo de peso.", price: 18.50, type: "produto", icon: "food" },
-  { id: 3, name: "Coleira Ajustável Média", desc: "Coleira em nylon resistente, ajustável.", price: 8.90, type: "produto", icon: "collar" },
-  { id: 4, name: "Brinquedo Corda Resistente", desc: "Brinquedo de corda para mastigar, cães médios/grandes.", price: 6.50, type: "produto", icon: "toy" },
-  { id: 5, name: "Champô Hipoalergénico 250ml", desc: "Para peles sensíveis, sem perfume.", price: 11.90, type: "produto", icon: "bottle" },
-  { id: 6, name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "produto", icon: "drop" },
-  { id: 7, name: "Banho e Tosquia — Pequeno Porte", desc: "Banho completo + tosquia higiénica.", price: 19.00, type: "servico", icon: "bath" },
-  { id: 8, name: "Banho e Tosquia — Grande Porte", desc: "Banho completo + tosquia higiénica.", price: 29.00, type: "servico", icon: "bath" },
-  { id: 9, name: "Corte de Unhas", desc: "Serviço rápido de corte e limagem de unhas.", price: 7.00, type: "servico", icon: "paw" },
+  { id: 1, name: "Royal Canin Medium Adult 4kg", desc: "Ração seca para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "produto", icon: "food" },
+  { id: 2, name: "Royal Canin Indoor Sterilised 2kg", desc: "Ração para gatos esterilizados de interior.", price: 22.50, type: "produto", icon: "food" },
+  { id: 3, name: "Ownat Prestige Puppy 3kg", desc: "Ração para cachorros em crescimento, todas as raças.", price: 19.90, type: "produto", icon: "food" },
+  { id: 4, name: "Ownat Just Cat Sterilized 1.5kg", desc: "Ração para gatos esterilizados, controlo de peso.", price: 15.90, type: "produto", icon: "food" },
+  { id: 5, name: "Coleira Ajustável Média", desc: "Coleira em nylon resistente, ajustável.", price: 8.90, type: "produto", icon: "collar" },
+  { id: 6, name: "Brinquedo Corda Resistente", desc: "Brinquedo de corda para mastigar, cães médios/grandes.", price: 6.50, type: "produto", icon: "toy" },
+  { id: 7, name: "Champô Hipoalergénico 250ml", desc: "Para peles sensíveis, sem perfume.", price: 11.90, type: "produto", icon: "bottle" },
+  { id: 8, name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "produto", icon: "drop" },
+  { id: 9, name: "Banho e Tosquia — Pequeno Porte", desc: "Banho completo + tosquia higiénica.", price: 19.00, type: "servico", icon: "bath" },
+  { id: 10, name: "Banho e Tosquia — Grande Porte", desc: "Banho completo + tosquia higiénica.", price: 29.00, type: "servico", icon: "bath" },
+  { id: 11, name: "Corte de Unhas", desc: "Serviço rápido de corte e limagem de unhas.", price: 7.00, type: "servico", icon: "paw" },
 ];
 
 const icons = {
@@ -273,17 +405,47 @@ function closeCart() {
   document.getElementById('checkoutForm').classList.remove('open');
 }
 function showCheckout() {
+  if (!auth.currentUser) {
+    pendingCheckout = true;
+    closeCart();
+    setAuthMode('login');
+    openAuth();
+    return;
+  }
   document.getElementById('checkoutForm').classList.add('open');
+  openCart();
 }
+
 function submitOrder() {
-  const name = document.getElementById('ckName').value.trim();
   const phone = document.getElementById('ckPhone').value.trim();
-  if (!name || !phone) { alert('Por favor preencha nome e telefone.'); return; }
-  alert('Pedido de demonstração enviado! (Ainda não fica guardado — isso é a próxima fase.)');
-  cart = {};
-  saveCart();
-  renderCart();
-  closeCart();
+  const user = auth.currentUser;
+  if (!user) { showCheckout(); return; }
+  if (!phone) { alert('Por favor preencha o telefone.'); return; }
+
+  const items = Object.keys(cart).map(id => {
+    const p = products.find(pr => pr.id == id);
+    return { nome: p.name, preco: p.price, quantidade: cart[id] };
+  });
+  const total = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
+
+  db.collection('pedidos').add({
+    uid: user.uid,
+    nome: user.displayName || '',
+    email: user.email,
+    telefone: phone,
+    items: items,
+    total: total,
+    estado: 'pendente',
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    alert('Pedido enviado! Vamos avisar-vos quando estiver pronto para levantamento.');
+    cart = {};
+    saveCart();
+    renderCart();
+    closeCart();
+  }).catch(err => {
+    alert('Não foi possível enviar o pedido. Tente novamente. (' + err.message + ')');
+  });
 }
 
 document.querySelectorAll('.store-tab').forEach(tab => {
