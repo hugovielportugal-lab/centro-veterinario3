@@ -10,12 +10,51 @@
 <link rel="stylesheet" href="style.css?v=3">
 <style>
 /* ---------- Store-specific styles ---------- */
-.store-tabs { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; }
+.store-tabs { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; position: relative; z-index: 20; }
 .store-tab {
   padding: 10px 20px; border-radius: var(--radius-pill); border: 1.5px solid var(--border);
   background: #fff; font-weight: 600; font-size: 0.9rem; color: var(--gray); cursor: pointer;
 }
 .store-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+/* Species mega-menu (Cães / Gatos) */
+.store-tab-menu { position: relative; }
+.store-tab-menu > .store-tab { display: flex; align-items: center; gap: 6px; }
+.store-tab-menu > .store-tab svg { width: 12px; height: 12px; transition: transform .15s ease; }
+.store-tab-menu.open > .store-tab svg { transform: rotate(180deg); }
+.store-submenu {
+  position: absolute; top: calc(100% + 8px); left: 0; background: #fff; border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(15,59,96,0.16); border: 1px solid var(--border);
+  min-width: 240px; padding: 10px; z-index: 30; display: none; flex-direction: column; gap: 2px;
+}
+.store-tab-menu.open .store-submenu { display: flex; }
+.store-submenu button {
+  text-align: left; padding: 10px 14px; border-radius: 10px; border: none; background: none;
+  font-weight: 600; font-size: 0.88rem; color: var(--navy); cursor: pointer; width: 100%;
+}
+.store-submenu button:hover { background: var(--blue-soft); }
+.store-submenu .submenu-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-light); font-weight: 700; padding: 8px 14px 2px; }
+.store-submenu hr { border: none; border-top: 1px solid var(--border); margin: 6px 4px; }
+/* Search bar */
+.store-search {
+  position: relative; margin-bottom: 22px; max-width: 420px;
+}
+.store-search input {
+  width: 100%; padding: 12px 44px 12px 16px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border); font-family: var(--font); font-size: 0.92rem;
+  box-sizing: border-box; background: #fff;
+}
+.store-search input:focus { outline: none; border-color: var(--navy); }
+.store-search svg {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; color: var(--gray-light); pointer-events: none;
+}
+.store-search .clear-search {
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--gray-light); font-size: 1.1rem;
+  cursor: pointer; display: none; line-height: 1; padding: 4px;
+}
+.store-search .clear-search.show { display: block; }
+.no-results { color: var(--gray); text-align: center; padding: 40px 0; grid-column: 1 / -1; }
 .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2,1fr); } }
 @media (max-width: 600px) { .product-grid { grid-template-columns: 1fr; } }
@@ -152,11 +191,54 @@
 
 <section>
   <div class="wrap">
-    <div class="store-tabs">
-      <button class="store-tab active" data-filter="todos">Todos</button>
-      <button class="store-tab" data-filter="racoes">Rações</button>
-      <button class="store-tab" data-filter="racoes-vet">Rações Veterinárias</button>
-      <button class="store-tab" data-filter="farmacia">Farmácia</button>
+    <div class="store-search">
+      <input type="text" id="storeSearch" placeholder="Pesquisar produtos..." autocomplete="off">
+      <button class="clear-search" id="clearSearch" aria-label="Limpar pesquisa" type="button">✕</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    </div>
+    <div class="store-tabs" id="storeTabs">
+      <button class="store-tab active" data-filter="todos" data-species="todas">Todos</button>
+
+      <div class="store-tab-menu" data-menu="cao">
+        <button class="store-tab" data-species="cao">
+          Cães
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="store-submenu">
+          <button data-species="cao" data-filter="todos">Ver tudo para cães</button>
+          <hr>
+          <span class="submenu-label">Categorias</span>
+          <button data-species="cao" data-filter="racoes">Rações</button>
+          <button data-species="cao" data-filter="racoes-vet">Rações Veterinárias</button>
+          <button data-species="cao" data-filter="farmacia">Farmácia</button>
+          <hr>
+          <span class="submenu-label">Top marcas</span>
+          <button data-species="cao" data-brand="Royal Canin">Royal Canin</button>
+          <button data-species="cao" data-brand="Ownat">Ownat</button>
+        </div>
+      </div>
+
+      <div class="store-tab-menu" data-menu="gato">
+        <button class="store-tab" data-species="gato">
+          Gatos
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="store-submenu">
+          <button data-species="gato" data-filter="todos">Ver tudo para gatos</button>
+          <hr>
+          <span class="submenu-label">Categorias</span>
+          <button data-species="gato" data-filter="racoes">Rações</button>
+          <button data-species="gato" data-filter="racoes-vet">Rações Veterinárias</button>
+          <button data-species="gato" data-filter="farmacia">Farmácia</button>
+          <hr>
+          <span class="submenu-label">Top marcas</span>
+          <button data-species="gato" data-brand="Royal Canin">Royal Canin</button>
+          <button data-species="gato" data-brand="Ownat">Ownat</button>
+        </div>
+      </div>
+
+      <button class="store-tab" data-filter="racoes-vet" data-species="todas">Rações Veterinárias</button>
+      <button class="store-tab" data-filter="farmacia" data-species="todas">Farmácia</button>
     </div>
     <div class="product-grid" id="productGrid"></div>
   </div>
@@ -293,67 +375,67 @@ auth.onAuthStateChanged(user => {
 // ---------- Products / cart ----------
 const products = [
   // Rações (gama normal / loja)
-  { id: 1, name: "Royal Canin Mini Adult 2kg", desc: "Para cães adultos de raças pequenas (até 10kg).", price: 19.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 2, name: "Royal Canin Medium Adult 4kg", desc: "Para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 3, name: "Royal Canin Maxi Adult 4kg", desc: "Para cães adultos de porte grande (26 a 44kg).", price: 34.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 4, name: "Royal Canin Mini Puppy 2kg", desc: "Para cachorros de raças pequenas em crescimento.", price: 21.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 5, name: "Royal Canin Medium Puppy 4kg", desc: "Para cachorros de porte médio em crescimento.", price: 33.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 6, name: "Royal Canin Indoor Sterilised 2kg", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 7, name: "Royal Canin Kitten 2kg", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 8, name: "Royal Canin Persian Adult 2kg", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 1, species: 'cao', name: "Royal Canin Mini Adult 2kg", desc: "Para cães adultos de raças pequenas (até 10kg).", price: 19.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 2, species: 'cao', name: "Royal Canin Medium Adult 4kg", desc: "Para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 3, species: 'cao', name: "Royal Canin Maxi Adult 4kg", desc: "Para cães adultos de porte grande (26 a 44kg).", price: 34.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 4, species: 'cao', name: "Royal Canin Mini Puppy 2kg", desc: "Para cachorros de raças pequenas em crescimento.", price: 21.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 5, species: 'cao', name: "Royal Canin Medium Puppy 4kg", desc: "Para cachorros de porte médio em crescimento.", price: 33.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 6, species: 'gato', name: "Royal Canin Indoor Sterilised 2kg", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 7, species: 'gato', name: "Royal Canin Kitten 2kg", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 8, species: 'gato', name: "Royal Canin Persian Adult 2kg", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "racoes", brand: "Royal Canin", icon: "food" },
 
   // Ownat — gama Grain Free Prime / Just / Author (cão e gato)
-  { id: 17, name: "Ownat Grain Free Prime Sterilized Fish", desc: "Para gatos esterilizados, à base de peixe, sem cereais.", price: 24.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-sterilized-fish-gato.jpg" },
-  { id: 18, name: "Ownat Author Sterilized Fresh Chicken", desc: "Para gatos esterilizados, com frango fresco, grain free.", price: 26.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-author-sterilized-chicken-gato.jpg" },
-  { id: 19, name: "Ownat Author Fresh Oily Fish & Poultry", desc: "Para gatos, peixe gordo e aves frescas, low grain.", price: 27.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-author-oily-fish-poultry-gato.jpg" },
-  { id: 20, name: "Ownat Just Grain Free Junior", desc: "Para cães em crescimento, todas as raças, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-gf-junior-cao.jpg" },
-  { id: 21, name: "Ownat Just Grain Free Light", desc: "Para cães adultos com tendência para excesso de peso.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-gf-light-cao.jpg" },
-  { id: 22, name: "Ownat Grain Free Prime Adult Chicken & Turkey (Gato)", desc: "Para gatos adultos, frango e peru, sem cereais.", price: 25.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-gato.jpg" },
-  { id: 23, name: "Ownat Grain Free Prime Adult Chicken & Turkey (Cão)", desc: "Para cães adultos, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-cao.jpg" },
-  { id: 24, name: "Ownat Grain Free Prime Hair & Skin Care", desc: "Para cães, cuidado da pele e pelo, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-hair-skin-care-cao.jpg" },
-  { id: 25, name: "Ownat Grain Free Prime Junior Chicken & Turkey", desc: "Para cachorros, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-junior-chicken-turkey-cao.jpg" },
-  { id: 26, name: "Ownat Grain Free Prime Kitten", desc: "Para gatinhos em crescimento, sem cereais.", price: 25.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-kitten-gato.jpg" },
-  { id: 27, name: "Ownat Grain Free Prime Mini Chicken & Turkey", desc: "Para cães de raças pequenas, frango e peru.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-mini-chicken-turkey-cao.jpg" },
-  { id: 28, name: "Ownat Grain Free Prime Senior Chicken & Turkey", desc: "Para cães seniores, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-senior-chicken-turkey-cao.jpg" },
-  { id: 43, name: "Ownat Grain Free Prime Sterilized (Gato)", desc: "Para gatos esterilizados, sem cereais.", price: 24.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-sterilized-gato.jpg" },
-  { id: 44, name: "Ownat Just Grain Free Adult Chicken (Gato)", desc: "Para gatos adultos, com frango, sem cereais.", price: 15.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-gato.jpg" },
-  { id: 45, name: "Ownat Just Grain Free Adult Chicken (Cão)", desc: "Para cães adultos, com frango, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-cao.jpg" },
-  { id: 46, name: "Ownat Just Grain Free Adult Lamb (Cão)", desc: "Para cães adultos, com cordeiro, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-lamb-cao.jpg" },
-  { id: 47, name: "Ownat Just Grain Free Pato (Cão)", desc: "Para cães adultos, com pato, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-duck-cao.jpg" },
-  { id: 48, name: "Ownat Just Grain Free Salmão & Marisco (Cão)", desc: "Para cães adultos, com salmão e marisco, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-salmon-seafood-cao.jpg" },
-  { id: 49, name: "Ownat Just Grain Free Esterilizado (Gato)", desc: "Para gatos esterilizados, sem cereais.", price: 17.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-sterilized-gato.jpg" },
-  { id: 50, name: "Ownat Just Grain Free Truta (Cão)", desc: "Para cães adultos, com truta, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-trout-cao.jpg" },
-  { id: 51, name: "Ownat Just Grain Free Esterilizado Peixe (Gato)", desc: "Para gatos esterilizados, com peixe, sem cereais.", price: 17.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-sterilized-fish-gato.jpg" },
+  { id: 17, species: 'gato', name: "Ownat Grain Free Prime Sterilized Fish", desc: "Para gatos esterilizados, à base de peixe, sem cereais.", price: 24.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-sterilized-fish-gato.jpg" },
+  { id: 18, species: 'gato', name: "Ownat Author Sterilized Fresh Chicken", desc: "Para gatos esterilizados, com frango fresco, grain free.", price: 26.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-author-sterilized-chicken-gato.jpg" },
+  { id: 19, species: 'gato', name: "Ownat Author Fresh Oily Fish & Poultry", desc: "Para gatos, peixe gordo e aves frescas, low grain.", price: 27.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-author-oily-fish-poultry-gato.jpg" },
+  { id: 20, species: 'cao', name: "Ownat Just Grain Free Junior", desc: "Para cães em crescimento, todas as raças, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-gf-junior-cao.jpg" },
+  { id: 21, species: 'cao', name: "Ownat Just Grain Free Light", desc: "Para cães adultos com tendência para excesso de peso.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-gf-light-cao.jpg" },
+  { id: 22, species: 'gato', name: "Ownat Grain Free Prime Adult Chicken & Turkey (Gato)", desc: "Para gatos adultos, frango e peru, sem cereais.", price: 25.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-gato.jpg" },
+  { id: 23, species: 'cao', name: "Ownat Grain Free Prime Adult Chicken & Turkey (Cão)", desc: "Para cães adultos, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-cao.jpg" },
+  { id: 24, species: 'cao', name: "Ownat Grain Free Prime Hair & Skin Care", desc: "Para cães, cuidado da pele e pelo, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-hair-skin-care-cao.jpg" },
+  { id: 25, species: 'cao', name: "Ownat Grain Free Prime Junior Chicken & Turkey", desc: "Para cachorros, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-junior-chicken-turkey-cao.jpg" },
+  { id: 26, species: 'gato', name: "Ownat Grain Free Prime Kitten", desc: "Para gatinhos em crescimento, sem cereais.", price: 25.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-kitten-gato.jpg" },
+  { id: 27, species: 'cao', name: "Ownat Grain Free Prime Mini Chicken & Turkey", desc: "Para cães de raças pequenas, frango e peru.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-mini-chicken-turkey-cao.jpg" },
+  { id: 28, species: 'cao', name: "Ownat Grain Free Prime Senior Chicken & Turkey", desc: "Para cães seniores, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-senior-chicken-turkey-cao.jpg" },
+  { id: 43, species: 'gato', name: "Ownat Grain Free Prime Sterilized (Gato)", desc: "Para gatos esterilizados, sem cereais.", price: 24.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-prime-sterilized-gato.jpg" },
+  { id: 44, species: 'gato', name: "Ownat Just Grain Free Adult Chicken (Gato)", desc: "Para gatos adultos, com frango, sem cereais.", price: 15.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-gato.jpg" },
+  { id: 45, species: 'cao', name: "Ownat Just Grain Free Adult Chicken (Cão)", desc: "Para cães adultos, com frango, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-cao.jpg" },
+  { id: 46, species: 'cao', name: "Ownat Just Grain Free Adult Lamb (Cão)", desc: "Para cães adultos, com cordeiro, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-adult-lamb-cao.jpg" },
+  { id: 47, species: 'cao', name: "Ownat Just Grain Free Pato (Cão)", desc: "Para cães adultos, com pato, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-duck-cao.jpg" },
+  { id: 48, species: 'cao', name: "Ownat Just Grain Free Salmão & Marisco (Cão)", desc: "Para cães adultos, com salmão e marisco, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-salmon-seafood-cao.jpg" },
+  { id: 49, species: 'gato', name: "Ownat Just Grain Free Esterilizado (Gato)", desc: "Para gatos esterilizados, sem cereais.", price: 17.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-sterilized-gato.jpg" },
+  { id: 50, species: 'cao', name: "Ownat Just Grain Free Truta (Cão)", desc: "Para cães adultos, com truta, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-trout-cao.jpg" },
+  { id: 51, species: 'gato', name: "Ownat Just Grain Free Esterilizado Peixe (Gato)", desc: "Para gatos esterilizados, com peixe, sem cereais.", price: 17.90, type: "racoes", brand: "Ownat", icon: "food", img: "produtos/ownat-just-gf-sterilized-fish-gato.jpg" },
 
   // Rações Veterinárias (dietas prescritas / gama Care)
-  { id: 9, name: "Royal Canin Veterinary Renal 2kg", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 10, name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 11, name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 12, name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 13, name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 14, name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 15, name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 16, name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 9, species: 'cao', name: "Royal Canin Veterinary Renal 2kg", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 10, species: 'ambos', name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 11, species: 'ambos', name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 12, species: 'ambos', name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 13, species: 'ambos', name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 14, species: 'ambos', name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 15, species: 'ambos', name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 16, species: 'ambos', name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
 
-  { id: 29, name: "Ownat Care Renal", desc: "Dieta veterinária de apoio à função renal em gatos.", price: 29.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-renal-gato.png" },
-  { id: 30, name: "Ownat Care Weight Control (Cão)", desc: "Dieta veterinária para controlo de peso em cães.", price: 26.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-weight-control-cao.webp" },
-  { id: 31, name: "Ownat Care Weight Control (Gato)", desc: "Dieta veterinária para controlo de peso em gatos.", price: 26.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-weight-control-gato.webp" },
-  { id: 32, name: "Ownat Care Hypoallergenic", desc: "Dieta veterinária para alergias e sensibilidades alimentares em gatos.", price: 28.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-hypoallergenic-gato.jpg" },
-  { id: 33, name: "Ownat Grain Free Hypoallergenic Mini Lamb (Gato)", desc: "Fórmula monoproteica de borrego, sem cereais, para gatos sensíveis.", price: 27.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-mini-lamb-gato.jpg" },
-  { id: 34, name: "Ownat Grain Free Hypoallergenic Iberian Pork (Cão)", desc: "Fórmula monoproteica de porco ibérico, sem cereais, para cães sensíveis.", price: 28.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-iberian-pork-cao.jpg" },
-  { id: 35, name: "Ownat Grain Free Hypoallergenic Lamb (Cão)", desc: "Fórmula monoproteica de borrego, sem cereais, para cães sensíveis.", price: 28.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-lamb-cao.jpg" },
-  { id: 52, name: "Ownat Care Urinary (Gato)", desc: "Apoio à saúde do trato urinário em gatos adultos.", price: 17.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-urinary-gato.png" },
-  { id: 53, name: "Ownat Care Mobility (Cão)", desc: "Apoio às articulações em cães adultos, com frango.", price: 13.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-mobility-cao.webp" },
-  { id: 54, name: "Ownat Care Digestive (Cão)", desc: "Apoio à sensibilidade digestiva em cães adultos.", price: 16.90, type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-digestive-cao.webp" },
+  { id: 29, species: 'gato', name: "Ownat Care Renal", desc: "Dieta veterinária de apoio à função renal em gatos.", sizes: [{label:"1.5kg", price:29.90},{label:"3kg", price:55.30}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-renal-gato.png" },
+  { id: 30, species: 'cao', name: "Ownat Care Weight Control (Cão)", desc: "Dieta veterinária para controlo de peso em cães.", sizes: [{label:"3kg", price:26.90},{label:"10kg", price:67.25}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-weight-control-cao.webp" },
+  { id: 31, species: 'gato', name: "Ownat Care Weight Control (Gato)", desc: "Dieta veterinária para controlo de peso em gatos.", sizes: [{label:"1.5kg", price:26.90},{label:"3kg", price:49.75}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-weight-control-gato.webp" },
+  { id: 32, species: 'gato', name: "Ownat Care Hypoallergenic", desc: "Dieta veterinária para alergias e sensibilidades alimentares em gatos.", sizes: [{label:"1.5kg", price:28.90},{label:"3kg", price:53.45}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-hypoallergenic-gato.jpg" },
+  { id: 33, species: 'gato', name: "Ownat Grain Free Hypoallergenic Mini Lamb (Gato)", desc: "Fórmula monoproteica de borrego, sem cereais, para gatos sensíveis.", sizes: [{label:"1.5kg", price:27.90},{label:"3kg", price:51.60}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-mini-lamb-gato.jpg" },
+  { id: 34, species: 'cao', name: "Ownat Grain Free Hypoallergenic Iberian Pork (Cão)", desc: "Fórmula monoproteica de porco ibérico, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-iberian-pork-cao.jpg" },
+  { id: 35, species: 'cao', name: "Ownat Grain Free Hypoallergenic Lamb (Cão)", desc: "Fórmula monoproteica de borrego, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-lamb-cao.jpg" },
+  { id: 52, species: 'gato', name: "Ownat Care Urinary (Gato)", desc: "Apoio à saúde do trato urinário em gatos adultos.", sizes: [{label:"1.5kg", price:17.90},{label:"3kg", price:33.10}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-urinary-gato.png" },
+  { id: 53, species: 'cao', name: "Ownat Care Mobility (Cão)", desc: "Apoio às articulações em cães adultos, com frango.", sizes: [{label:"3kg", price:13.90},{label:"10kg", price:34.75}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-mobility-cao.webp" },
+  { id: 54, species: 'cao', name: "Ownat Care Digestive (Cão)", desc: "Apoio à sensibilidade digestiva em cães adultos.", sizes: [{label:"3kg", price:16.90},{label:"10kg", price:42.25}], type: "racoes-vet", brand: "Ownat", icon: "drop", img: "produtos/ownat-care-digestive-cao.webp" },
 
   // Farmácia (higiene, prevenção, suplementos)
-  { id: 36, name: "Champô Hipoalergénico Veterinário 250ml", desc: "Para peles sensíveis, sem perfume, uso veterinário.", price: 11.90, type: "farmacia", brand: "", icon: "bottle" },
-  { id: 37, name: "Champô Dermatológico 250ml", desc: "Ação calmante para peles irritadas ou com dermatite.", price: 13.50, type: "farmacia", brand: "", icon: "bottle" },
-  { id: 38, name: "Coleira Desparasitante", desc: "Proteção contínua contra pulgas e carraças, até 8 meses.", price: 16.90, type: "farmacia", brand: "", icon: "collar" },
-  { id: 39, name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "farmacia", brand: "", icon: "drop" },
-  { id: 40, name: "Suplemento Articulações (60 comp.)", desc: "Glucosamina e condroitina para saúde articular.", price: 21.90, type: "farmacia", brand: "", icon: "drop" },
-  { id: 41, name: "Suplemento Calmante (30 comp.)", desc: "Apoio em situações de stress e ansiedade.", price: 18.50, type: "farmacia", brand: "", icon: "drop" },
-  { id: 42, name: "Desparasitante Interno (comprimido)", desc: "Desparasitação interna, cães e gatos.", price: 6.90, type: "farmacia", brand: "", icon: "drop" },
+  { id: 36, species: 'ambos', name: "Champô Hipoalergénico Veterinário 250ml", desc: "Para peles sensíveis, sem perfume, uso veterinário.", price: 11.90, type: "farmacia", brand: "", icon: "bottle" },
+  { id: 37, species: 'ambos', name: "Champô Dermatológico 250ml", desc: "Ação calmante para peles irritadas ou com dermatite.", price: 13.50, type: "farmacia", brand: "", icon: "bottle" },
+  { id: 38, species: 'ambos', name: "Coleira Desparasitante", desc: "Proteção contínua contra pulgas e carraças, até 8 meses.", price: 16.90, type: "farmacia", brand: "", icon: "collar" },
+  { id: 39, species: 'ambos', name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "farmacia", brand: "", icon: "drop" },
+  { id: 40, species: 'ambos', name: "Suplemento Articulações (60 comp.)", desc: "Glucosamina e condroitina para saúde articular.", price: 21.90, type: "farmacia", brand: "", icon: "drop" },
+  { id: 41, species: 'ambos', name: "Suplemento Calmante (30 comp.)", desc: "Apoio em situações de stress e ansiedade.", price: 18.50, type: "farmacia", brand: "", icon: "drop" },
+  { id: 42, species: 'ambos', name: "Desparasitante Interno (comprimido)", desc: "Desparasitação interna, cães e gatos.", price: 6.90, type: "farmacia", brand: "", icon: "drop" },
 ];
 
 const icons = {
@@ -370,6 +452,9 @@ let cart = JSON.parse(localStorage.getItem('cvla_cart') || '{}');
 // Migração de segurança: se o carrinho tiver o formato antigo (id: quantidade em vez de objeto), começa vazio.
 if (Object.values(cart).some(v => typeof v !== 'object')) { cart = {}; }
 let currentFilter = 'todos';
+let currentSpecies = 'todas';
+let currentBrand = null;
+let currentSearch = '';
 
 function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
 
@@ -377,7 +462,18 @@ const categoryLabels = { 'racoes': 'Rações', 'racoes-vet': 'Ração Veterinár
 
 function renderProducts() {
   const grid = document.getElementById('productGrid');
-  const list = products.filter(p => currentFilter === 'todos' || p.type === currentFilter);
+  const q = currentSearch.trim().toLowerCase();
+  const list = products.filter(p => {
+    const matchesType = currentFilter === 'todos' || p.type === currentFilter;
+    const matchesSpecies = currentSpecies === 'todas' || p.species === currentSpecies || p.species === 'ambos';
+    const matchesBrand = !currentBrand || p.brand === currentBrand;
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
+    return matchesType && matchesSpecies && matchesBrand && matchesSearch;
+  });
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="no-results">Sem resultados para esta pesquisa.</div>';
+    return;
+  }
   grid.innerHTML = list.map(p => {
     const hasSizes = Array.isArray(p.sizes);
     const displayPrice = hasSizes ? p.sizes[0].price : p.price;
@@ -532,13 +628,77 @@ function submitOrder() {
   });
 }
 
-document.querySelectorAll('.store-tab').forEach(tab => {
+function setActiveTab(el) {
+  document.querySelectorAll('.store-tabs > .store-tab, .store-tab-menu > .store-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+function closeAllMenus(except) {
+  document.querySelectorAll('.store-tab-menu').forEach(m => { if (m !== except) m.classList.remove('open'); });
+}
+
+// Top-level tabs (Todos / Rações Veterinárias / Farmácia) — direct filter, no species menu
+document.querySelectorAll('#storeTabs > .store-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.store-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+    closeAllMenus();
     currentFilter = tab.dataset.filter;
+    currentSpecies = 'todas';
+    currentBrand = null;
+    setActiveTab(tab);
     renderProducts();
   });
+});
+
+// Cães / Gatos menu toggles
+document.querySelectorAll('.store-tab-menu').forEach(menu => {
+  const trigger = menu.querySelector(':scope > .store-tab');
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.classList.contains('open');
+    closeAllMenus();
+    if (!isOpen) {
+      menu.classList.add('open');
+    } else {
+      // Clicking the trigger itself while open also applies "ver tudo desta espécie"
+      currentFilter = 'todos';
+      currentSpecies = trigger.dataset.species;
+      currentBrand = null;
+      setActiveTab(trigger);
+      renderProducts();
+    }
+  });
+
+  // Submenu options (categorias e marcas)
+  menu.querySelectorAll('.store-submenu button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentSpecies = btn.dataset.species;
+      currentFilter = btn.dataset.filter || 'todos';
+      currentBrand = btn.dataset.brand || null;
+      setActiveTab(trigger);
+      closeAllMenus();
+      renderProducts();
+    });
+  });
+});
+
+// Close menus when clicking outside
+document.addEventListener('click', () => closeAllMenus());
+
+// Search bar
+const searchInput = document.getElementById('storeSearch');
+const clearSearchBtn = document.getElementById('clearSearch');
+searchInput.addEventListener('input', () => {
+  currentSearch = searchInput.value;
+  clearSearchBtn.classList.toggle('show', currentSearch.length > 0);
+  renderProducts();
+});
+clearSearchBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  currentSearch = '';
+  clearSearchBtn.classList.remove('show');
+  searchInput.focus();
+  renderProducts();
 });
 
 renderProducts();
