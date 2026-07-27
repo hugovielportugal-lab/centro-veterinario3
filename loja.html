@@ -33,6 +33,8 @@
 }
 .store-submenu button:hover { background: var(--blue-soft); }
 .store-submenu .submenu-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-light); font-weight: 700; padding: 8px 14px 2px; }
+.store-submenu .gama-opt { padding-left: 28px; font-size: 0.82rem; font-weight: 600; color: var(--gray); position: relative; }
+.store-submenu .gama-opt::before { content: "–"; position: absolute; left: 14px; }
 .store-submenu hr { border: none; border-top: 1px solid var(--border); margin: 6px 4px; }
 /* Search bar */
 .store-search {
@@ -207,19 +209,25 @@
         <div class="store-submenu">
           <button data-species="cao" data-filter="todos">Ver tudo para cães</button>
           <hr>
-          <span class="submenu-label">Categorias</span>
-          <button data-species="cao" data-filter="racoes">Rações</button>
-          <button data-species="cao" data-filter="racoes-vet">Rações Veterinárias</button>
+          <span class="submenu-label">Alimentação</span>
+          <button data-species="cao" data-filter="racoes">Alimentação Regular</button>
+          <button data-species="cao" data-filter="racoes-vet">Alimentação Veterinária</button>
           <button data-species="cao" data-filter="farmacia">Farmácia</button>
           <hr>
-          <span class="submenu-label">Top marcas</span>
+          <span class="submenu-label">Marcas</span>
           <button data-species="cao" data-brand="Royal Canin">Royal Canin</button>
-          <button data-species="cao" data-brand="Ownat">Ownat (todas as gamas)</button>
+          <button data-species="cao" data-brand="Ownat">Ownat</button>
+          <button class="gama-opt" data-species="cao" data-brand="Ownat" data-gama="Prime">Prime</button>
+          <button class="gama-opt" data-species="cao" data-brand="Ownat" data-gama="Just">Just</button>
+          <button class="gama-opt" data-species="cao" data-brand="Ownat" data-gama="Care">Care (veterinária)</button>
           <hr>
-          <span class="submenu-label">Gamas Ownat</span>
-          <button data-species="cao" data-brand="Ownat" data-gama="Prime">Prime</button>
-          <button data-species="cao" data-brand="Ownat" data-gama="Just">Just</button>
-          <button data-species="cao" data-brand="Ownat" data-gama="Care">Care (veterinária)</button>
+          <span class="submenu-label">Cuidados específicos</span>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Renal">Ração renal</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Urinária">Ração urinária</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Digestiva">Ração digestiva</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Hipoalergénico">Ração hipoalergénica</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Peso">Controlo de peso</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Mobilidade">Mobilidade articular</button>
         </div>
       </div>
 
@@ -231,20 +239,25 @@
         <div class="store-submenu">
           <button data-species="gato" data-filter="todos">Ver tudo para gatos</button>
           <hr>
-          <span class="submenu-label">Categorias</span>
-          <button data-species="gato" data-filter="racoes">Rações</button>
-          <button data-species="gato" data-filter="racoes-vet">Rações Veterinárias</button>
+          <span class="submenu-label">Alimentação</span>
+          <button data-species="gato" data-filter="racoes">Alimentação Regular</button>
+          <button data-species="gato" data-filter="racoes-vet">Alimentação Veterinária</button>
           <button data-species="gato" data-filter="farmacia">Farmácia</button>
           <hr>
-          <span class="submenu-label">Top marcas</span>
+          <span class="submenu-label">Marcas</span>
           <button data-species="gato" data-brand="Royal Canin">Royal Canin</button>
-          <button data-species="gato" data-brand="Ownat">Ownat (todas as gamas)</button>
+          <button data-species="gato" data-brand="Ownat">Ownat</button>
+          <button class="gama-opt" data-species="gato" data-brand="Ownat" data-gama="Prime">Prime</button>
+          <button class="gama-opt" data-species="gato" data-brand="Ownat" data-gama="Author">Author</button>
+          <button class="gama-opt" data-species="gato" data-brand="Ownat" data-gama="Just">Just</button>
+          <button class="gama-opt" data-species="gato" data-brand="Ownat" data-gama="Care">Care (veterinária)</button>
           <hr>
-          <span class="submenu-label">Gamas Ownat</span>
-          <button data-species="gato" data-brand="Ownat" data-gama="Prime">Prime</button>
-          <button data-species="gato" data-brand="Ownat" data-gama="Author">Author</button>
-          <button data-species="gato" data-brand="Ownat" data-gama="Just">Just</button>
-          <button data-species="gato" data-brand="Ownat" data-gama="Care">Care (veterinária)</button>
+          <span class="submenu-label">Cuidados específicos</span>
+          <button data-species="gato" data-filter="racoes-vet" data-condicao="Renal">Ração renal</button>
+          <button data-species="gato" data-filter="racoes-vet" data-condicao="Urinária">Ração urinária</button>
+          <button data-species="gato" data-filter="racoes-vet" data-condicao="Digestiva">Ração digestiva</button>
+          <button data-species="gato" data-filter="racoes-vet" data-condicao="Hipoalergénico">Ração hipoalergénica</button>
+          <button data-species="gato" data-filter="racoes-vet" data-condicao="Peso">Controlo de peso</button>
         </div>
       </div>
 
@@ -419,25 +432,25 @@ const products = [
   { id: 51, species: 'gato', name: "Ownat Just Grain Free Esterilizado Peixe (Gato)", desc: "Para gatos esterilizados, com peixe, sem cereais.", sizes: [{label:"3kg", price:17.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-sterilized-fish-gato.jpg" },
 
   // Rações Veterinárias (dietas prescritas / gama Care)
-  { id: 9, species: 'cao', name: "Royal Canin Veterinary Renal 2kg (Cão)", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 10, species: 'ambos', name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 11, species: 'ambos', name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 12, species: 'ambos', name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 13, species: 'ambos', name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 14, species: 'ambos', name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 9, species: 'cao', name: "Royal Canin Veterinary Renal 2kg (Cão)", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Renal" },
+  { id: 10, species: 'ambos', name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva" },
+  { id: 11, species: 'ambos', name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Hipoalergénico" },
+  { id: 12, species: 'ambos', name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Urinária" },
+  { id: 13, species: 'ambos', name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Peso" },
+  { id: 14, species: 'ambos', name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Diabética" },
   { id: 15, species: 'ambos', name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 16, species: 'ambos', name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
+  { id: 16, species: 'ambos', name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Cardíaca" },
 
-  { id: 29, species: 'gato', name: "Ownat Care Renal (Gato)", desc: "Dieta veterinária de apoio à função renal em gatos.", sizes: [{label:"1.5kg", price:29.90},{label:"3kg", price:55.30}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-renal-gato.png" },
-  { id: 30, species: 'cao', name: "Ownat Care Weight Control (Cão)", desc: "Dieta veterinária para controlo de peso em cães.", sizes: [{label:"3kg", price:26.90},{label:"10kg", price:67.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-weight-control-cao.webp" },
-  { id: 31, species: 'gato', name: "Ownat Care Weight Control (Gato)", desc: "Dieta veterinária para controlo de peso em gatos.", sizes: [{label:"1.5kg", price:26.90},{label:"3kg", price:49.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-weight-control-gato.webp" },
-  { id: 32, species: 'gato', name: "Ownat Care Hypoallergenic (Gato)", desc: "Dieta veterinária para alergias e sensibilidades alimentares em gatos.", sizes: [{label:"1.5kg", price:28.90},{label:"3kg", price:53.45}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-hypoallergenic-gato.jpg" },
-  { id: 33, species: 'gato', name: "Ownat Grain Free Hypoallergenic Mini Lamb (Gato)", desc: "Fórmula monoproteica de borrego, sem cereais, para gatos sensíveis.", sizes: [{label:"1.5kg", price:27.90},{label:"3kg", price:51.60}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-mini-lamb-gato.jpg" },
-  { id: 34, species: 'cao', name: "Ownat Grain Free Hypoallergenic Iberian Pork (Cão)", desc: "Fórmula monoproteica de porco ibérico, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-iberian-pork-cao.jpg" },
-  { id: 35, species: 'cao', name: "Ownat Grain Free Hypoallergenic Lamb (Cão)", desc: "Fórmula monoproteica de borrego, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-gf-hypoallergenic-lamb-cao.jpg" },
-  { id: 52, species: 'gato', name: "Ownat Care Urinary (Gato)", desc: "Apoio à saúde do trato urinário em gatos adultos.", sizes: [{label:"1.5kg", price:17.90},{label:"3kg", price:33.10}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-urinary-gato.png" },
-  { id: 53, species: 'cao', name: "Ownat Care Mobility (Cão)", desc: "Apoio às articulações em cães adultos, com frango.", sizes: [{label:"3kg", price:13.90},{label:"10kg", price:34.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-mobility-cao.webp" },
-  { id: 54, species: 'cao', name: "Ownat Care Digestive (Cão)", desc: "Apoio à sensibilidade digestiva em cães adultos.", sizes: [{label:"3kg", price:16.90},{label:"10kg", price:42.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", img: "produtos/ownat-care-digestive-cao.webp" },
+  { id: 29, species: 'gato', name: "Ownat Care Renal (Gato)", desc: "Dieta veterinária de apoio à função renal em gatos.", sizes: [{label:"1.5kg", price:29.90},{label:"3kg", price:55.30}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Renal", img: "produtos/ownat-care-renal-gato.png" },
+  { id: 30, species: 'cao', name: "Ownat Care Weight Control (Cão)", desc: "Dieta veterinária para controlo de peso em cães.", sizes: [{label:"3kg", price:26.90},{label:"10kg", price:67.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Peso", img: "produtos/ownat-care-weight-control-cao.webp" },
+  { id: 31, species: 'gato', name: "Ownat Care Weight Control (Gato)", desc: "Dieta veterinária para controlo de peso em gatos.", sizes: [{label:"1.5kg", price:26.90},{label:"3kg", price:49.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Peso", img: "produtos/ownat-care-weight-control-gato.webp" },
+  { id: 32, species: 'gato', name: "Ownat Care Hypoallergenic (Gato)", desc: "Dieta veterinária para alergias e sensibilidades alimentares em gatos.", sizes: [{label:"1.5kg", price:28.90},{label:"3kg", price:53.45}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-care-hypoallergenic-gato.jpg" },
+  { id: 33, species: 'gato', name: "Ownat Grain Free Hypoallergenic Mini Lamb (Gato)", desc: "Fórmula monoproteica de borrego, sem cereais, para gatos sensíveis.", sizes: [{label:"1.5kg", price:27.90},{label:"3kg", price:51.60}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-mini-lamb-gato.jpg" },
+  { id: 34, species: 'cao', name: "Ownat Grain Free Hypoallergenic Iberian Pork (Cão)", desc: "Fórmula monoproteica de porco ibérico, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-iberian-pork-cao.jpg" },
+  { id: 35, species: 'cao', name: "Ownat Grain Free Hypoallergenic Lamb (Cão)", desc: "Fórmula monoproteica de borrego, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"10kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-lamb-cao.jpg" },
+  { id: 52, species: 'gato', name: "Ownat Care Urinary (Gato)", desc: "Apoio à saúde do trato urinário em gatos adultos.", sizes: [{label:"1.5kg", price:17.90},{label:"3kg", price:33.10}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Urinária", img: "produtos/ownat-care-urinary-gato.png" },
+  { id: 53, species: 'cao', name: "Ownat Care Mobility (Cão)", desc: "Apoio às articulações em cães adultos, com frango.", sizes: [{label:"3kg", price:13.90},{label:"10kg", price:34.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Mobilidade", img: "produtos/ownat-care-mobility-cao.webp" },
+  { id: 54, species: 'cao', name: "Ownat Care Digestive (Cão)", desc: "Apoio à sensibilidade digestiva em cães adultos.", sizes: [{label:"3kg", price:16.90},{label:"10kg", price:42.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Digestiva", img: "produtos/ownat-care-digestive-cao.webp" },
 
   // Farmácia (higiene, prevenção, suplementos)
   { id: 36, species: 'ambos', name: "Champô Hipoalergénico Veterinário 250ml", desc: "Para peles sensíveis, sem perfume, uso veterinário.", price: 11.90, type: "farmacia", brand: "", icon: "bottle" },
@@ -466,6 +479,7 @@ let currentFilter = 'todos';
 let currentSpecies = 'todas';
 let currentBrand = null;
 let currentGama = null;
+let currentCondicao = null;
 let currentSearch = '';
 
 function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
@@ -480,8 +494,9 @@ function renderProducts() {
     const matchesSpecies = currentSpecies === 'todas' || p.species === currentSpecies || p.species === 'ambos';
     const matchesBrand = !currentBrand || p.brand === currentBrand;
     const matchesGama = !currentGama || p.gama === currentGama;
+    const matchesCondicao = !currentCondicao || p.condicao === currentCondicao;
     const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
-    return matchesType && matchesSpecies && matchesBrand && matchesGama && matchesSearch;
+    return matchesType && matchesSpecies && matchesBrand && matchesGama && matchesCondicao && matchesSearch;
   });
   if (list.length === 0) {
     grid.innerHTML = '<div class="no-results">Sem resultados para esta pesquisa.</div>';
@@ -658,6 +673,7 @@ document.querySelectorAll('#storeTabs > .store-tab').forEach(tab => {
     currentSpecies = 'todas';
     currentBrand = null;
     currentGama = null;
+    currentCondicao = null;
     setActiveTab(tab);
     renderProducts();
   });
@@ -678,6 +694,7 @@ document.querySelectorAll('.store-tab-menu').forEach(menu => {
       currentSpecies = trigger.dataset.species;
       currentBrand = null;
       currentGama = null;
+      currentCondicao = null;
       setActiveTab(trigger);
       renderProducts();
     }
@@ -691,6 +708,7 @@ document.querySelectorAll('.store-tab-menu').forEach(menu => {
       currentFilter = btn.dataset.filter || 'todos';
       currentBrand = btn.dataset.brand || null;
       currentGama = btn.dataset.gama || null;
+      currentCondicao = btn.dataset.condicao || null;
       setActiveTab(trigger);
       closeAllMenus();
       renderProducts();
