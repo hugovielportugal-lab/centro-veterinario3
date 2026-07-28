@@ -121,10 +121,10 @@
 
     <div id="pedidosPanel">
       <div class="filter-bar">
-        <button class="active" data-f="todos" onclick="setFilter('todos', this)">Todos</button>
-        <button data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
+        <button class="active" data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
         <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
         <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+        <button data-f="todos" onclick="setFilter('todos', this)">Todos</button>
       </div>
       <div id="ordersList"></div>
     </div>
@@ -164,7 +164,7 @@ const db = firebase.firestore();
 
 const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
 let allOrders = [];
-let currentFilter = 'todos';
+let currentFilter = 'pendente';
 let openHistoryFor = null; // id do pedido cujo histórico está aberto
 
 function doLogin() {
