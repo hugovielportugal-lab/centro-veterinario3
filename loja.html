@@ -346,7 +346,21 @@
         </div>
       </div>
 
-      <button class="store-tab" data-filter="farmacia" data-species="todas">Farmácia</button>
+      <div class="store-tab-menu" data-menu="farmacia">
+        <button class="store-tab" data-species="todas">
+          Farmácia
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="store-submenu">
+          <button data-species="todas" data-filter="farmacia">Ver tudo na Farmácia</button>
+          <hr>
+          <span class="submenu-label">Categorias</span>
+          <button data-species="todas" data-filter="farmacia" data-categoria="Champôs e Higiene">Champôs e Higiene</button>
+          <button data-species="todas" data-filter="farmacia" data-categoria="Suplementos Articulares">Suplementos Articulares</button>
+          <button data-species="todas" data-filter="farmacia" data-categoria="Antiparasitários">Antiparasitários</button>
+          <button data-species="todas" data-filter="farmacia" data-categoria="Calmantes">Calmantes</button>
+        </div>
+      </div>
     </div>
     <div class="product-grid" id="productGrid"></div>
   </div>
@@ -588,6 +602,7 @@ let currentSpecies = 'todas';
 let currentBrand = null;
 let currentGama = null;
 let currentCondicao = null;
+let currentCategoria = null;
 let currentSearch = '';
 
 function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
@@ -732,8 +747,9 @@ function renderProducts() {
     const matchesBrand = !currentBrand || p.brand === currentBrand;
     const matchesGama = !currentGama || p.gama === currentGama;
     const matchesCondicao = !currentCondicao || p.condicao === currentCondicao;
+    const matchesCategoria = !currentCategoria || p.categoria === currentCategoria;
     const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
-    return matchesType && matchesSpecies && matchesBrand && matchesGama && matchesCondicao && matchesSearch;
+    return matchesType && matchesSpecies && matchesBrand && matchesGama && matchesCondicao && matchesCategoria && matchesSearch;
   });
   if (list.length === 0) {
     grid.innerHTML = '<div class="no-results">Sem resultados para esta pesquisa.</div>';
@@ -1062,6 +1078,7 @@ document.querySelectorAll('#storeTabs > .store-tab').forEach(tab => {
     currentBrand = null;
     currentGama = null;
     currentCondicao = null;
+    currentCategoria = null;
     setActiveTab(tab);
     renderProducts();
   });
@@ -1083,6 +1100,7 @@ document.querySelectorAll('.store-tab-menu').forEach(menu => {
       currentBrand = null;
       currentGama = null;
       currentCondicao = null;
+      currentCategoria = null;
       setActiveTab(trigger);
       renderProducts();
     }
@@ -1097,6 +1115,7 @@ document.querySelectorAll('.store-tab-menu').forEach(menu => {
       currentBrand = btn.dataset.brand || null;
       currentGama = btn.dataset.gama || null;
       currentCondicao = btn.dataset.condicao || null;
+      currentCategoria = btn.dataset.categoria || null;
       setActiveTab(trigger);
       closeAllMenus();
       renderProducts();
