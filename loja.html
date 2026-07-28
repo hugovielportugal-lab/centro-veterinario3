@@ -125,6 +125,9 @@
 .cart-close { align-self: flex-end; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); margin-bottom: 6px; }
 .checkout-form { display: none; flex-direction: column; gap: 10px; margin-top: 6px; }
 .checkout-form.open { display: flex; }
+.order-review { display: none; flex-direction: column; gap: 10px; margin-top: 6px; }
+.order-review.open { display: flex; }
+.order-review h3 { font-size: 1.05rem; margin: 0; }
 .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
 .checkout-note { font-size: 0.8rem; color: var(--gray-light); margin-top: 6px; }
 .auth-hint { font-size: 0.78rem; color: var(--gray-light); margin-top: -4px; margin-bottom: 2px; }
@@ -398,8 +401,16 @@
   </div>
   <div class="checkout-form" id="checkoutForm">
     <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
-    <button class="btn btn-navy" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
+    <button class="btn btn-navy" style="justify-content:center;" onclick="showOrderReview()">Rever pedido</button>
     <p class="checkout-note">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.</p>
+  </div>
+  <div class="order-review" id="orderReview">
+    <h3>Confirme o seu pedido</h3>
+    <div id="orderReviewItems"></div>
+    <div class="cart-total" id="orderReviewTotal"></div>
+    <p class="checkout-note">Telefone: <strong id="orderReviewPhone"></strong></p>
+    <button class="btn btn-navy" style="justify-content:center;" onclick="submitOrder()" id="confirmOrderBtn">Confirmar e enviar pedido</button>
+    <button type="button" onclick="backToCheckoutForm()" style="background:none; border:none; color:var(--gray); font-size:0.85rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Voltar e editar</button>
   </div>
 </div>
 
@@ -969,13 +980,35 @@ function showCheckout() {
     if (!auth.currentUser.emailVerified) {
       document.getElementById('verifyEmailNotice').style.display = 'block';
       document.getElementById('checkoutForm').classList.remove('open');
+      document.getElementById('orderReview').classList.remove('open');
       openCart();
       return;
     }
     document.getElementById('verifyEmailNotice').style.display = 'none';
+    document.getElementById('orderReview').classList.remove('open');
     document.getElementById('checkoutForm').classList.add('open');
     openCart();
   });
+}
+function showOrderReview() {
+  const phone = document.getElementById('ckPhone').value.trim();
+  if (!phone) { alert('Por favor preencha o telefone.'); return; }
+  const keys = Object.keys(cart);
+  if (keys.length === 0) { alert('O seu carrinho está vazio.'); return; }
+  const itemsHtml = keys.map(key => {
+    const it = cart[key];
+    return '<div class="cart-item"><div class="info"><div class="name">' + it.qty + 'x ' + it.name + '</div></div><div class="price">' + (it.price * it.qty).toFixed(2) + '€</div></div>';
+  }).join('');
+  const total = keys.reduce((s, key) => s + cart[key].price * cart[key].qty, 0);
+  document.getElementById('orderReviewItems').innerHTML = itemsHtml;
+  document.getElementById('orderReviewTotal').textContent = 'Total: ' + total.toFixed(2) + '€';
+  document.getElementById('orderReviewPhone').textContent = phone;
+  document.getElementById('checkoutForm').classList.remove('open');
+  document.getElementById('orderReview').classList.add('open');
+}
+function backToCheckoutForm() {
+  document.getElementById('orderReview').classList.remove('open');
+  document.getElementById('checkoutForm').classList.add('open');
 }
 function getFallbackStockByKey(key) {
   const parts = key.split('_');
@@ -1018,6 +1051,9 @@ function submitOrder() {
   if (!user) { showCheckout(); return; }
   if (!user.emailVerified) { showCheckout(); return; }
   if (!phone) { alert('Por favor preencha o telefone.'); return; }
+  const confirmBtn = document.getElementById('confirmOrderBtn');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'A enviar...';
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
@@ -1046,11 +1082,15 @@ function submitOrder() {
     cart = {};
     saveCart();
     renderCart();
+    document.getElementById('orderReview').classList.remove('open');
     closeCart();
     renderProducts();
     renderAdminStock();
   }).catch(err => {
     alert('Não foi possível enviar o pedido. Tente novamente. (' + err.message + ')');
+  }).finally(() => {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Confirmar e enviar pedido';
   });
 }
 
