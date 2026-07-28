@@ -400,11 +400,11 @@ auth.onAuthStateChanged(user => {
 // ---------- Products / cart ----------
 const products = [
   // Rações (gama normal / loja)
-  { id: 1, species: 'cao', name: "Royal Canin Mini Adult 2kg (Cão)", desc: "Para cães adultos de raças pequenas (até 10kg).", price: 19.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 2, species: 'cao', name: "Royal Canin Medium Adult 4kg (Cão)", desc: "Para cães adultos de porte médio (11 a 25kg).", price: 32.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 3, species: 'cao', name: "Royal Canin Maxi Adult 4kg (Cão)", desc: "Para cães adultos de porte grande (26 a 44kg).", price: 34.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 4, species: 'cao', name: "Royal Canin Mini Puppy 2kg (Cão)", desc: "Para cachorros de raças pequenas em crescimento.", price: 21.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 5, species: 'cao', name: "Royal Canin Medium Puppy 4kg (Cão)", desc: "Para cachorros de porte médio em crescimento.", price: 33.90, type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 1, species: 'cao', name: "Royal Canin Mini Adult (Cão)", desc: "Para cães adultos de raças pequenas (até 10kg).", sizes: [{label:"2kg", price:19.90},{label:"4kg", price:35.90},{label:"8kg", price:65.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 2, species: 'cao', name: "Royal Canin Medium Adult (Cão)", desc: "Para cães adultos de porte médio (11 a 25kg).", sizes: [{label:"4kg", price:32.90},{label:"10kg", price:74.90},{label:"15kg", price:104.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 3, species: 'cao', name: "Royal Canin Maxi Adult (Cão)", desc: "Para cães adultos de porte grande (26 a 44kg).", sizes: [{label:"4kg", price:34.90},{label:"10kg", price:77.90},{label:"15kg", price:107.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 4, species: 'cao', name: "Royal Canin Mini Puppy (Cão)", desc: "Para cachorros de raças pequenas em crescimento.", sizes: [{label:"2kg", price:21.90},{label:"4kg", price:39.90},{label:"8kg", price:72.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
+  { id: 5, species: 'cao', name: "Royal Canin Medium Puppy (Cão)", desc: "Para cachorros de porte médio em crescimento.", sizes: [{label:"4kg", price:33.90},{label:"10kg", price:76.90},{label:"15kg", price:106.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
   { id: 6, species: 'gato', name: "Royal Canin Indoor Sterilised 2kg (Gato)", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "racoes", brand: "Royal Canin", icon: "food" },
   { id: 7, species: 'gato', name: "Royal Canin Kitten 2kg (Gato)", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "racoes", brand: "Royal Canin", icon: "food" },
   { id: 8, species: 'gato', name: "Royal Canin Persian Adult 2kg (Gato)", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "racoes", brand: "Royal Canin", icon: "food" },
