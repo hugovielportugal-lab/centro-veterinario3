@@ -127,6 +127,15 @@
 .checkout-form.open { display: flex; }
 .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
 .checkout-note { font-size: 0.8rem; color: var(--gray-light); margin-top: 6px; }
+.auth-hint { font-size: 0.78rem; color: var(--gray-light); margin-top: -4px; margin-bottom: 2px; }
+.verify-email-notice {
+  display: none; background: #fff3cd; border: 1px solid #ffe69c; padding: 12px 14px;
+  border-radius: 12px; font-size: 0.85rem; color: #664d03; margin-bottom: 14px;
+}
+.verify-resend-btn {
+  display: block; margin-top: 8px; background: none; border: none; color: var(--navy);
+  text-decoration: underline; cursor: pointer; font-weight: 600; padding: 0; font-family: var(--font); font-size: 0.85rem;
+}
 /* Account / auth */
 .account-btn {
   position: fixed; bottom: 24px; right: 158px; z-index: 70;
@@ -365,8 +374,11 @@
   </div>
   <div class="checkout-form open" style="margin-top:0;">
     <input type="text" id="authName" placeholder="O seu nome" style="display:none;">
+    <input type="text" id="authHoneypot" name="website" autocomplete="off" tabindex="-1" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" aria-hidden="true">
     <input type="email" id="authEmail" placeholder="E-mail">
-    <input type="password" id="authPassword" placeholder="Senha">
+    <input type="password" id="authPassword" placeholder="Senha" oninput="updatePasswordHint()">
+    <div class="auth-hint" id="authPasswordHint" style="display:none;">A senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e número.</div>
+    <input type="password" id="authPasswordConfirm" placeholder="Confirmar senha" style="display:none;">
     <div class="auth-error" id="authError"></div>
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitAuth()" id="authSubmitBtn">Entrar</button>
     <button type="button" id="forgotPasswordLink" onclick="submitForgotPassword()" style="background:none; border:none; color:var(--gray); font-size:0.82rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Esqueci-me da senha</button>
@@ -380,6 +392,10 @@
   <div id="cartItems"></div>
   <div class="cart-total" id="cartTotal" style="display:none;"></div>
   <button class="btn btn-navy" id="goCheckoutBtn" style="display:none; justify-content:center;" onclick="showCheckout()">Pedir para levantar na loja</button>
+  <div class="verify-email-notice" id="verifyEmailNotice">
+    Precisa de confirmar o seu e-mail antes de finalizar a compra. Verifique a caixa de entrada (e a pasta de spam).
+    <button type="button" onclick="resendVerificationEmail()" class="verify-resend-btn">Reenviar e-mail de confirmação</button>
+  </div>
   <div class="checkout-form" id="checkoutForm">
     <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
@@ -448,10 +464,17 @@ function setAuthMode(mode) {
   document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
   document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
   document.getElementById('authName').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authPasswordConfirm').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('authTitle').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
   document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
   document.getElementById('forgotPasswordLink').style.display = mode === 'register' ? 'none' : 'block';
   document.getElementById('authError').classList.remove('show', 'success');
+  updatePasswordHint();
+}
+function updatePasswordHint() {
+  const hint = document.getElementById('authPasswordHint');
+  if (authMode !== 'register') { hint.style.display = 'none'; return; }
+  hint.style.display = 'block';
 }
 function openAuth() {
   if (auth.currentUser) { auth.signOut(); return; }
@@ -476,22 +499,66 @@ function submitForgotPassword() {
     showAuthError('E-mail enviado! Verifique a caixa de entrada de ' + email + ' para definir uma nova senha.', true);
   }).catch(err => showAuthError(traduzErro(err.code)));
 }
+// ---------- Segurança do registo ----------
+const DISPOSABLE_EMAIL_DOMAINS = [
+  'mailinator.com','tempmail.com','temp-mail.org','10minutemail.com','guerrillamail.com',
+  'yopmail.com','trashmail.com','throwawaymail.com','fakeinbox.com','getnada.com',
+  'sharklasers.com','maildrop.cc','dispostable.com','mintemail.com','moakt.com'
+];
+function isDisposableEmail(email) {
+  const domain = (email.split('@')[1] || '').toLowerCase();
+  return DISPOSABLE_EMAIL_DOMAINS.includes(domain);
+}
+function isStrongPassword(pw) {
+  return pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw);
+}
+function checkRegisterRateLimit() {
+  const key = 'regAttempts';
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  let data;
+  try { data = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { data = {}; }
+  if (!data.first || now - data.first > windowMs) { data = { count: 0, first: now }; }
+  if (data.count >= 5) { return false; }
+  data.count = (data.count || 0) + 1;
+  localStorage.setItem(key, JSON.stringify(data));
+  return true;
+}
+
 function submitAuth() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const name = document.getElementById('authName').value.trim();
+  const honeypot = document.getElementById('authHoneypot').value;
+  // Honeypot: campo invisível para humanos, se vier preenchido é um bot — ignora silenciosamente
+  if (honeypot) { return; }
   if (!email || !password) { showAuthError('Preencha e-mail e senha.'); return; }
   if (authMode === 'register') {
     if (!name) { showAuthError('Preencha o seu nome.'); return; }
+    if (isDisposableEmail(email)) { showAuthError('Por favor use um e-mail permanente (não aceitamos e-mails temporários).'); return; }
+    if (!isStrongPassword(password)) { showAuthError('A senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e número.'); return; }
+    const passwordConfirm = document.getElementById('authPasswordConfirm').value;
+    if (password !== passwordConfirm) { showAuthError('As senhas não coincidem.'); return; }
+    if (!checkRegisterRateLimit()) { showAuthError('Demasiadas tentativas de registo. Tente novamente mais tarde.'); return; }
     auth.createUserWithEmailAndPassword(email, password)
-      .then(cred => cred.user.updateProfile({ displayName: name }))
-      .then(() => { closeAuth(); if (pendingCheckout) showCheckout(); })
+      .then(cred => cred.user.updateProfile({ displayName: name }).then(() => cred.user.sendEmailVerification()))
+      .then(() => {
+        closeAuth();
+        if (pendingCheckout) { showCheckout(); }
+        alert('Conta criada! Enviámos um e-mail de confirmação para ' + email + '. Precisa de confirmar antes de finalizar uma compra.');
+      })
       .catch(err => showAuthError(traduzErro(err.code)));
   } else {
     auth.signInWithEmailAndPassword(email, password)
       .then(() => { closeAuth(); if (pendingCheckout) showCheckout(); })
       .catch(err => showAuthError(traduzErro(err.code)));
   }
+}
+function resendVerificationEmail() {
+  if (!auth.currentUser) return;
+  auth.currentUser.sendEmailVerification().then(() => {
+    alert('E-mail de confirmação reenviado para ' + auth.currentUser.email);
+  }).catch(err => alert('Não foi possível reenviar o e-mail: ' + err.message));
 }
 function traduzErro(code) {
   const map = {
@@ -500,7 +567,8 @@ function traduzErro(code) {
     'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
     'auth/user-not-found': 'Não existe conta com este e-mail.',
     'auth/wrong-password': 'Senha incorreta.',
-    'auth/invalid-credential': 'E-mail ou senha incorretos.'
+    'auth/invalid-credential': 'E-mail ou senha incorretos.',
+    'auth/too-many-requests': 'Demasiadas tentativas. Aguarde um pouco e tente novamente.'
   };
   return map[code] || 'Ocorreu um erro. Tente novamente.';
 }
@@ -515,6 +583,7 @@ auth.onAuthStateChanged(user => {
     label.textContent = 'Entrar';
     adminBtn.style.display = 'none';
     closeAdmin();
+    document.getElementById('verifyEmailNotice').style.display = 'none';
   }
 });
 
@@ -896,8 +965,17 @@ function showCheckout() {
     openAuth();
     return;
   }
-  document.getElementById('checkoutForm').classList.add('open');
-  openCart();
+  auth.currentUser.reload().then(() => {
+    if (!auth.currentUser.emailVerified) {
+      document.getElementById('verifyEmailNotice').style.display = 'block';
+      document.getElementById('checkoutForm').classList.remove('open');
+      openCart();
+      return;
+    }
+    document.getElementById('verifyEmailNotice').style.display = 'none';
+    document.getElementById('checkoutForm').classList.add('open');
+    openCart();
+  });
 }
 function getFallbackStockByKey(key) {
   const parts = key.split('_');
@@ -938,6 +1016,7 @@ function submitOrder() {
   const phone = document.getElementById('ckPhone').value.trim();
   const user = auth.currentUser;
   if (!user) { showCheckout(); return; }
+  if (!user.emailVerified) { showCheckout(); return; }
   if (!phone) { alert('Por favor preencha o telefone.'); return; }
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
