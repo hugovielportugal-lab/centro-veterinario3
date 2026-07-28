@@ -182,6 +182,7 @@
 .auth-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .auth-error { color: #c0392b; font-size: 0.85rem; margin-top: 4px; display: none; }
 .auth-error.show { display: block; }
+.auth-error.success { color: #106b3d; }
 /* Product detail modal */
 .product-thumb, .product-body h3 { cursor: pointer; }
 .product-modal-backdrop {
@@ -368,6 +369,7 @@
     <input type="password" id="authPassword" placeholder="Senha">
     <div class="auth-error" id="authError"></div>
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitAuth()" id="authSubmitBtn">Entrar</button>
+    <button type="button" id="forgotPasswordLink" onclick="submitForgotPassword()" style="background:none; border:none; color:var(--gray); font-size:0.82rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Esqueci-me da senha</button>
   </div>
 </div>
 
@@ -447,7 +449,8 @@ function setAuthMode(mode) {
   document.getElementById('authName').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('authTitle').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
   document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
-  document.getElementById('authError').classList.remove('show');
+  document.getElementById('forgotPasswordLink').style.display = mode === 'register' ? 'none' : 'block';
+  document.getElementById('authError').classList.remove('show', 'success');
 }
 function openAuth() {
   if (auth.currentUser) { auth.signOut(); return; }
@@ -459,10 +462,18 @@ function closeAuth() {
   document.getElementById('authBackdrop').classList.remove('open');
   pendingCheckout = false;
 }
-function showAuthError(msg) {
+function showAuthError(msg, success) {
   const el = document.getElementById('authError');
   el.textContent = msg;
   el.classList.add('show');
+  el.classList.toggle('success', !!success);
+}
+function submitForgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { showAuthError('Escreva o seu e-mail em cima e clique de novo.'); return; }
+  auth.sendPasswordResetEmail(email).then(() => {
+    showAuthError('E-mail enviado! Verifique a caixa de entrada de ' + email + ' para definir uma nova senha.', true);
+  }).catch(err => showAuthError(traduzErro(err.code)));
 }
 function submitAuth() {
   const email = document.getElementById('authEmail').value.trim();
