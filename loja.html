@@ -143,6 +143,39 @@
 .auth-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .auth-error { color: #c0392b; font-size: 0.85rem; margin-top: 4px; display: none; }
 .auth-error.show { display: block; }
+/* Product detail modal */
+.product-thumb, .product-body h3 { cursor: pointer; }
+.product-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15,32,43,0.55); z-index: 85;
+  opacity: 0; visibility: hidden; transition: opacity .2s ease;
+}
+.product-modal-backdrop.open { opacity: 1; visibility: visible; }
+.product-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%);
+  width: min(560px, 92vw); max-height: 88vh; overflow-y: auto;
+  background: #fff; border-radius: 20px; z-index: 86;
+  opacity: 0; visibility: hidden; transition: opacity .2s ease, transform .2s ease;
+  box-shadow: 0 24px 60px rgba(15,59,96,0.25);
+}
+.product-modal.open { opacity: 1; visibility: visible; transform: translate(-50%, -50%); }
+.product-modal-close {
+  position: absolute; top: 16px; right: 16px; background: #fff; border: 1px solid var(--border);
+  border-radius: 50%; width: 34px; height: 34px; font-size: 1.1rem; cursor: pointer; color: var(--gray); z-index: 2;
+}
+.product-modal-img {
+  height: 260px; background: var(--blue-soft); display: flex; align-items: center; justify-content: center;
+  border-radius: 20px 20px 0 0; overflow: hidden;
+}
+.product-modal-img img { width: 100%; height: 100%; object-fit: contain; padding: 20px; box-sizing: border-box; background: #fff; }
+.product-modal-img svg { width: 80px; height: 80px; color: var(--navy); }
+.product-modal-body { padding: 24px 28px 28px; }
+.product-modal-body h2 { font-size: 1.3rem; margin: 6px 0 10px; }
+.product-modal-desc { color: var(--gray); font-size: 0.92rem; line-height: 1.55; margin-bottom: 18px; }
+@media (max-width: 620px) {
+  .product-modal { width: 100vw; max-height: 100vh; height: 100vh; top: 0; left: 0; transform: none; border-radius: 0; }
+  .product-modal.open { transform: none; }
+  .product-modal-img { border-radius: 0; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -308,6 +341,22 @@
   </div>
 </div>
 
+<div class="product-modal-backdrop" id="productModalBackdrop" onclick="closeProductModal()"></div>
+<div class="product-modal" id="productModal">
+  <button class="product-modal-close" onclick="closeProductModal()">✕</button>
+  <div class="product-modal-img" id="productModalImg"></div>
+  <div class="product-modal-body">
+    <span class="category-tag" id="productModalTag"></span>
+    <h2 id="productModalName"></h2>
+    <p class="product-modal-desc" id="productModalDesc"></p>
+    <div id="productModalSizes"></div>
+    <div class="product-footer">
+      <span class="product-price" id="productModalPrice"></span>
+      <button class="add-btn" id="productModalAddBtn">Adicionar</button>
+    </div>
+  </div>
+</div>
+
 <footer class="site">
   <div class="wrap">
     <div class="footer-bottom" style="border-top:none; margin-top:0; padding-top:0;">
@@ -413,15 +462,15 @@ const products = [
   { id: 57, species: 'gato', name: "Royal Canin Light Weight Care (Gato)", desc: "Ajuda a manter o peso ideal em gatos com tendência para engordar.", sizes: [{label:"400g", price:6.90},{label:"1.5kg", price:19.90},{label:"3kg", price:36.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-light-weight-care-gato.png" },
   { id: 58, species: 'gato', name: "Royal Canin Hair & Skin Care (Gato)", desc: "Cuidado da pele e do pelo em gatos adultos.", sizes: [{label:"400g", price:7.90},{label:"2kg", price:25.90},{label:"4kg", price:46.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-hair-skin-care-gato.png" },
   { id: 59, species: 'gato', name: "Royal Canin Urinary Care (Gato)", desc: "Ajuda a manter a saúde do trato urinário em gatos adultos.", sizes: [{label:"400g", price:8.20},{label:"2kg", price:26.90},{label:"3.5kg", price:44.90},{label:"7kg", price:79.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-urinary-care-gato.png" },
-  { id: 60, species: 'gato', name: "Royal Canin Ageing Sterilised 12+ (Gato)", desc: "Para gatos esterilizados a partir dos 12 anos.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90},{label:"4kg", price:45.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-ageing-sterilised-12-gato.webp" },
+  { id: 60, species: 'gato', name: "Royal Canin Ageing Sterilised 11+ (Gato)", desc: "Para gatos esterilizados a partir dos 11 anos.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90},{label:"4kg", price:45.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-ageing-sterilised-12-gato.webp" },
   { id: 61, species: 'gato', name: "Royal Canin Hairball Care (Gato)", desc: "Ajuda a reduzir a formação de bolas de pelo em gatos adultos.", sizes: [{label:"400g", price:7.90},{label:"2kg", price:25.90},{label:"4kg", price:46.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-hairball-care-gato.webp" },
   { id: 62, species: 'gato', name: "Royal Canin Ageing 15+ (Gato)", desc: "Para gatos a partir dos 15 anos, com necessidades de idade muito avançada.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-ageing-15-gato.webp" },
-  { id: 63, species: 'gato', name: "Royal Canin Ageing 12+ (Gato)", desc: "Para gatos não esterilizados a partir dos 12 anos.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90},{label:"4kg", price:45.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-ageing-12-gato.webp" },
+  { id: 63, species: 'gato', name: "Royal Canin Ageing 11+ (Gato)", desc: "Para gatos não esterilizados a partir dos 11 anos.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90},{label:"4kg", price:45.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-ageing-12-gato.webp" },
   { id: 64, species: 'gato', name: "Royal Canin British Shorthair Adult (Gato)", desc: "Fórmula específica para gatos British Shorthair adultos.", sizes: [{label:"400g", price:7.50},{label:"2kg", price:24.90},{label:"4kg", price:45.90},{label:"10kg", price:94.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-british-shorthair-adult-gato.webp" },
   { id: 65, species: 'gato', name: "Royal Canin Sterilised 7+ (Gato)", desc: "Para gatos esterilizados a partir dos 7 anos.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-sterilised-7-gato.webp" },
   { id: 66, species: 'gato', name: "Royal Canin Sterilised 37 (Gato)", desc: "Para gatos adultos esterilizados, ajuda a controlar o peso.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-sterilised-37-gato.webp" },
   { id: 67, species: 'gato', name: "Royal Canin Fit 32 (Gato)", desc: "Para gatos adultos ativos, com acesso ao exterior.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-fit-32-gato.webp" },
-  { id: 68, species: 'gato', name: "Royal Canin Exigent 42 (Gato)", desc: "Para gatos adultos exigentes ao nível do sabor e textura.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-exigent-42-gato.webp" },
+  { id: 68, species: 'gato', name: "Royal Canin Fussy (Gato)", desc: "Para gatos adultos exigentes ao nível do sabor e textura.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-exigent-42-gato.webp" },
   { id: 69, species: 'gato', name: "Royal Canin Digestive Care (Gato)", desc: "Ajuda a manter a saúde digestiva em gatos adultos.", sizes: [{label:"400g", price:7.90},{label:"2kg", price:25.90},{label:"4kg", price:46.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-digestive-care-gato.webp" },
   { id: 70, species: 'gato', name: "Royal Canin Appetite Control Care (Gato)", desc: "Ajuda a controlar o apetite em gatos esterilizados.", sizes: [{label:"400g", price:7.90},{label:"2kg", price:25.90},{label:"3.5kg", price:42.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-appetite-control-care-gato.webp" },
   { id: 71, species: 'gato', name: "Royal Canin Sensible 33 (Gato)", desc: "Para gatos adultos com sistema digestivo sensível.", sizes: [{label:"400g", price:6.90},{label:"2kg", price:22.90},{label:"4kg", price:41.90},{label:"10kg", price:84.90}], type: "racoes", brand: "Royal Canin", icon: "food", img: "produtos/rc-sensible-33-gato.webp" },
@@ -534,10 +583,10 @@ function renderProducts() {
         </div>` : '';
     return `
     <div class="product-card">
-      <div class="product-thumb">${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : icons[p.icon]}</div>
+      <div class="product-thumb" onclick="openProductModal(${p.id})">${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : icons[p.icon]}</div>
       <div class="product-body">
         <span class="category-tag">${p.brand ? (p.brand + (p.gama ? ' · ' + p.gama : '')) : categoryLabels[p.type]}</span>
-        <h3>${p.name}</h3>
+        <h3 onclick="openProductModal(${p.id})">${p.name}</h3>
         <p>${p.desc}</p>
         ${sizesHtml}
         <div class="product-footer">
@@ -555,6 +604,61 @@ function updatePrice(id) {
   const selected = document.querySelector(`input[name="size-${id}"]:checked`);
   const size = p.sizes[parseInt(selected.value, 10)];
   document.getElementById(`price-${id}`).textContent = size.price.toFixed(2) + '€';
+}
+
+function openProductModal(id) {
+  const p = products.find(pr => pr.id === id);
+  if (!p) return;
+  document.getElementById('productModalImg').innerHTML = p.img
+    ? `<img src="${p.img}" alt="${p.name}">`
+    : icons[p.icon];
+  document.getElementById('productModalTag').textContent = p.brand ? (p.brand + (p.gama ? ' · ' + p.gama : '')) : categoryLabels[p.type];
+  document.getElementById('productModalName').textContent = p.name;
+  document.getElementById('productModalDesc').textContent = p.desc;
+  const hasSizes = Array.isArray(p.sizes);
+  const sizesEl = document.getElementById('productModalSizes');
+  sizesEl.innerHTML = hasSizes ? `
+    <div class="size-select">
+      ${p.sizes.map((s, i) => `
+        <label class="size-opt">
+          <input type="radio" name="modal-size-${p.id}" value="${i}" ${i === 0 ? 'checked' : ''} onchange="updateModalPrice(${p.id})">
+          <span>${s.label}</span>
+        </label>
+      `).join('')}
+    </div>` : '';
+  document.getElementById('productModalPrice').textContent = (hasSizes ? p.sizes[0].price : p.price).toFixed(2) + '€';
+  document.getElementById('productModalAddBtn').setAttribute('onclick', `addToCartFromModal(${p.id})`);
+  document.getElementById('productModal').classList.add('open');
+  document.getElementById('productModalBackdrop').classList.add('open');
+}
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+  document.getElementById('productModalBackdrop').classList.remove('open');
+}
+function updateModalPrice(id) {
+  const p = products.find(pr => pr.id === id);
+  const selected = document.querySelector(`input[name="modal-size-${id}"]:checked`);
+  const size = p.sizes[parseInt(selected.value, 10)];
+  document.getElementById('productModalPrice').textContent = size.price.toFixed(2) + '€';
+}
+function addToCartFromModal(id) {
+  const p = products.find(pr => pr.id === id);
+  let key = String(id);
+  let itemName = p.name;
+  let itemPrice = p.price;
+  if (Array.isArray(p.sizes)) {
+    const selected = document.querySelector(`input[name="modal-size-${id}"]:checked`);
+    const idx = selected ? parseInt(selected.value, 10) : 0;
+    const size = p.sizes[idx];
+    key = `${id}_${idx}`;
+    itemName = `${p.name} (${size.label})`;
+    itemPrice = size.price;
+  }
+  if (!cart[key]) cart[key] = { name: itemName, price: itemPrice, qty: 0 };
+  cart[key].qty += 1;
+  saveCart();
+  renderCart();
+  closeProductModal();
 }
 
 function addToCart(id) {
