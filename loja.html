@@ -137,12 +137,91 @@
 @media (max-width: 620px) {
   .account-btn { position: static; box-shadow: none; width: 100%; justify-content: center; margin-bottom: 16px; }
 }
+#adminBtn { right: 320px; }
+@media (max-width: 620px) {
+  #adminBtn { position: static; box-shadow: none; width: 100%; justify-content: center; margin-bottom: 16px; }
+}
 .auth-drawer { max-width: 100%; }
+
+/* Stock */
+.soldout-badge {
+  position: absolute; top: 10px; left: 10px; background: var(--navy); color: #fff;
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  padding: 4px 10px; border-radius: var(--radius-pill); z-index: 2;
+}
+.product-thumb { position: relative; }
+.size-opt.out span { opacity: 0.45; text-decoration: line-through; cursor: not-allowed; }
+.size-opt input:disabled { cursor: not-allowed; }
+.add-btn:disabled { background: var(--border); color: var(--gray); cursor: not-allowed; }
+.add-btn:disabled:hover { background: var(--border); }
+
+/* Admin panel */
+.admin-drawer { width: min(480px, 94vw); }
+.admin-list { flex: 1; overflow-y: auto; }
+.admin-product { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.admin-product-name { font-weight: 700; font-size: 0.88rem; margin-bottom: 8px; color: var(--navy); }
+.admin-stock-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.admin-stock-label { width: 60px; font-size: 0.8rem; color: var(--gray); flex-shrink: 0; }
+.admin-stock-row input[type="number"] {
+  width: 70px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font);
+}
+.admin-order { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.admin-order-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.admin-order-status {
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 3px 10px; border-radius: var(--radius-pill);
+}
+.status-pendente { background: #fdecd2; color: #8a5a00; }
+.status-pronto { background: #d7f0e0; color: #106b3d; }
+.status-entregue { background: var(--border); color: var(--gray); }
+.admin-order-meta { font-size: 0.78rem; color: var(--gray); margin-bottom: 6px; }
+.admin-order-items { font-size: 0.85rem; margin-bottom: 6px; }
+.admin-order-total { font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.admin-order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .auth-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
 .auth-tab { flex: 1; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-weight: 600; cursor: pointer; color: var(--gray); }
 .auth-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .auth-error { color: #c0392b; font-size: 0.85rem; margin-top: 4px; display: none; }
 .auth-error.show { display: block; }
+.auth-error.success { color: #106b3d; }
+.auth-animais { display: flex; align-items: center; gap: 14px; font-size: 0.88rem; color: var(--gray); padding: 2px 0; }
+.auth-animais-label { font-weight: 600; color: var(--ink); }
+.auth-animais label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.auth-hint { font-size: 0.78rem; color: var(--gray-light); margin-top: -4px; }
+.verify-banner { background: #fef3e0; color: #8a5a00; border-radius: 10px; padding: 12px 14px; font-size: 0.85rem; margin: 10px 0; }
+.verify-banner button { background: none; border: none; color: #8a5a00; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; font-size: 0.85rem; }
+/* Product detail modal */
+.product-thumb, .product-body h3 { cursor: pointer; }
+.product-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15,32,43,0.55); z-index: 85;
+  opacity: 0; visibility: hidden; transition: opacity .2s ease;
+}
+.product-modal-backdrop.open { opacity: 1; visibility: visible; }
+.product-modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%);
+  width: min(560px, 92vw); max-height: 88vh; overflow-y: auto;
+  background: #fff; border-radius: 20px; z-index: 86;
+  opacity: 0; visibility: hidden; transition: opacity .2s ease, transform .2s ease;
+  box-shadow: 0 24px 60px rgba(15,59,96,0.25);
+}
+.product-modal.open { opacity: 1; visibility: visible; transform: translate(-50%, -50%); }
+.product-modal-close {
+  position: absolute; top: 16px; right: 16px; background: #fff; border: 1px solid var(--border);
+  border-radius: 50%; width: 34px; height: 34px; font-size: 1.1rem; cursor: pointer; color: var(--gray); z-index: 2;
+}
+.product-modal-img {
+  height: 260px; background: var(--blue-soft); display: flex; align-items: center; justify-content: center;
+  border-radius: 20px 20px 0 0; overflow: hidden;
+}
+.product-modal-img img { width: 100%; height: 100%; object-fit: contain; padding: 20px; box-sizing: border-box; background: #fff; }
+.product-modal-img svg { width: 80px; height: 80px; color: var(--navy); }
+.product-modal-body { padding: 24px 28px 28px; }
+.product-modal-body h2 { font-size: 1.3rem; margin: 6px 0 10px; }
+.product-modal-desc { color: var(--gray); font-size: 0.92rem; line-height: 1.55; margin-bottom: 18px; }
+@media (max-width: 620px) {
+  .product-modal { width: 100vw; max-height: 100vh; height: 100vh; top: 0; left: 0; transform: none; border-radius: 0; }
+  .product-modal.open { transform: none; }
+  .product-modal-img { border-radius: 0; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -230,6 +309,7 @@
           <button data-species="cao" data-filter="racoes-vet" data-condicao="Mobilidade">Mobilidade articular</button>
           <button data-species="cao" data-filter="racoes-vet" data-condicao="Diabética">Ração diabética</button>
           <button data-species="cao" data-filter="racoes-vet" data-condicao="Hepática">Ração hepática</button>
+          <button data-species="cao" data-filter="racoes-vet" data-condicao="Cardíaca">Ração cardíaca</button>
         </div>
       </div>
 
@@ -274,6 +354,11 @@
   <span id="accountLabel">Entrar</span>
 </button>
 
+<button class="account-btn" id="adminBtn" onclick="openAdmin()" style="display:none;">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+  <span>Admin</span>
+</button>
+
 <button class="cart-fab" onclick="openCart()">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2.4 12.4a2 2 0 002 1.6h8.4a2 2 0 002-1.6L21 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
   Carrinho <span class="count" id="cartCount">0</span>
@@ -289,10 +374,18 @@
   </div>
   <div class="checkout-form open" style="margin-top:0;">
     <input type="text" id="authName" placeholder="O seu nome" style="display:none;">
+    <input type="tel" id="authPhone" placeholder="Telefone / WhatsApp" style="display:none;">
+    <div class="auth-animais" id="authAnimais" style="display:none;">
+      <span class="auth-animais-label">Tem:</span>
+      <label><input type="checkbox" id="authAnimalCao"> Cão</label>
+      <label><input type="checkbox" id="authAnimalGato"> Gato</label>
+    </div>
     <input type="email" id="authEmail" placeholder="E-mail">
     <input type="password" id="authPassword" placeholder="Senha">
+    <div class="auth-hint" id="authPasswordHint" style="display:none;">Mínimo 8 caracteres, com pelo menos uma letra e um número.</div>
     <div class="auth-error" id="authError"></div>
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitAuth()" id="authSubmitBtn">Entrar</button>
+    <button type="button" id="forgotPasswordLink" onclick="submitForgotPassword()" style="background:none; border:none; color:var(--gray); font-size:0.82rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Esqueci-me da senha</button>
   </div>
 </div>
 
@@ -304,10 +397,43 @@
   <div class="cart-total" id="cartTotal" style="display:none;"></div>
   <button class="btn btn-navy" id="goCheckoutBtn" style="display:none; justify-content:center;" onclick="showCheckout()">Pedir para levantar na loja</button>
   <div class="checkout-form" id="checkoutForm">
+    <div class="verify-banner" id="verifyBanner" style="display:none;">
+      Confirme o seu e-mail para poder finalizar a compra.
+      <button onclick="resendVerification()">Reenviar e-mail de confirmação</button>
+    </div>
     <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
-    <button class="btn btn-navy" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
+    <button class="btn btn-navy" id="confirmOrderBtn" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
     <p class="checkout-note">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.</p>
   </div>
+</div>
+
+<div class="product-modal-backdrop" id="productModalBackdrop" onclick="closeProductModal()"></div>
+<div class="product-modal" id="productModal">
+  <button class="product-modal-close" onclick="closeProductModal()">✕</button>
+  <div class="product-modal-img" id="productModalImg"></div>
+  <div class="product-modal-body">
+    <span class="category-tag" id="productModalTag"></span>
+    <h2 id="productModalName"></h2>
+    <p class="product-modal-desc" id="productModalDesc"></p>
+    <div id="productModalSizes"></div>
+    <div class="product-footer">
+      <span class="product-price" id="productModalPrice"></span>
+      <button class="add-btn" id="productModalAddBtn">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="cart-backdrop" id="adminBackdrop" onclick="closeAdmin()"></div>
+<div class="cart-drawer admin-drawer" id="adminDrawer">
+  <button class="cart-close" onclick="closeAdmin()">✕</button>
+  <h2>Administração</h2>
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="adminTabStock" onclick="setAdminTab('stock')">Stock</button>
+    <button class="auth-tab" id="adminTabPedidos" onclick="setAdminTab('pedidos')">Pedidos</button>
+  </div>
+  <input type="text" id="adminStockSearch" placeholder="Pesquisar produto..." style="margin:10px 0; padding:10px 12px; border-radius:10px; border:1px solid var(--border); font-family:var(--font); font-size:0.9rem;" oninput="renderAdminStock()">
+  <div id="adminStockList" class="admin-list"></div>
+  <div id="adminPedidosList" class="admin-list" style="display:none;"></div>
 </div>
 
 <footer class="site">
@@ -318,6 +444,7 @@
   </div>
 </footer>
 
+<script src="produtos-data.js"></script>
 <script>
 // ---------- Firebase setup ----------
 const firebaseConfig = {
@@ -341,9 +468,13 @@ function setAuthMode(mode) {
   document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
   document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
   document.getElementById('authName').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authPhone').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('authAnimais').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('authPasswordHint').style.display = mode === 'register' ? 'block' : 'none';
   document.getElementById('authTitle').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
   document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
-  document.getElementById('authError').classList.remove('show');
+  document.getElementById('forgotPasswordLink').style.display = mode === 'register' ? 'none' : 'block';
+  document.getElementById('authError').classList.remove('show', 'success');
 }
 function openAuth() {
   if (auth.currentUser) { auth.signOut(); return; }
@@ -355,10 +486,21 @@ function closeAuth() {
   document.getElementById('authBackdrop').classList.remove('open');
   pendingCheckout = false;
 }
-function showAuthError(msg) {
+function showAuthError(msg, success) {
   const el = document.getElementById('authError');
   el.textContent = msg;
   el.classList.add('show');
+  el.classList.toggle('success', !!success);
+}
+function submitForgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { showAuthError('Escreva o seu e-mail em cima e clique de novo.'); return; }
+  auth.sendPasswordResetEmail(email).then(() => {
+    showAuthError('E-mail enviado! Verifique a caixa de entrada de ' + email + ' para definir uma nova senha.', true);
+  }).catch(err => showAuthError(traduzErro(err.code)));
+}
+function isStrongPassword(pw) {
+  return pw.length >= 8 && /[A-Za-z]/.test(pw) && /[0-9]/.test(pw);
 }
 function submitAuth() {
   const email = document.getElementById('authEmail').value.trim();
@@ -367,9 +509,29 @@ function submitAuth() {
   if (!email || !password) { showAuthError('Preencha e-mail e senha.'); return; }
   if (authMode === 'register') {
     if (!name) { showAuthError('Preencha o seu nome.'); return; }
+    const phone = document.getElementById('authPhone').value.trim();
+    if (!phone) { showAuthError('Preencha o telefone.'); return; }
+    const temCao = document.getElementById('authAnimalCao').checked;
+    const temGato = document.getElementById('authAnimalGato').checked;
+    if (!temCao && !temGato) { showAuthError('Selecione pelo menos um: Cão ou Gato.'); return; }
+    if (!isStrongPassword(password)) { showAuthError('A senha precisa de pelo menos 8 caracteres, com uma letra e um número.'); return; }
+    const animais = [];
+    if (temCao) animais.push('cao');
+    if (temGato) animais.push('gato');
     auth.createUserWithEmailAndPassword(email, password)
-      .then(cred => cred.user.updateProfile({ displayName: name }))
-      .then(() => { closeAuth(); if (pendingCheckout) showCheckout(); })
+      .then(cred => Promise.all([
+        cred.user.updateProfile({ displayName: name }),
+        db.collection('clientes').doc(cred.user.uid).set({
+          nome: name, email: email, telefone: phone, animais: animais,
+          criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        }),
+        cred.user.sendEmailVerification()
+      ]))
+      .then(() => {
+        closeAuth();
+        alert('Conta criada! Enviámos um e-mail de confirmação para ' + email + '. Precisa de confirmar o e-mail antes de finalizar uma compra.');
+        if (pendingCheckout) showCheckout();
+      })
       .catch(err => showAuthError(traduzErro(err.code)));
   } else {
     auth.signInWithEmailAndPassword(email, password)
@@ -388,95 +550,22 @@ function traduzErro(code) {
   };
   return map[code] || 'Ocorreu um erro. Tente novamente.';
 }
+const ADMIN_EMAIL = 'cvlindaavelha@outlook.com';
 auth.onAuthStateChanged(user => {
   const label = document.getElementById('accountLabel');
+  const adminBtn = document.getElementById('adminBtn');
   if (user) {
     label.textContent = (user.displayName || user.email.split('@')[0]) + ' · Sair';
+    adminBtn.style.display = (user.email === ADMIN_EMAIL) ? 'flex' : 'none';
   } else {
     label.textContent = 'Entrar';
+    adminBtn.style.display = 'none';
+    closeAdmin();
   }
 });
 
 // ---------- Products / cart ----------
-const products = [
-  // Rações (gama normal / loja)
-  { id: 1, species: 'cao', name: "Royal Canin Mini Adult (Cão)", desc: "Para cães adultos de raças pequenas (até 10kg).", sizes: [{label:"2kg", price:19.90},{label:"4kg", price:35.90},{label:"8kg", price:65.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 2, species: 'cao', name: "Royal Canin Medium Adult (Cão)", desc: "Para cães adultos de porte médio (11 a 25kg).", sizes: [{label:"4kg", price:32.90},{label:"10kg", price:74.90},{label:"15kg", price:104.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 3, species: 'cao', name: "Royal Canin Maxi Adult (Cão)", desc: "Para cães adultos de porte grande (26 a 44kg).", sizes: [{label:"4kg", price:34.90},{label:"10kg", price:77.90},{label:"15kg", price:107.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 4, species: 'cao', name: "Royal Canin Mini Puppy (Cão)", desc: "Para cachorros de raças pequenas em crescimento.", sizes: [{label:"2kg", price:21.90},{label:"4kg", price:39.90},{label:"8kg", price:72.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 5, species: 'cao', name: "Royal Canin Medium Puppy (Cão)", desc: "Para cachorros de porte médio em crescimento.", sizes: [{label:"4kg", price:33.90},{label:"10kg", price:76.90},{label:"15kg", price:106.90}], type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 6, species: 'gato', name: "Royal Canin Indoor Sterilised 2kg (Gato)", desc: "Para gatos esterilizados de interior.", price: 22.50, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 7, species: 'gato', name: "Royal Canin Kitten 2kg (Gato)", desc: "Para gatinhos até aos 12 meses.", price: 23.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-  { id: 8, species: 'gato', name: "Royal Canin Persian Adult 2kg (Gato)", desc: "Fórmula específica para gatos Persas adultos.", price: 24.90, type: "racoes", brand: "Royal Canin", icon: "food" },
-
-  // Ownat — gama Grain Free Prime / Just / Author (cão e gato)
-  { id: 17, species: 'gato', name: "Ownat Grain Free Prime Sterilized Fish (Gato)", desc: "Para gatos esterilizados, à base de peixe, sem cereais.", sizes: [{label:"3kg", price:24.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-sterilized-fish-gato.jpg" },
-  { id: 18, species: 'gato', name: "Ownat Author Sterilized Fresh Chicken (Gato)", desc: "Para gatos esterilizados, com frango fresco, grain free.", sizes: [{label:"3kg", price:26.90}], type: "racoes", brand: "Ownat", gama: "Author", icon: "food", img: "produtos/ownat-author-sterilized-chicken-gato.jpg" },
-  { id: 19, species: 'gato', name: "Ownat Author Fresh Oily Fish & Poultry (Gato)", desc: "Para gatos, peixe gordo e aves frescas, low grain.", sizes: [{label:"3kg", price:27.90}], type: "racoes", brand: "Ownat", gama: "Author", icon: "food", img: "produtos/ownat-author-oily-fish-poultry-gato.jpg" },
-  { id: 20, species: 'cao', name: "Ownat Just Grain Free Junior (Cão)", desc: "Para cães em crescimento, todas as raças, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-gf-junior-cao.jpg" },
-  { id: 21, species: 'cao', name: "Ownat Just Grain Free Light (Cão)", desc: "Para cães adultos com tendência para excesso de peso.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-gf-light-cao.jpg" },
-  { id: 22, species: 'gato', name: "Ownat Grain Free Prime Adult Chicken & Turkey (Gato)", desc: "Para gatos adultos, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"8kg", price:59.60}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-gato.jpg" },
-  { id: 23, species: 'cao', name: "Ownat Grain Free Prime Adult Chicken & Turkey (Cão)", desc: "Para cães adultos, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-adult-chicken-turkey-cao.jpg" },
-  { id: 24, species: 'cao', name: "Ownat Grain Free Prime Hair & Skin Care (Cão)", desc: "Para cães, cuidado da pele e pelo, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-hair-skin-care-cao.jpg" },
-  { id: 25, species: 'cao', name: "Ownat Grain Free Prime Junior Chicken & Turkey (Cão)", desc: "Para cachorros, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-junior-chicken-turkey-cao.jpg" },
-  { id: 26, species: 'gato', name: "Ownat Grain Free Prime Kitten (Gato)", desc: "Para gatinhos em crescimento, sem cereais.", sizes: [{label:"1kg", price:12.90},{label:"3kg", price:25.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-kitten-gato.jpg" },
-  { id: 27, species: 'cao', name: "Ownat Grain Free Prime Mini Chicken & Turkey (Cão)", desc: "Para cães de raças pequenas, frango e peru.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-mini-chicken-turkey-cao.jpg" },
-  { id: 28, species: 'cao', name: "Ownat Grain Free Prime Senior Chicken & Turkey (Cão)", desc: "Para cães seniores, frango e peru, sem cereais.", sizes: [{label:"3kg", price:25.90},{label:"12kg", price:76.90}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-senior-chicken-turkey-cao.jpg" },
-  { id: 43, species: 'gato', name: "Ownat Grain Free Prime Sterilized (Gato)", desc: "Para gatos esterilizados, sem cereais.", sizes: [{label:"3kg", price:24.90},{label:"8kg", price:57.30}], type: "racoes", brand: "Ownat", gama: "Prime", icon: "food", img: "produtos/ownat-prime-sterilized-gato.jpg" },
-  { id: 44, species: 'gato', name: "Ownat Just Grain Free Adult Chicken (Gato)", desc: "Para gatos adultos, com frango, sem cereais.", sizes: [{label:"3kg", price:15.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-gato.jpg" },
-  { id: 45, species: 'cao', name: "Ownat Just Grain Free Adult Chicken (Cão)", desc: "Para cães adultos, com frango, sem cereais.", sizes: [{label:"3kg", price:17.90},{label:"14kg", price:65.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-adult-chicken-cao.jpg" },
-  { id: 46, species: 'cao', name: "Ownat Just Grain Free Adult Lamb (Cão)", desc: "Para cães adultos, com cordeiro, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-adult-lamb-cao.jpg" },
-  { id: 47, species: 'cao', name: "Ownat Just Grain Free Pato (Cão)", desc: "Para cães adultos, com pato, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-duck-cao.jpg" },
-  { id: 48, species: 'cao', name: "Ownat Just Grain Free Salmão & Marisco (Cão)", desc: "Para cães adultos, com salmão e marisco, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-salmon-seafood-cao.jpg" },
-  { id: 49, species: 'gato', name: "Ownat Just Grain Free Esterilizado (Gato)", desc: "Para gatos esterilizados, sem cereais.", sizes: [{label:"3kg", price:17.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-sterilized-gato.jpg" },
-  { id: 50, species: 'cao', name: "Ownat Just Grain Free Truta (Cão)", desc: "Para cães adultos, com truta, sem cereais.", sizes: [{label:"3kg", price:18.90},{label:"14kg", price:68.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-trout-cao.jpg" },
-  { id: 51, species: 'gato', name: "Ownat Just Grain Free Esterilizado Peixe (Gato)", desc: "Para gatos esterilizados, com peixe, sem cereais.", sizes: [{label:"3kg", price:17.90}], type: "racoes", brand: "Ownat", gama: "Just", icon: "food", img: "produtos/ownat-just-gf-sterilized-fish-gato.jpg" },
-
-  // Rações Veterinárias (dietas prescritas / gama Care)
-  { id: 9, species: 'cao', name: "Royal Canin Veterinary Renal 2kg (Cão)", desc: "Dieta para apoio à função renal em cães.", price: 28.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Renal" },
-  { id: 10, species: 'ambos', name: "Royal Canin Veterinary Gastrointestinal 2kg", desc: "Dieta para distúrbios digestivos.", price: 26.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva" },
-  { id: 11, species: 'ambos', name: "Royal Canin Veterinary Hypoallergenic 2kg", desc: "Dieta para intolerâncias e alergias alimentares.", price: 29.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Hipoalergénico" },
-  { id: 12, species: 'ambos', name: "Royal Canin Veterinary Urinary S/O 1.5kg", desc: "Dieta para dissolução e prevenção de cálculos urinários.", price: 25.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Urinária" },
-  { id: 13, species: 'ambos', name: "Royal Canin Veterinary Satiety 1.5kg", desc: "Dieta para gestão e controlo de peso.", price: 24.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Peso" },
-  { id: 14, species: 'ambos', name: "Royal Canin Veterinary Diabetic 1.5kg", desc: "Dieta para apoio ao controlo da diabetes.", price: 27.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Diabética" },
-  { id: 15, species: 'ambos', name: "Royal Canin Veterinary Recovery (lata)", desc: "Alimento líquido de alta energia para convalescença.", price: 4.90, type: "racoes-vet", brand: "Royal Canin", icon: "drop" },
-  { id: 16, species: 'ambos', name: "Royal Canin Veterinary Cardiac 2kg", desc: "Dieta de apoio em doenças cardíacas.", price: 29.50, type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Cardíaca" },
-
-  { id: 29, species: 'gato', name: "Ownat Care Renal (Gato)", desc: "Dieta veterinária de apoio à função renal em gatos.", sizes: [{label:"1.5kg", price:29.90},{label:"3kg", price:55.30}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Renal", img: "produtos/ownat-care-renal-gato.png" },
-  { id: 30, species: 'cao', name: "Ownat Care Weight Control (Cão)", desc: "Dieta veterinária para controlo de peso em cães.", sizes: [{label:"3kg", price:26.90},{label:"10kg", price:67.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Peso", img: "produtos/ownat-care-weight-control-cao.webp" },
-  { id: 31, species: 'gato', name: "Ownat Care Weight Control (Gato)", desc: "Dieta veterinária para controlo de peso em gatos.", sizes: [{label:"1.5kg", price:26.90},{label:"3kg", price:49.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Peso", img: "produtos/ownat-care-weight-control-gato.webp" },
-  { id: 32, species: 'gato', name: "Ownat Care Hypoallergenic (Gato)", desc: "Dieta veterinária para alergias e sensibilidades alimentares em gatos.", sizes: [{label:"1.5kg", price:28.90},{label:"3kg", price:53.45}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-care-hypoallergenic-gato.jpg" },
-  { id: 33, species: 'gato', name: "Ownat Grain Free Hypoallergenic Mini Lamb (Gato)", desc: "Fórmula monoproteica de borrego, sem cereais, para gatos sensíveis.", sizes: [{label:"1.5kg", price:27.90},{label:"3kg", price:51.60}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-mini-lamb-gato.jpg" },
-  { id: 34, species: 'cao', name: "Ownat Grain Free Hypoallergenic Iberian Pork (Cão)", desc: "Fórmula monoproteica de porco ibérico, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"12kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-iberian-pork-cao.jpg" },
-  { id: 35, species: 'cao', name: "Ownat Grain Free Hypoallergenic Lamb (Cão)", desc: "Fórmula monoproteica de borrego, sem cereais, para cães sensíveis.", sizes: [{label:"3kg", price:28.90},{label:"12kg", price:72.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Hipoalergénico", img: "produtos/ownat-gf-hypoallergenic-lamb-cao.jpg" },
-  { id: 52, species: 'gato', name: "Ownat Care Urinary (Gato)", desc: "Apoio à saúde do trato urinário em gatos adultos.", sizes: [{label:"1.5kg", price:17.90},{label:"3kg", price:33.10}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Urinária", img: "produtos/ownat-care-urinary-gato.png" },
-  { id: 53, species: 'cao', name: "Ownat Care Mobility (Cão)", desc: "Apoio às articulações em cães adultos, com frango.", sizes: [{label:"3kg", price:13.90},{label:"10kg", price:34.75}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Mobilidade", img: "produtos/ownat-care-mobility-cao.webp" },
-  { id: 54, species: 'cao', name: "Ownat Care Digestive (Cão)", desc: "Apoio à sensibilidade digestiva em cães adultos.", sizes: [{label:"3kg", price:16.90},{label:"10kg", price:42.25}], type: "racoes-vet", brand: "Ownat", gama: "Care", icon: "drop", condicao: "Digestiva", img: "produtos/ownat-care-digestive-cao.webp" },
-
-  // Royal Canin Veterinary (dietas veterinárias para cães)
-  { id: 55, species: 'cao', name: "Royal Canin Veterinary Gastrointestinal (Cão)", desc: "Dieta de apoio digestivo para cães com distúrbios gastrointestinais.", sizes: [{label:"2kg", price:19.09},{label:"7.5kg", price:56.99},{label:"15kg", price:96.99}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva", img: "produtos/royal-canin-vet-gastrointestinal-cao.webp" },
-  { id: 56, species: 'cao', name: "Royal Canin Veterinary Gastrointestinal Low Fat (Cão)", desc: "Dieta de baixo teor de gordura para distúrbios digestivos crónicos.", sizes: [{label:"1.5kg", price:16.39},{label:"6kg", price:48.99},{label:"12kg", price:92.99}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva", img: "produtos/royal-canin-vet-gastrointestinal-low-fat-cao.webp" },
-  { id: 57, species: 'cao', name: "Royal Canin Veterinary Gastrointestinal Low Fat Small Dog (Cão)", desc: "Baixo teor de gordura, para cães de raça pequena com sensibilidade digestiva.", sizes: [{label:"1.5kg", price:18.09},{label:"3.5kg", price:38.79},{label:"8kg", price:77.49}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva", img: "produtos/royal-canin-vet-gastrointestinal-low-fat-small-cao.webp" },
-  { id: 58, species: 'cao', name: "Royal Canin Veterinary Gastrointestinal Moderate Calorie (Cão)", desc: "Dieta digestiva com calorias moderadas, para cães com tendência a ganhar peso.", sizes: [{label:"2kg", price:19.90},{label:"7.5kg", price:56.90},{label:"14kg", price:97.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva", img: "produtos/royal-canin-vet-gastrointestinal-moderate-cao.png" },
-  { id: 59, species: 'cao', name: "Royal Canin Veterinary Gastrointestinal Moderate Calorie Small Dog (Cão)", desc: "Dieta digestiva com calorias moderadas, para cães de raça pequena.", sizes: [{label:"1.5kg", price:19.90},{label:"3.5kg", price:39.90},{label:"8kg", price:79.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Digestiva", img: "produtos/royal-canin-vet-gastrointestinal-moderate-small-cao.webp" },
-  { id: 60, species: 'cao', name: "Royal Canin Veterinary Urinary S/O (Cão)", desc: "Dieta para dissolução e prevenção de cálculos urinários em cães.", sizes: [{label:"2kg", price:20.79},{label:"7.5kg", price:64.99},{label:"13kg", price:95.99}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Urinária", img: "produtos/royal-canin-vet-urinary-so-cao.webp" },
-  { id: 61, species: 'cao', name: "Royal Canin Veterinary Urinary S/O Small Dog (Cão)", desc: "Dieta urinária para cães de raça pequena.", sizes: [{label:"1.5kg", price:22.39},{label:"4kg", price:57.09},{label:"8kg", price:111.99}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Urinária", img: "produtos/royal-canin-vet-urinary-so-small-cao.webp" },
-  { id: 62, species: 'cao', name: "Royal Canin Veterinary Hepatic (Cão)", desc: "Dieta de apoio à função hepática em cães.", sizes: [{label:"1.5kg", price:16.99},{label:"7kg", price:61.99},{label:"12kg", price:105.99}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Hepática", img: "produtos/royal-canin-vet-hepatic-cao.webp" },
-  { id: 63, species: 'cao', name: "Royal Canin Veterinary Renal Early (Cão)", desc: "Dieta de apoio renal para fases iniciais de doença renal crónica.", sizes: [{label:"2kg", price:19.90},{label:"7kg", price:53.90},{label:"14kg", price:97.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Renal", img: "produtos/royal-canin-vet-renal-early-cao.png" },
-  { id: 64, species: 'cao', name: "Royal Canin Veterinary Diabetic (Cão)", desc: "Dieta de apoio ao controlo glicémico em cães diabéticos.", sizes: [{label:"1.5kg", price:15.90},{label:"7kg", price:58.90},{label:"12kg", price:97.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Diabética", img: "produtos/royal-canin-vet-diabetic-cao.webp" },
-  { id: 65, species: 'cao', name: "Royal Canin Veterinary Hypoallergenic (Cão)", desc: "Dieta hipoalergénica para reações adversas a alimentos em cães.", sizes: [{label:"2kg", price:19.90},{label:"7kg", price:54.90},{label:"14kg", price:97.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Hipoalergénico", img: "produtos/royal-canin-vet-hypoallergenic-cao.webp" },
-  { id: 66, species: 'cao', name: "Royal Canin Veterinary Hypoallergenic Small Dog (Cão)", desc: "Dieta hipoalergénica para cães de raça pequena.", sizes: [{label:"1.5kg", price:19.90},{label:"3.5kg", price:39.90},{label:"8kg", price:79.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Hipoalergénico", img: "produtos/royal-canin-vet-hypoallergenic-small-cao.webp" },
-  { id: 67, species: 'cao', name: "Royal Canin Veterinary Satiety Weight Management (Cão)", desc: "Dieta de apoio ao controlo de peso e saciedade em cães.", sizes: [{label:"1.5kg", price:16.90},{label:"6kg", price:49.90},{label:"12kg", price:93.90}], type: "racoes-vet", brand: "Royal Canin", icon: "drop", condicao: "Peso", img: "produtos/royal-canin-vet-satiety-cao.webp" },
-
-  // Farmácia (higiene, prevenção, suplementos)
-  { id: 36, species: 'ambos', name: "Champô Hipoalergénico Veterinário 250ml", desc: "Para peles sensíveis, sem perfume, uso veterinário.", price: 11.90, type: "farmacia", brand: "", icon: "bottle" },
-  { id: 37, species: 'ambos', name: "Champô Dermatológico 250ml", desc: "Ação calmante para peles irritadas ou com dermatite.", price: 13.50, type: "farmacia", brand: "", icon: "bottle" },
-  { id: 38, species: 'ambos', name: "Coleira Desparasitante", desc: "Proteção contínua contra pulgas e carraças, até 8 meses.", price: 16.90, type: "farmacia", brand: "", icon: "collar" },
-  { id: 39, species: 'ambos', name: "Antiparasitário Pipeta (unid.)", desc: "Proteção mensal contra pulgas e carraças.", price: 14.90, type: "farmacia", brand: "", icon: "drop" },
-  { id: 40, species: 'ambos', name: "Suplemento Articulações (60 comp.)", desc: "Glucosamina e condroitina para saúde articular.", price: 21.90, type: "farmacia", brand: "", icon: "drop" },
-  { id: 41, species: 'ambos', name: "Suplemento Calmante (30 comp.)", desc: "Apoio em situações de stress e ansiedade.", price: 18.50, type: "farmacia", brand: "", icon: "drop" },
-  { id: 42, species: 'ambos', name: "Desparasitante Interno (comprimido)", desc: "Desparasitação interna, cães e gatos.", price: 6.90, type: "farmacia", brand: "", icon: "drop" },
-];
+// products vem agora de produtos-data.js (partilhado com admin.html)
 
 const icons = {
   food: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21c4-1 6-4 6-8V4l-3 2M20 21c-4-1-6-4-6-8V4l3 2"/></svg>',
@@ -500,6 +589,135 @@ let currentSearch = '';
 
 function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
 
+// ---- Stock ----
+// liveStock guarda a contagem real vinda do Firestore (coleção 'estoque'),
+// indexada pela mesma chave usada no carrinho: "{id}_{sizeIndex}" ou "{id}" (produtos sem tamanhos).
+// Enquanto o Firestore não responde (ou não existe doc para essa chave ainda),
+// usa-se o valor de fallback definido no próprio catálogo (products[].stock / sizes[].stock).
+let liveStock = {};
+let stockLoaded = false;
+
+function stockKey(id, sizeIdx) { return sizeIdx === null || sizeIdx === undefined ? String(id) : `${id}_${sizeIdx}`; }
+
+function getStock(p, sizeIdx) {
+  const key = stockKey(p.id, sizeIdx);
+  if (Object.prototype.hasOwnProperty.call(liveStock, key)) return liveStock[key];
+  const fallback = Array.isArray(p.sizes) ? p.sizes[sizeIdx].stock : p.stock;
+  return typeof fallback === 'number' ? fallback : Infinity;
+}
+
+function loadStock() {
+  db.collection('estoque').get().then(snap => {
+    snap.forEach(doc => { liveStock[doc.id] = doc.data().qty; });
+    stockLoaded = true;
+    renderProducts();
+    renderCart();
+    renderAdminStock();
+  }).catch(err => {
+    console.error('Não foi possível carregar o stock, a usar valores por defeito do catálogo.', err);
+    stockLoaded = true;
+  });
+}
+
+// ---- Admin ----
+function openAdmin() {
+  if (!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) return;
+  document.getElementById('adminDrawer').classList.add('open');
+  document.getElementById('adminBackdrop').classList.add('open');
+  renderAdminStock();
+  loadAdminPedidos();
+}
+function closeAdmin() {
+  document.getElementById('adminDrawer').classList.remove('open');
+  document.getElementById('adminBackdrop').classList.remove('open');
+}
+function setAdminTab(tab) {
+  document.getElementById('adminTabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('adminTabPedidos').classList.toggle('active', tab === 'pedidos');
+  document.getElementById('adminStockSearch').style.display = tab === 'stock' ? 'block' : 'none';
+  document.getElementById('adminStockList').style.display = tab === 'stock' ? 'block' : 'none';
+  document.getElementById('adminPedidosList').style.display = tab === 'pedidos' ? 'block' : 'none';
+}
+
+function renderAdminStock() {
+  const listEl = document.getElementById('adminStockList');
+  if (!listEl) return;
+  const q = (document.getElementById('adminStockSearch').value || '').trim().toLowerCase();
+  const list = products.filter(p => !q || p.name.toLowerCase().includes(q));
+  listEl.innerHTML = list.map(p => {
+    const hasSizes = Array.isArray(p.sizes);
+    const rows = hasSizes ? p.sizes.map((s, i) => {
+      const key = stockKey(p.id, i);
+      return `
+        <div class="admin-stock-row">
+          <span class="admin-stock-label">${s.label}</span>
+          <input type="number" min="0" step="1" id="stockinput-${key}" value="${getStock(p, i)}">
+          <button class="btn btn-navy" style="padding:8px 14px;" onclick="saveStock(${p.id}, ${i})">Guardar</button>
+        </div>`;
+    }).join('') : `
+        <div class="admin-stock-row">
+          <span class="admin-stock-label">Único</span>
+          <input type="number" min="0" step="1" id="stockinput-${stockKey(p.id)}" value="${getStock(p, null)}">
+          <button class="btn btn-navy" style="padding:8px 14px;" onclick="saveStock(${p.id}, null)">Guardar</button>
+        </div>`;
+    return `
+      <div class="admin-product">
+        <div class="admin-product-name">${p.name}</div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+function saveStock(productId, sizeIdx) {
+  const key = stockKey(productId, sizeIdx);
+  const input = document.getElementById(`stockinput-${key}`);
+  const qty = Math.max(0, parseInt(input.value, 10) || 0);
+  db.collection('estoque').doc(key).set({ qty: qty }, { merge: true }).then(() => {
+    liveStock[key] = qty;
+    renderProducts();
+    renderAdminStock();
+  }).catch(err => alert('Não foi possível guardar o stock: ' + err.message));
+}
+
+function loadAdminPedidos() {
+  const listEl = document.getElementById('adminPedidosList');
+  listEl.innerHTML = '<div class="cart-empty">A carregar pedidos...</div>';
+  db.collection('pedidos').orderBy('criadoEm', 'desc').limit(50).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="cart-empty">Ainda não há pedidos.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const o = doc.data();
+      const itemsText = (o.items || []).map(it => `${it.quantidade}x ${it.nome}`).join(', ');
+      const estado = o.estado || 'pendente';
+      const dataStr = o.criadoEm && o.criadoEm.toDate ? o.criadoEm.toDate().toLocaleString('pt-PT') : '';
+      return `
+        <div class="admin-order">
+          <div class="admin-order-head">
+            <strong>${o.nome || o.email || 'Cliente'}</strong>
+            <span class="admin-order-status status-${estado}">${estado}</span>
+          </div>
+          <div class="admin-order-meta">${o.telefone || ''} · ${o.email || ''} ${dataStr ? '· ' + dataStr : ''}</div>
+          <div class="admin-order-items">${itemsText}</div>
+          <div class="admin-order-total">${(o.total || 0).toFixed(2)}€</div>
+          <div class="admin-order-actions">
+            <button class="btn btn-navy" style="padding:6px 12px;" onclick="setOrderStatus('${doc.id}','pendente')">Pendente</button>
+            <button class="btn btn-navy" style="padding:6px 12px;" onclick="setOrderStatus('${doc.id}','pronto')">Pronto</button>
+            <button class="btn btn-navy" style="padding:6px 12px;" onclick="setOrderStatus('${doc.id}','entregue')">Entregue</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="cart-empty">Erro ao carregar pedidos.</div>';
+    console.error(err);
+  });
+}
+function setOrderStatus(orderId, estado) {
+  db.collection('pedidos').doc(orderId).update({ estado: estado }).then(loadAdminPedidos)
+    .catch(err => alert('Não foi possível atualizar o pedido: ' + err.message));
+}
+
 const categoryLabels = { 'racoes': 'Rações', 'racoes-vet': 'Ração Veterinária', 'farmacia': 'Farmácia' };
 
 function renderProducts() {
@@ -520,27 +738,35 @@ function renderProducts() {
   }
   grid.innerHTML = list.map(p => {
     const hasSizes = Array.isArray(p.sizes);
-    const displayPrice = hasSizes ? p.sizes[0].price : p.price;
+    const stocks = hasSizes ? p.sizes.map((s, i) => getStock(p, i)) : [getStock(p, null)];
+    const totalStock = stocks.reduce((a, b) => a + b, 0);
+    const soldOut = totalStock <= 0;
+    // seleciona por defeito o primeiro tamanho com stock; se todos esgotados, mantém o primeiro
+    const defaultIdx = hasSizes ? Math.max(0, p.sizes.findIndex((_, i) => stocks[i] > 0)) : 0;
+    const displayPrice = hasSizes ? p.sizes[defaultIdx].price : p.price;
     const sizesHtml = hasSizes ? `
         <div class="size-select">
           ${p.sizes.map((s, i) => `
-            <label class="size-opt">
-              <input type="radio" name="size-${p.id}" value="${i}" ${i === 0 ? 'checked' : ''} onchange="updatePrice(${p.id})">
-              <span>${s.label}</span>
+            <label class="size-opt ${stocks[i] <= 0 ? 'out' : ''}">
+              <input type="radio" name="size-${p.id}" value="${i}" ${i === defaultIdx ? 'checked' : ''} ${stocks[i] <= 0 ? 'disabled' : ''} onchange="updatePrice(${p.id})">
+              <span>${s.label}${stocks[i] <= 0 ? ' · esgotado' : ''}</span>
             </label>
           `).join('')}
         </div>` : '';
     return `
     <div class="product-card">
-      <div class="product-thumb">${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : icons[p.icon]}</div>
+      <div class="product-thumb" onclick="openProductModal(${p.id})">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : icons[p.icon]}
+        ${soldOut ? '<span class="soldout-badge">Esgotado</span>' : ''}
+      </div>
       <div class="product-body">
         <span class="category-tag">${p.brand ? (p.brand + (p.gama ? ' · ' + p.gama : '')) : categoryLabels[p.type]}</span>
-        <h3>${p.name}</h3>
+        <h3 onclick="openProductModal(${p.id})">${p.name}</h3>
         <p>${p.desc}</p>
         ${sizesHtml}
         <div class="product-footer">
           <span class="product-price" id="price-${p.id}">${displayPrice.toFixed(2)}€</span>
-          <button class="add-btn" onclick="addToCart(${p.id})">Adicionar</button>
+          <button class="add-btn" id="addbtn-${p.id}" onclick="addToCart(${p.id})" ${stocks[defaultIdx] <= 0 ? 'disabled' : ''}>${stocks[defaultIdx] <= 0 ? 'Esgotado' : 'Adicionar'}</button>
         </div>
       </div>
     </div>
@@ -551,8 +777,82 @@ function renderProducts() {
 function updatePrice(id) {
   const p = products.find(pr => pr.id === id);
   const selected = document.querySelector(`input[name="size-${id}"]:checked`);
-  const size = p.sizes[parseInt(selected.value, 10)];
+  const idx = parseInt(selected.value, 10);
+  const size = p.sizes[idx];
   document.getElementById(`price-${id}`).textContent = size.price.toFixed(2) + '€';
+  const btn = document.getElementById(`addbtn-${id}`);
+  const stock = getStock(p, idx);
+  btn.disabled = stock <= 0;
+  btn.textContent = stock <= 0 ? 'Esgotado' : 'Adicionar';
+}
+
+function openProductModal(id) {
+  const p = products.find(pr => pr.id === id);
+  if (!p) return;
+  document.getElementById('productModalImg').innerHTML = p.img
+    ? `<img src="${p.img}" alt="${p.name}">`
+    : icons[p.icon];
+  document.getElementById('productModalTag').textContent = p.brand ? (p.brand + (p.gama ? ' · ' + p.gama : '')) : categoryLabels[p.type];
+  document.getElementById('productModalName').textContent = p.name;
+  document.getElementById('productModalDesc').textContent = p.long || p.desc;
+  const hasSizes = Array.isArray(p.sizes);
+  const stocks = hasSizes ? p.sizes.map((s, i) => getStock(p, i)) : [getStock(p, null)];
+  const defaultIdx = hasSizes ? Math.max(0, p.sizes.findIndex((_, i) => stocks[i] > 0)) : 0;
+  const sizesEl = document.getElementById('productModalSizes');
+  sizesEl.innerHTML = hasSizes ? `
+    <div class="size-select">
+      ${p.sizes.map((s, i) => `
+        <label class="size-opt ${stocks[i] <= 0 ? 'out' : ''}">
+          <input type="radio" name="modal-size-${p.id}" value="${i}" ${i === defaultIdx ? 'checked' : ''} ${stocks[i] <= 0 ? 'disabled' : ''} onchange="updateModalPrice(${p.id})">
+          <span>${s.label}${stocks[i] <= 0 ? ' · esgotado' : ''}</span>
+        </label>
+      `).join('')}
+    </div>` : '';
+  document.getElementById('productModalPrice').textContent = (hasSizes ? p.sizes[defaultIdx].price : p.price).toFixed(2) + '€';
+  const addBtn = document.getElementById('productModalAddBtn');
+  addBtn.setAttribute('onclick', `addToCartFromModal(${p.id})`);
+  addBtn.disabled = stocks[defaultIdx] <= 0;
+  addBtn.textContent = stocks[defaultIdx] <= 0 ? 'Esgotado' : 'Adicionar';
+  document.getElementById('productModal').classList.add('open');
+  document.getElementById('productModalBackdrop').classList.add('open');
+}
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+  document.getElementById('productModalBackdrop').classList.remove('open');
+}
+function updateModalPrice(id) {
+  const p = products.find(pr => pr.id === id);
+  const selected = document.querySelector(`input[name="modal-size-${id}"]:checked`);
+  const idx = parseInt(selected.value, 10);
+  const size = p.sizes[idx];
+  document.getElementById('productModalPrice').textContent = size.price.toFixed(2) + '€';
+  const stock = getStock(p, idx);
+  const addBtn = document.getElementById('productModalAddBtn');
+  addBtn.disabled = stock <= 0;
+  addBtn.textContent = stock <= 0 ? 'Esgotado' : 'Adicionar';
+}
+function addToCartFromModal(id) {
+  const p = products.find(pr => pr.id === id);
+  let key = String(id);
+  let itemName = p.name;
+  let itemPrice = p.price;
+  let idx = null;
+  if (Array.isArray(p.sizes)) {
+    const selected = document.querySelector(`input[name="modal-size-${id}"]:checked`);
+    idx = selected ? parseInt(selected.value, 10) : 0;
+    const size = p.sizes[idx];
+    key = `${id}_${idx}`;
+    itemName = `${p.name} (${size.label})`;
+    itemPrice = size.price;
+  }
+  const stock = getStock(p, idx);
+  const currentQty = cart[key] ? cart[key].qty : 0;
+  if (currentQty + 1 > stock) { alert('Sem mais stock disponível deste produto.'); return; }
+  if (!cart[key]) cart[key] = { name: itemName, price: itemPrice, qty: 0 };
+  cart[key].qty += 1;
+  saveCart();
+  renderCart();
+  closeProductModal();
 }
 
 function addToCart(id) {
@@ -560,14 +860,18 @@ function addToCart(id) {
   let key = String(id);
   let itemName = p.name;
   let itemPrice = p.price;
+  let idx = null;
   if (Array.isArray(p.sizes)) {
     const selected = document.querySelector(`input[name="size-${id}"]:checked`);
-    const idx = selected ? parseInt(selected.value, 10) : 0;
+    idx = selected ? parseInt(selected.value, 10) : 0;
     const size = p.sizes[idx];
     key = `${id}_${idx}`;
     itemName = `${p.name} (${size.label})`;
     itemPrice = size.price;
   }
+  const stock = getStock(p, idx);
+  const currentQty = cart[key] ? cart[key].qty : 0;
+  if (currentQty + 1 > stock) { alert('Sem mais stock disponível deste produto.'); return; }
   if (!cart[key]) cart[key] = { name: itemName, price: itemPrice, qty: 0 };
   cart[key].qty += 1;
   saveCart();
@@ -575,6 +879,13 @@ function addToCart(id) {
 }
 function changeQty(key, delta) {
   if (!cart[key]) return;
+  if (delta > 0) {
+    const parts = key.split('_');
+    const p = products.find(pr => pr.id === parseInt(parts[0], 10));
+    const idx = parts.length > 1 ? parseInt(parts[1], 10) : null;
+    const stock = p ? getStock(p, idx) : Infinity;
+    if (cart[key].qty + delta > stock) { alert('Sem mais stock disponível deste produto.'); return; }
+  }
   cart[key].qty += delta;
   if (cart[key].qty <= 0) delete cart[key];
   saveCart();
@@ -631,20 +942,76 @@ function showCheckout() {
     openAuth();
     return;
   }
+  const user = auth.currentUser;
+  const verifyBanner = document.getElementById('verifyBanner');
+  const confirmBtn = document.getElementById('confirmOrderBtn');
+  const emailVerified = user.emailVerified;
+  verifyBanner.style.display = emailVerified ? 'none' : 'block';
+  confirmBtn.disabled = !emailVerified;
+  confirmBtn.style.opacity = emailVerified ? '1' : '0.5';
+  if (!document.getElementById('ckPhone').value) {
+    db.collection('clientes').doc(user.uid).get().then(doc => {
+      if (doc.exists && doc.data().telefone) document.getElementById('ckPhone').value = doc.data().telefone;
+    }).catch(() => {});
+  }
   document.getElementById('checkoutForm').classList.add('open');
   openCart();
 }
+function resendVerification() {
+  const user = auth.currentUser;
+  if (!user) return;
+  user.sendEmailVerification().then(() => {
+    alert('E-mail de confirmação reenviado para ' + user.email + '.');
+  }).catch(err => alert('Não foi possível reenviar: ' + err.message));
+}
+function getFallbackStockByKey(key) {
+  const parts = key.split('_');
+  const id = parseInt(parts[0], 10);
+  const p = products.find(pr => pr.id === id);
+  if (!p) return Infinity;
+  if (parts.length > 1) {
+    const idx = parseInt(parts[1], 10);
+    return (p.sizes && p.sizes[idx] && typeof p.sizes[idx].stock === 'number') ? p.sizes[idx].stock : Infinity;
+  }
+  return typeof p.stock === 'number' ? p.stock : Infinity;
+}
+
+function decrementStockForCart(cartSnapshot) {
+  const keys = Object.keys(cartSnapshot);
+  if (keys.length === 0) return Promise.resolve();
+  return db.runTransaction(tx => {
+    const refs = keys.map(k => db.collection('estoque').doc(k));
+    return Promise.all(refs.map(r => tx.get(r))).then(snaps => {
+      snaps.forEach((snap, i) => {
+        const key = keys[i];
+        const orderedQty = cartSnapshot[key].qty;
+        const currentQty = snap.exists ? snap.data().qty : getFallbackStockByKey(key);
+        const newQty = Math.max(0, currentQty - orderedQty);
+        tx.set(refs[i], { qty: newQty }, { merge: true });
+      });
+    });
+  }).then(() => {
+    keys.forEach(key => {
+      const orderedQty = cartSnapshot[key].qty;
+      const current = Object.prototype.hasOwnProperty.call(liveStock, key) ? liveStock[key] : getFallbackStockByKey(key);
+      liveStock[key] = Math.max(0, current - orderedQty);
+    });
+  });
+}
+
 function submitOrder() {
   const phone = document.getElementById('ckPhone').value.trim();
   const user = auth.currentUser;
   if (!user) { showCheckout(); return; }
+  if (!user.emailVerified) { alert('Precisa de confirmar o seu e-mail antes de finalizar a compra. Verifique a caixa de entrada, ou use o botão "Reenviar e-mail de confirmação".'); return; }
   if (!phone) { alert('Por favor preencha o telefone.'); return; }
+  const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
     return { nome: item.name, preco: item.price, quantidade: item.qty };
   });
   const total = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
-  db.collection('pedidos').add({
+  decrementStockForCart(cartSnapshot).then(() => db.collection('pedidos').add({
     uid: user.uid,
     nome: user.displayName || '',
     email: user.email,
@@ -653,7 +1020,7 @@ function submitOrder() {
     total: total,
     estado: 'pendente',
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+  })).then(() => {
     const itemsText = items.map(it => `${it.quantidade}x ${it.nome} — ${(it.preco * it.quantidade).toFixed(2)}€`).join('\n');
     emailjs.send('service_309ip3s', 'template_9enl1od', {
       from_name: user.displayName || user.email,
@@ -667,6 +1034,8 @@ function submitOrder() {
     saveCart();
     renderCart();
     closeCart();
+    renderProducts();
+    renderAdminStock();
   }).catch(err => {
     alert('Não foi possível enviar o pedido. Tente novamente. (' + err.message + ')');
   });
@@ -753,6 +1122,7 @@ clearSearchBtn.addEventListener('click', () => {
 
 renderProducts();
 renderCart();
+loadStock();
 </script>
 </body>
 </html>
