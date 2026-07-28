@@ -73,6 +73,7 @@
   .stock-row .stock-saved.show { opacity: 1; }
 
   .stock-import-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .stock-bulk-box { background: #fef3e0; border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
   .stock-import-title { font-weight: 700; color: var(--navy); margin-bottom: 6px; }
   .stock-import-help { font-size: 0.85rem; color: var(--gray); margin-bottom: 14px; }
   .stock-import-actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -130,6 +131,12 @@
     </div>
 
     <div id="stockPanel" style="display:none;">
+      <div class="stock-bulk-box">
+        <div class="stock-import-title">Loja ainda em construção?</div>
+        <p class="stock-import-help">Marca todos os produtos como sem stock de uma só vez, para que ninguém consiga comprar enquanto ainda estás a preparar o site. Podes repor tudo depois, produto a produto, ou usar a importação de entregas em baixo.</p>
+        <button class="btn btn-outline-navy" onclick="markAllOutOfStock()">Marcar tudo sem stock (0)</button>
+        <div id="bulkStockResult"></div>
+      </div>
       <div class="stock-import-box">
         <div class="stock-import-title">Atualizar stock de uma entrega</div>
         <p class="stock-import-help">Descarrega o modelo, preenche a coluna "Quantidade Recebida" com o que chegou, e importa de volta. As quantidades somam ao stock atual — não substituem.</p>
@@ -371,6 +378,37 @@ function renderStock() {
         ${rows}
       </div>`;
   }).join('');
+}
+
+function markAllOutOfStock() {
+  if (!confirm('Isto vai marcar TODOS os produtos e tamanhos como sem stock (0). Tens a certeza?')) return;
+  const resultEl = document.getElementById('bulkStockResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A atualizar...</div>';
+  const keys = [];
+  products.forEach(p => {
+    if (Array.isArray(p.sizes)) {
+      p.sizes.forEach((s, i) => keys.push(stockKey(p.id, i)));
+    } else {
+      keys.push(stockKey(p.id, null));
+    }
+  });
+  // Firestore batches têm um limite de 500 operações; dividimos em grupos de 400 por segurança.
+  const chunks = [];
+  for (let i = 0; i < keys.length; i += 400) chunks.push(keys.slice(i, i + 400));
+  const writeChunk = chunk => {
+    const batch = db.batch();
+    chunk.forEach(key => batch.set(db.collection('estoque').doc(key), { qty: 0 }, { merge: true }));
+    return batch.commit();
+  };
+  chunks.reduce((p, chunk) => p.then(() => writeChunk(chunk)), Promise.resolve())
+    .then(() => {
+      keys.forEach(key => { liveStock[key] = 0; });
+      renderStock();
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="ok">${keys.length} tamanhos marcados como sem stock.</span></div>`;
+    })
+    .catch(err => {
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro: ${err.message}</span></div>`;
+    });
 }
 
 function saveStock(productId, sizeIdx) {
