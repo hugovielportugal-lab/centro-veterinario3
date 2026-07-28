@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestão de Pedidos | Centro Veterinário Linda-a-Velha</title>
+<title>Gestão | Centro Veterinário Linda-a-Velha</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,6 +19,9 @@
   .order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
   .order-client { font-weight: 700; color: var(--ink); }
   .order-meta { font-size: 0.85rem; color: var(--gray); }
+  .order-meta a { color: var(--gray); text-decoration: underline; }
+  .order-meta a.contact-wa { color: #1e7a3d; font-weight: 600; text-decoration: none; }
+  .order-meta a.contact-wa:hover { text-decoration: underline; }
   .status-badge { padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 700; }
   .status-pendente { background: #fef3e0; color: #b8720a; }
   .status-pronto { background: #e3f3e8; color: #1e7a3d; }
@@ -39,12 +42,40 @@
   .filter-bar button { padding: 9px 18px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.88rem; cursor: pointer; color: var(--gray); }
   .filter-bar button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 
+  .main-tabs { display: flex; gap: 10px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .main-tabs button {
+    padding: 12px 4px; margin-right: 22px; border: none; background: none; cursor: pointer;
+    font-weight: 700; font-size: 1rem; color: var(--gray); border-bottom: 3px solid transparent; margin-bottom: -1px;
+  }
+  .main-tabs button.active { color: var(--navy); border-bottom-color: var(--navy); }
+
   .empty-state { text-align: center; color: var(--gray); padding: 60px 20px; }
-  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+  /* Histórico do cliente */
+  .history-toggle { background: none; border: none; color: var(--navy); font-size: 0.82rem; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 8px; }
+  .history-panel { display: none; margin-top: 10px; padding: 12px; background: var(--bg-alt); border-radius: 10px; }
+  .history-panel.open { display: block; }
+  .history-summary { font-size: 0.82rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .history-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--gray); padding: 4px 0; border-bottom: 1px dashed var(--border); }
+  .history-row:last-child { border-bottom: none; }
+
+  /* Stock */
+  .stock-search { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; font-family: var(--font); font-size: 0.92rem; box-sizing: border-box; }
+  .stock-product { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 20px; margin-bottom: 12px; }
+  .stock-product-name { font-weight: 700; font-size: 0.92rem; color: var(--navy); margin-bottom: 10px; }
+  .stock-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .stock-row:last-child { margin-bottom: 0; }
+  .stock-label { width: 70px; font-size: 0.85rem; color: var(--gray); flex-shrink: 0; }
+  .stock-row input[type="number"] { width: 80px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); }
+  .stock-row button { padding: 7px 16px; border-radius: var(--radius-pill); border: none; background: var(--navy); color: #fff; font-weight: 600; font-size: 0.82rem; cursor: pointer; }
+  .stock-row .stock-saved { font-size: 0.78rem; color: #1e7a3d; font-weight: 600; opacity: 0; transition: opacity .2s ease; }
+  .stock-row .stock-saved.show { opacity: 1; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="produtos-data.js"></script>
 </head>
 <body>
 
@@ -59,7 +90,7 @@
 <div class="admin-wrap">
 
   <div class="admin-login" id="loginBox">
-    <h2>Gestão de Pedidos</h2>
+    <h2>Gestão</h2>
     <p>Acesso restrito à equipa do Centro Veterinário Linda-a-Velha.</p>
     <div class="admin-error" id="loginError"></div>
     <input type="email" id="adminEmail" placeholder="E-mail" value="cvlindaavelha@outlook.com">
@@ -69,16 +100,29 @@
 
   <div id="panel" style="display:none;">
     <div class="top-actions">
-      <h1 style="margin:0; font-size:1.6rem;">Pedidos</h1>
+      <h1 style="margin:0; font-size:1.6rem;">Gestão</h1>
       <button class="btn btn-outline-navy" onclick="auth.signOut()">Sair</button>
     </div>
-    <div class="filter-bar">
-      <button class="active" data-f="todos" onclick="setFilter('todos', this)">Todos</button>
-      <button data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
-      <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
-      <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+
+    <div class="main-tabs">
+      <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
+      <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
     </div>
-    <div id="ordersList"></div>
+
+    <div id="pedidosPanel">
+      <div class="filter-bar">
+        <button class="active" data-f="todos" onclick="setFilter('todos', this)">Todos</button>
+        <button data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
+        <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
+        <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+
+    <div id="stockPanel" style="display:none;">
+      <input type="text" class="stock-search" id="stockSearch" placeholder="Pesquisar produto..." oninput="renderStock()">
+      <div id="stockList"></div>
+    </div>
   </div>
 
 </div>
@@ -99,6 +143,7 @@ const db = firebase.firestore();
 const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
 let allOrders = [];
 let currentFilter = 'todos';
+let openHistoryFor = null; // id do pedido cujo histórico está aberto
 
 function doLogin() {
   const email = document.getElementById('adminEmail').value.trim();
@@ -124,12 +169,22 @@ auth.onAuthStateChanged(user => {
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('panel').style.display = 'block';
     loadOrders();
+    loadStock();
   } else {
     document.getElementById('loginBox').style.display = 'block';
     document.getElementById('panel').style.display = 'none';
   }
 });
 
+// ---------- Navegação principal ----------
+function setMainTab(tab) {
+  document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
+  document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
+  document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
+}
+
+// ---------- Pedidos ----------
 function loadOrders() {
   db.collection('pedidos').orderBy('criadoEm', 'desc').onSnapshot(snap => {
     allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -149,6 +204,27 @@ function setFilter(f, btn) {
 
 function statusLabel(s) {
   return { pendente: 'Pendente', pronto: 'Pronto para levantar', entregue: 'Entregue' }[s] || s;
+}
+
+// Formata um telefone português (ou já internacional) num link wa.me
+function waLink(phone) {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return null;
+  const withCountry = digits.length <= 9 ? '351' + digits : digits;
+  return 'https://wa.me/' + withCountry;
+}
+
+// Devolve os pedidos anteriores do mesmo cliente (por uid, com fallback para e-mail), mais antigos que o pedido atual
+function getCustomerHistory(order) {
+  return allOrders.filter(o =>
+    o.id !== order.id &&
+    ((order.uid && o.uid === order.uid) || (!order.uid && o.email === order.email))
+  );
+}
+
+function toggleHistory(orderId) {
+  openHistoryFor = openHistoryFor === orderId ? null : orderId;
+  renderOrders();
 }
 
 function renderOrders() {
@@ -176,17 +252,40 @@ function renderOrders() {
       actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>`;
     }
 
+    const wa = waLink(o.telefone);
+    const contactHtml = `
+      ${o.email ? `<a href="mailto:${o.email}">${o.email}</a>` : ''}
+      ${o.telefone ? ' · ' + (wa ? `<a class="contact-wa" href="${wa}" target="_blank" rel="noopener">💬 ${o.telefone}</a>` : o.telefone) : ' · sem telefone'}
+      · ${data}
+    `;
+
+    const history = getCustomerHistory(o);
+    const historyOpen = openHistoryFor === o.id;
+    const historyTotal = history.reduce((s, h) => s + (h.total || 0), 0);
+    const historyHtml = history.length === 0 ? '' : `
+      <button class="history-toggle" onclick="toggleHistory('${o.id}')">${historyOpen ? 'Esconder' : 'Ver'} histórico deste cliente (${history.length} pedido${history.length > 1 ? 's' : ''} anterior${history.length > 1 ? 'es' : ''})</button>
+      <div class="history-panel ${historyOpen ? 'open' : ''}">
+        <div class="history-summary">${history.length} pedido${history.length > 1 ? 's' : ''} anterior${history.length > 1 ? 'es' : ''} · ${historyTotal.toFixed(2)}€ no total</div>
+        ${history.map(h => {
+          const hData = h.criadoEm ? h.criadoEm.toDate().toLocaleDateString('pt-PT') : '—';
+          const hItems = (h.items || []).map(it => `${it.quantidade}x ${it.nome}`).join(', ');
+          return `<div class="history-row"><span>${hData} — ${hItems}</span><span>${(h.total || 0).toFixed(2)}€</span></div>`;
+        }).join('')}
+      </div>
+    `;
+
     return `
       <div class="order-card">
         <div class="order-top">
           <div>
             <div class="order-client">${o.nome || o.email}</div>
-            <div class="order-meta">${o.email} · ${o.telefone || 'sem telefone'} · ${data}</div>
+            <div class="order-meta">${contactHtml}</div>
           </div>
           <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
         </div>
         <div class="order-items">${itemsHtml}</div>
         <div class="order-total">Total: ${(o.total || 0).toFixed(2)}€</div>
+        ${historyHtml}
         <div class="order-actions">${actions}</div>
       </div>
     `;
@@ -195,6 +294,73 @@ function renderOrders() {
 
 function updateStatus(id, novoEstado) {
   db.collection('pedidos').doc(id).update({ estado: novoEstado });
+}
+
+// ---------- Stock ----------
+// Mesma lógica/chaves da loja.html: "{id}_{sizeIndex}" para produtos com tamanhos, "{id}" para os restantes.
+let liveStock = {};
+
+function stockKey(id, sizeIdx) { return sizeIdx === null || sizeIdx === undefined ? String(id) : `${id}_${sizeIdx}`; }
+
+function getStock(p, sizeIdx) {
+  const key = stockKey(p.id, sizeIdx);
+  if (Object.prototype.hasOwnProperty.call(liveStock, key)) return liveStock[key];
+  const fallback = Array.isArray(p.sizes) ? p.sizes[sizeIdx].stock : p.stock;
+  return typeof fallback === 'number' ? fallback : 0;
+}
+
+function loadStock() {
+  db.collection('estoque').get().then(snap => {
+    snap.forEach(doc => { liveStock[doc.id] = doc.data().qty; });
+    renderStock();
+  }).catch(err => console.error('Não foi possível carregar o stock.', err));
+}
+
+function renderStock() {
+  const listEl = document.getElementById('stockList');
+  if (!listEl) return;
+  const q = (document.getElementById('stockSearch').value || '').trim().toLowerCase();
+  const list = products.filter(p => !q || p.name.toLowerCase().includes(q));
+  if (list.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">Sem produtos para esta pesquisa.</div>';
+    return;
+  }
+  listEl.innerHTML = list.map(p => {
+    const hasSizes = Array.isArray(p.sizes);
+    const rows = hasSizes ? p.sizes.map((s, i) => {
+      const key = stockKey(p.id, i);
+      return `
+        <div class="stock-row">
+          <span class="stock-label">${s.label}</span>
+          <input type="number" min="0" step="1" id="stockinput-${key}" value="${getStock(p, i)}">
+          <button onclick="saveStock(${p.id}, ${i})">Guardar</button>
+          <span class="stock-saved" id="saved-${key}">Guardado ✓</span>
+        </div>`;
+    }).join('') : `
+        <div class="stock-row">
+          <span class="stock-label">Único</span>
+          <input type="number" min="0" step="1" id="stockinput-${stockKey(p.id)}" value="${getStock(p, null)}">
+          <button onclick="saveStock(${p.id}, null)">Guardar</button>
+          <span class="stock-saved" id="saved-${stockKey(p.id)}">Guardado ✓</span>
+        </div>`;
+    return `
+      <div class="stock-product">
+        <div class="stock-product-name">${p.name}</div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+function saveStock(productId, sizeIdx) {
+  const key = stockKey(productId, sizeIdx);
+  const input = document.getElementById(`stockinput-${key}`);
+  const qty = Math.max(0, parseInt(input.value, 10) || 0);
+  db.collection('estoque').doc(key).set({ qty: qty }, { merge: true }).then(() => {
+    liveStock[key] = qty;
+    const savedEl = document.getElementById(`saved-${key}`);
+    savedEl.classList.add('show');
+    setTimeout(() => savedEl.classList.remove('show'), 1800);
+  }).catch(err => alert('Não foi possível guardar o stock: ' + err.message));
 }
 </script>
 
