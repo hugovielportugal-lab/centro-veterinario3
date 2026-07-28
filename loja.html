@@ -1078,6 +1078,13 @@ function submitOrder() {
       order_items: itemsText,
       order_total: total.toFixed(2)
     }).catch(err => console.error('Falha ao enviar notificação por e-mail:', err));
+    // E-mail de confirmação para o CLIENTE
+    emailjs.send('service_309ip3s', 'template_osog3af', {
+      to_email: user.email,
+      to_name: user.displayName || user.email,
+      order_items: itemsText,
+      order_total: total.toFixed(2)
+    }).catch(err => console.error('Falha ao enviar e-mail de confirmação ao cliente:', err));
     alert('Pedido enviado! Vamos avisar-vos quando estiver pronto para levantamento.');
     cart = {};
     saveCart();
