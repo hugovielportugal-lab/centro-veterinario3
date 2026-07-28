@@ -71,10 +71,20 @@
   .stock-row button { padding: 7px 16px; border-radius: var(--radius-pill); border: none; background: var(--navy); color: #fff; font-weight: 600; font-size: 0.82rem; cursor: pointer; }
   .stock-row .stock-saved { font-size: 0.78rem; color: #1e7a3d; font-weight: 600; opacity: 0; transition: opacity .2s ease; }
   .stock-row .stock-saved.show { opacity: 1; }
+
+  .stock-import-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .stock-import-title { font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .stock-import-help { font-size: 0.85rem; color: var(--gray); margin-bottom: 14px; }
+  .stock-import-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stock-import-result { margin-top: 14px; font-size: 0.85rem; }
+  .stock-import-result .ok { color: #1e7a3d; font-weight: 600; }
+  .stock-import-result .warn { color: #b8720a; font-weight: 600; margin-top: 6px; }
+  .stock-import-result ul { margin: 6px 0 0 18px; color: var(--gray); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="produtos-data.js"></script>
 </head>
 <body>
@@ -120,6 +130,18 @@
     </div>
 
     <div id="stockPanel" style="display:none;">
+      <div class="stock-import-box">
+        <div class="stock-import-title">Atualizar stock de uma entrega</div>
+        <p class="stock-import-help">Descarrega o modelo, preenche a coluna "Quantidade Recebida" com o que chegou, e importa de volta. As quantidades somam ao stock atual — não substituem.</p>
+        <div class="stock-import-actions">
+          <button class="btn btn-outline-navy" onclick="downloadStockTemplate()">Descarregar modelo (Excel)</button>
+          <label class="btn btn-navy" style="cursor:pointer;">
+            Importar ficheiro
+            <input type="file" id="stockImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleStockImport(event)">
+          </label>
+        </div>
+        <div id="stockImportResult"></div>
+      </div>
       <input type="text" class="stock-search" id="stockSearch" placeholder="Pesquisar produto..." oninput="renderStock()">
       <div id="stockList"></div>
     </div>
@@ -361,6 +383,83 @@ function saveStock(productId, sizeIdx) {
     savedEl.classList.add('show');
     setTimeout(() => savedEl.classList.remove('show'), 1800);
   }).catch(err => alert('Não foi possível guardar o stock: ' + err.message));
+}
+
+// ---------- Importar/exportar stock em Excel ----------
+function downloadStockTemplate() {
+  const rows = [['ID', 'Tamanho_Idx', 'Produto', 'Tamanho', 'Stock Atual', 'Quantidade Recebida']];
+  products.forEach(p => {
+    if (Array.isArray(p.sizes)) {
+      p.sizes.forEach((s, i) => {
+        rows.push([p.id, i, p.name, s.label, getStock(p, i), 0]);
+      });
+    } else {
+      rows.push([p.id, '', p.name, 'Único', getStock(p, null), 0]);
+    }
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 6 }, { wch: 10 }, { wch: 42 }, { wch: 12 }, { wch: 12 }, { wch: 18 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Stock');
+  XLSX.writeFile(wb, 'stock-modelo.xlsx');
+}
+
+function handleStockImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const resultEl = document.getElementById('stockImportResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A processar...</div>';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    } catch (err) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não foi possível ler o ficheiro. Confirma que é o modelo descarregado (Excel ou CSV).</span></div>';
+      return;
+    }
+    // A primeira linha é o cabeçalho; ignora-a.
+    const dataRows = rows.slice(1).filter(r => r.length && r[0] !== '');
+    const updates = [];
+    const notFound = [];
+    dataRows.forEach(r => {
+      const id = parseInt(r[0], 10);
+      const sizeIdxRaw = r[1];
+      const sizeIdx = (sizeIdxRaw === '' || sizeIdxRaw === null || sizeIdxRaw === undefined) ? null : parseInt(sizeIdxRaw, 10);
+      const recebida = parseInt(r[5], 10) || 0;
+      const p = products.find(pr => pr.id === id);
+      if (!p || recebida === 0) return;
+      const key = stockKey(id, sizeIdx);
+      const current = getStock(p, sizeIdx);
+      updates.push({ key, newQty: current + recebida, nome: p.name + (sizeIdx !== null && p.sizes ? ' (' + p.sizes[sizeIdx].label + ')' : ''), recebida });
+    });
+
+    if (updates.length === 0) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Nenhuma linha com "Quantidade Recebida" preenchida foi encontrada.</span></div>';
+      return;
+    }
+
+    const batch = db.batch();
+    updates.forEach(u => {
+      batch.set(db.collection('estoque').doc(u.key), { qty: u.newQty }, { merge: true });
+    });
+    batch.commit().then(() => {
+      updates.forEach(u => { liveStock[u.key] = u.newQty; });
+      renderStock();
+      resultEl.innerHTML = `
+        <div class="stock-import-result">
+          <span class="ok">${updates.length} tamanho${updates.length > 1 ? 's' : ''} atualizado${updates.length > 1 ? 's' : ''} com sucesso.</span>
+          <ul>${updates.map(u => `<li>${u.nome}: +${u.recebida} → ${u.newQty}</li>`).join('')}</ul>
+        </div>`;
+    }).catch(err => {
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro ao guardar: ${err.message}</span></div>`;
+    });
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
 }
 </script>
 
