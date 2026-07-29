@@ -1101,8 +1101,22 @@ function aplicarCupom() {
       msgEl.className = 'cart-coupon-msg warn';
       return;
     }
-    appliedCoupon = { codigo: codigo, tipo: c.tipo, valor: c.valor, valorMinimo: c.valorMinimo || 0 };
-    renderCart();
+    const aplicar = () => {
+      appliedCoupon = { codigo: codigo, tipo: c.tipo, valor: c.valor, valorMinimo: c.valorMinimo || 0, umaVezPorCliente: !!c.umaVezPorCliente };
+      renderCart();
+    };
+    if (c.umaVezPorCliente && auth.currentUser) {
+      db.collection('cupons_usados').doc(auth.currentUser.uid + '_' + codigo).get().then(usoDoc => {
+        if (usoDoc.exists) {
+          msgEl.textContent = 'Já usaste este cupão antes — só é válido na primeira vez.';
+          msgEl.className = 'cart-coupon-msg warn';
+        } else {
+          aplicar();
+        }
+      }).catch(() => aplicar());
+    } else {
+      aplicar();
+    }
   }).catch(err => {
     msgEl.textContent = 'Não foi possível validar o código agora. Tenta de novo.';
     msgEl.className = 'cart-coupon-msg warn';
@@ -1194,6 +1208,24 @@ function submitOrder() {
   if (!user) { showCheckout(); return; }
   if (!user.emailVerified) { alert('Precisa de confirmar o seu e-mail antes de finalizar a compra. Verifique a caixa de entrada, ou use o botão "Reenviar e-mail de confirmação".'); return; }
   if (!phone) { alert('Por favor preencha o telefone.'); return; }
+
+  // Verificação final: mesmo que o cupão tenha sido aplicado antes do login, impede reutilização por quem já o usou
+  if (appliedCoupon && appliedCoupon.umaVezPorCliente) {
+    db.collection('cupons_usados').doc(user.uid + '_' + appliedCoupon.codigo).get().then(usoDoc => {
+      if (usoDoc.exists) {
+        alert(`Já usaste o cupão "${appliedCoupon.codigo}" antes — só é válido na primeira vez. Vamos removê-lo do carrinho.`);
+        appliedCoupon = null;
+        renderCart();
+      } else {
+        finalizarSubmitOrder(user, phone);
+      }
+    }).catch(() => finalizarSubmitOrder(user, phone));
+  } else {
+    finalizarSubmitOrder(user, phone);
+  }
+}
+
+function finalizarSubmitOrder(user, phone) {
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
@@ -1203,6 +1235,7 @@ function submitOrder() {
   const discount = calcularDesconto(subtotal, appliedCoupon);
   const total = Math.max(0, subtotal - discount);
   const productIds = [...new Set(Object.keys(cart).map(key => parseInt(key.split('_')[0], 10)))];
+  const cupomUsado = appliedCoupon; // guarda referência, porque appliedCoupon é limpo mais abaixo
   decrementStockForCart(cartSnapshot).then(() => db.collection('pedidos').add({
     uid: user.uid,
     nome: user.displayName || '',
@@ -1210,7 +1243,7 @@ function submitOrder() {
     telefone: phone,
     items: items,
     subtotal: subtotal,
-    cupom: appliedCoupon ? appliedCoupon.codigo : null,
+    cupom: cupomUsado ? cupomUsado.codigo : null,
     desconto: discount,
     total: total,
     estado: 'pendente',
@@ -1222,6 +1255,10 @@ function submitOrder() {
       const ref = db.collection('compras').doc(`${user.uid}_${pid}`);
       batch.set(ref, { uid: user.uid, produtoId: pid, criadoEm: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
     });
+    if (cupomUsado && cupomUsado.umaVezPorCliente) {
+      const cupomRef = db.collection('cupons_usados').doc(`${user.uid}_${cupomUsado.codigo}`);
+      batch.set(cupomRef, { uid: user.uid, codigo: cupomUsado.codigo, criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+    }
     batch.commit().catch(err => console.error('Falha ao registar compra verificada:', err));
     const itemsText = items.map(it => `${it.quantidade}x ${it.nome} — ${(it.preco * it.quantidade).toFixed(2)}€`).join('\n');
     emailjs.send('service_309ip3s', 'template_9enl1od', {

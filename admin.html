@@ -233,6 +233,10 @@
             <input type="date" id="cupomValidade">
           </div>
         </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="cupomUmaVez" style="width:auto;">
+          <label for="cupomUmaVez" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Só pode ser usado uma vez por cliente (ex: cupão de primeira compra)</label>
+        </div>
         <div class="stock-import-actions" style="margin-top:14px;">
           <button class="btn btn-navy" onclick="criarCupom()">Criar cupão</button>
         </div>
@@ -710,6 +714,7 @@ function criarCupom() {
   const valor = parseFloat(document.getElementById('cupomValor').value);
   const valorMinimo = parseFloat(document.getElementById('cupomMinimo').value) || 0;
   const validadeStr = document.getElementById('cupomValidade').value;
+  const umaVezPorCliente = document.getElementById('cupomUmaVez').checked;
   const progressEl = document.getElementById('cupomProgress');
 
   if (!codigo) {
@@ -733,6 +738,7 @@ function criarCupom() {
     valor: valor,
     valorMinimo: valorMinimo,
     ativo: true,
+    umaVezPorCliente: umaVezPorCliente,
     validade: validadeStr ? firebase.firestore.Timestamp.fromDate(new Date(validadeStr + 'T23:59:59')) : null,
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -747,6 +753,7 @@ function criarCupom() {
       document.getElementById('cupomValor').value = '';
       document.getElementById('cupomMinimo').value = '';
       document.getElementById('cupomValidade').value = '';
+      document.getElementById('cupomUmaVez').checked = false;
       loadCupoes();
     });
   }).catch(err => {
@@ -770,11 +777,12 @@ function loadCupoes() {
       const valorTxt = c.tipo === 'percentagem' ? `${c.valor}%` : `${c.valor.toFixed(2)}€`;
       const minimoTxt = c.valorMinimo > 0 ? ` · mínimo ${c.valorMinimo.toFixed(2)}€` : '';
       const validadeTxt = c.validade && c.validade.toDate ? ` · válido até ${c.validade.toDate().toLocaleDateString('pt-PT')}` : '';
+      const umaVezTxt = c.umaVezPorCliente ? ' · só 1x por cliente' : '';
       return `
         <div class="cupom-card ${c.ativo === false ? 'cupom-inativo' : ''}">
           <div>
             <div class="cupom-codigo">${codigo}</div>
-            <div class="cupom-detalhes">${valorTxt} de desconto${minimoTxt}${validadeTxt}${c.ativo === false ? ' · INATIVO' : ''}</div>
+            <div class="cupom-detalhes">${valorTxt} de desconto${minimoTxt}${validadeTxt}${umaVezTxt}${c.ativo === false ? ' · INATIVO' : ''}</div>
           </div>
           <div class="cupom-actions">
             <button onclick="toggleCupomAtivo('${codigo}', ${c.ativo === false})">${c.ativo === false ? 'Ativar' : 'Desativar'}</button>
