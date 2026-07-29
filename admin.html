@@ -85,7 +85,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="produtos-data.js"></script>
 </head>
@@ -169,7 +168,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-emailjs.init({ publicKey: "NJxFDw-frdjZmQFCD" });
 
 const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
 let allOrders = [];
@@ -432,15 +430,15 @@ function checkAndNotifyWaitingList(key) {
     if (snap.empty) return;
     const waiting = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const produtoNome = waiting[0].produtoNome;
-    if (!confirm(`${waiting.length} pessoa(s) pediram para ser avisadas quando "${produtoNome}" voltasse a ter stock. Enviar e-mail agora?`)) return;
-    const sendPromises = waiting.map(w =>
-      emailjs.send('service_309ip3s', 'template_stock_aviso', {
-        to_email: w.email,
-        product_name: w.produtoNome
-      }).then(() => db.collection('avisos_stock').doc(w.id).delete())
-        .catch(err => console.error('Falha ao notificar', w.email, err))
-    );
-    Promise.all(sendPromises).then(() => alert('Notificações enviadas!'));
+    const emails = waiting.map(w => w.email);
+    if (!confirm(`${waiting.length} pessoa(s) pediram para ser avisadas quando "${produtoNome}" voltasse a ter stock.\n\nVamos abrir o teu e-mail com todos os destinatários prontos — só falta clicares em enviar. Continuar?`)) return;
+    const subject = encodeURIComponent(`${produtoNome} já está disponível!`);
+    const body = encodeURIComponent(`Olá!\n\nO produto "${produtoNome}" que pediste para seres avisado(a) já está disponível no Centro Veterinário Linda-a-Velha.\n\nVem levantar quando quiseres!\n\nAté já.`);
+    const mailtoLink = `mailto:?bcc=${emails.join(',')}&subject=${subject}&body=${body}`;
+    window.location.href = mailtoLink;
+    // Assume que o e-mail foi (ou vai ser) enviado e limpa a lista de espera deste produto
+    const deletePromises = waiting.map(w => db.collection('avisos_stock').doc(w.id).delete());
+    Promise.all(deletePromises).catch(err => console.error('Não foi possível limpar a lista de espera:', err));
   }).catch(err => console.error('Não foi possível verificar a lista de espera:', err));
 }
 
