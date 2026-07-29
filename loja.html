@@ -89,6 +89,17 @@
   padding: 8px 16px; font-weight: 600; font-size: 0.85rem; cursor: pointer;
 }
 .add-btn:hover { background: var(--navy-2); }
+.notify-btn {
+  background: #fff; color: var(--navy); border: 1.5px solid var(--navy); border-radius: var(--radius-pill);
+  padding: 7px 14px; font-weight: 600; font-size: 0.78rem; cursor: pointer; white-space: nowrap;
+}
+.notify-btn:hover { background: var(--blue-soft); }
+.notify-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.notify-form input[type="email"] {
+  padding: 7px 10px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font);
+  font-size: 0.82rem; width: 140px;
+}
+.notify-sent { font-size: 0.8rem; color: #106b3d; font-weight: 600; max-width: 180px; }
 /* Floating cart button */
 .cart-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 70;
@@ -437,7 +448,7 @@
     <div id="productModalSizes"></div>
     <div class="product-footer">
       <span class="product-price" id="productModalPrice"></span>
-      <button class="add-btn" id="productModalAddBtn">Adicionar</button>
+      <div id="productModalFooterAction"><button class="add-btn" id="productModalAddBtn">Adicionar</button></div>
     </div>
   </div>
 </div>
@@ -673,7 +684,9 @@ function renderProducts() {
         ${sizesHtml}
         <div class="product-footer">
           <span class="product-price" id="price-${p.id}">${displayPrice.toFixed(2)}€</span>
-          <button class="add-btn" id="addbtn-${p.id}" onclick="addToCart(${p.id})" ${stocks[defaultIdx] <= 0 ? 'disabled' : ''}>${stocks[defaultIdx] <= 0 ? 'Esgotado' : 'Adicionar'}</button>
+          <div id="footeraction-${p.id}">${stocks[defaultIdx] <= 0
+            ? `<button class="notify-btn" id="notifybtn-${p.id}" onclick="showNotifyForm(${p.id}, 'card')">Avisa-me quando chegar</button>`
+            : `<button class="add-btn" id="addbtn-${p.id}" onclick="addToCart(${p.id})">Adicionar</button>`}</div>
         </div>
       </div>
     </div>
@@ -687,10 +700,53 @@ function updatePrice(id) {
   const idx = parseInt(selected.value, 10);
   const size = p.sizes[idx];
   document.getElementById(`price-${id}`).textContent = size.price.toFixed(2) + '€';
-  const btn = document.getElementById(`addbtn-${id}`);
   const stock = getStock(p, idx);
-  btn.disabled = stock <= 0;
-  btn.textContent = stock <= 0 ? 'Esgotado' : 'Adicionar';
+  const container = document.getElementById(`footeraction-${id}`);
+  container.innerHTML = stock <= 0
+    ? `<button class="notify-btn" id="notifybtn-${id}" onclick="showNotifyForm(${id}, 'card')">Avisa-me quando chegar</button>`
+    : `<button class="add-btn" id="addbtn-${id}" onclick="addToCart(${id})">Adicionar</button>`;
+}
+
+function showNotifyForm(id, ctx) {
+  const containerId = ctx === 'modal' ? 'productModalFooterAction' : `footeraction-${id}`;
+  const container = document.getElementById(containerId);
+  const defaultEmail = (auth.currentUser && auth.currentUser.email) || '';
+  container.innerHTML = `
+    <div class="notify-form">
+      <input type="email" id="notifyemail-${ctx}-${id}" placeholder="O teu e-mail" value="${defaultEmail}">
+      <button class="add-btn" onclick="submitNotifyMe(${id}, '${ctx}')">Avisar</button>
+    </div>`;
+}
+
+function submitNotifyMe(id, ctx) {
+  const p = products.find(pr => pr.id === id);
+  const emailInput = document.getElementById(`notifyemail-${ctx}-${id}`);
+  const email = emailInput.value.trim();
+  if (!email || !email.includes('@') || !email.includes('.')) { alert('Escreve um e-mail válido.'); return; }
+  let idx = null;
+  let sizeLabel = '';
+  if (Array.isArray(p.sizes)) {
+    const radioName = ctx === 'modal' ? `modal-size-${id}` : `size-${id}`;
+    const selected = document.querySelector(`input[name="${radioName}"]:checked`);
+    idx = selected ? parseInt(selected.value, 10) : 0;
+    sizeLabel = p.sizes[idx].label;
+  }
+  const key = stockKey(id, idx);
+  const containerId = ctx === 'modal' ? 'productModalFooterAction' : `footeraction-${id}`;
+  const container = document.getElementById(containerId);
+  container.innerHTML = '<div class="notify-sent">A guardar...</div>';
+  db.collection('avisos_stock').add({
+    key: key,
+    produtoId: id,
+    produtoNome: p.name + (sizeLabel ? ` (${sizeLabel})` : ''),
+    email: email,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    container.innerHTML = '<div class="notify-sent">✓ Avisamos-te por e-mail assim que chegar.</div>';
+  }).catch(err => {
+    container.innerHTML = `<button class="notify-btn" onclick="showNotifyForm(${id}, '${ctx}')">Avisa-me quando chegar</button>`;
+    alert('Não foi possível guardar o pedido de aviso: ' + err.message);
+  });
 }
 
 function openProductModal(id) {
@@ -716,10 +772,10 @@ function openProductModal(id) {
       `).join('')}
     </div>` : '';
   document.getElementById('productModalPrice').textContent = (hasSizes ? p.sizes[defaultIdx].price : p.price).toFixed(2) + '€';
-  const addBtn = document.getElementById('productModalAddBtn');
-  addBtn.setAttribute('onclick', `addToCartFromModal(${p.id})`);
-  addBtn.disabled = stocks[defaultIdx] <= 0;
-  addBtn.textContent = stocks[defaultIdx] <= 0 ? 'Esgotado' : 'Adicionar';
+  const footerAction = document.getElementById('productModalFooterAction');
+  footerAction.innerHTML = stocks[defaultIdx] <= 0
+    ? `<button class="notify-btn" id="notifybtn-modal-${p.id}" onclick="showNotifyForm(${p.id}, 'modal')">Avisa-me quando chegar</button>`
+    : `<button class="add-btn" id="productModalAddBtn" onclick="addToCartFromModal(${p.id})">Adicionar</button>`;
   document.getElementById('productModal').classList.add('open');
   document.getElementById('productModalBackdrop').classList.add('open');
 }
@@ -734,9 +790,10 @@ function updateModalPrice(id) {
   const size = p.sizes[idx];
   document.getElementById('productModalPrice').textContent = size.price.toFixed(2) + '€';
   const stock = getStock(p, idx);
-  const addBtn = document.getElementById('productModalAddBtn');
-  addBtn.disabled = stock <= 0;
-  addBtn.textContent = stock <= 0 ? 'Esgotado' : 'Adicionar';
+  const footerAction = document.getElementById('productModalFooterAction');
+  footerAction.innerHTML = stock <= 0
+    ? `<button class="notify-btn" id="notifybtn-modal-${id}" onclick="showNotifyForm(${id}, 'modal')">Avisa-me quando chegar</button>`
+    : `<button class="add-btn" id="productModalAddBtn" onclick="addToCartFromModal(${id})">Adicionar</button>`;
 }
 function addToCartFromModal(id) {
   const p = products.find(pr => pr.id === id);

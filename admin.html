@@ -85,6 +85,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="produtos-data.js"></script>
 </head>
@@ -168,6 +169,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+emailjs.init({ publicKey: "NJxFDw-frdjZmQFCD" });
 
 const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
 let allOrders = [];
@@ -420,7 +422,26 @@ function saveStock(productId, sizeIdx) {
     const savedEl = document.getElementById(`saved-${key}`);
     savedEl.classList.add('show');
     setTimeout(() => savedEl.classList.remove('show'), 1800);
+    if (qty > 0) checkAndNotifyWaitingList(key);
   }).catch(err => alert('Não foi possível guardar o stock: ' + err.message));
+}
+
+// Verifica se há clientes à espera deste produto/tamanho e oferece notificá-los por e-mail
+function checkAndNotifyWaitingList(key) {
+  db.collection('avisos_stock').where('key', '==', key).get().then(snap => {
+    if (snap.empty) return;
+    const waiting = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const produtoNome = waiting[0].produtoNome;
+    if (!confirm(`${waiting.length} pessoa(s) pediram para ser avisadas quando "${produtoNome}" voltasse a ter stock. Enviar e-mail agora?`)) return;
+    const sendPromises = waiting.map(w =>
+      emailjs.send('service_309ip3s', 'template_stock_aviso', {
+        to_email: w.email,
+        product_name: w.produtoNome
+      }).then(() => db.collection('avisos_stock').doc(w.id).delete())
+        .catch(err => console.error('Falha ao notificar', w.email, err))
+    );
+    Promise.all(sendPromises).then(() => alert('Notificações enviadas!'));
+  }).catch(err => console.error('Não foi possível verificar a lista de espera:', err));
 }
 
 // ---------- Importar/exportar stock em Excel ----------
@@ -486,6 +507,7 @@ function handleStockImport(event) {
     });
     batch.commit().then(() => {
       updates.forEach(u => { liveStock[u.key] = u.newQty; });
+      updates.forEach(u => { if (u.newQty > 0) checkAndNotifyWaitingList(u.key); });
       renderStock();
       resultEl.innerHTML = `
         <div class="stock-import-result">
