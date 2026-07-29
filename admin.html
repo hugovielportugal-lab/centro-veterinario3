@@ -81,10 +81,24 @@
   .stock-import-result .ok { color: #1e7a3d; font-weight: 600; }
   .stock-import-result .warn { color: #b8720a; font-weight: 600; margin-top: 6px; }
   .stock-import-result ul { margin: 6px 0 0 18px; color: var(--gray); }
+
+  /* Galeria */
+  .galeria-upload-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .galeria-upload-box input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); margin-top: 10px; margin-bottom: 10px; }
+  .galeria-progress { font-size: 0.85rem; color: var(--gray); margin-top: 10px; }
+  .galeria-progress.ok { color: #1e7a3d; font-weight: 600; }
+  .galeria-progress.warn { color: #c0392b; font-weight: 600; }
+  .galeria-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .galeria-admin-item { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; }
+  .galeria-admin-item img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+  .galeria-admin-item-body { padding: 8px 10px; }
+  .galeria-admin-item-legenda { font-size: 0.8rem; color: var(--gray); margin-bottom: 6px; min-height: 1.1em; }
+  .galeria-admin-item button { width: 100%; padding: 6px 0; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.78rem; cursor: pointer; color: #c0392b; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="produtos-data.js"></script>
 </head>
@@ -119,6 +133,7 @@
       <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
+      <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
     </div>
 
     <div id="pedidosPanel">
@@ -161,6 +176,18 @@
     <div id="avaliacoesPanel" style="display:none;">
       <div id="avaliacoesList"></div>
     </div>
+
+    <div id="galeriaPanel" style="display:none;">
+      <div class="galeria-upload-box">
+        <div class="stock-import-title">Adicionar foto à galeria</div>
+        <p class="stock-import-help">Estas fotos aparecem na loja, numa secção com os vossos clientes e patudos. Escolhe uma imagem e, se quiseres, uma legenda curta.</p>
+        <input type="file" id="galeriaFile" accept="image/*">
+        <input type="text" id="galeriaLegenda" placeholder="Legenda (opcional) — ex: O Bento a aprovar a ração nova">
+        <button class="btn btn-navy" onclick="uploadGaleriaFoto()">Adicionar à galeria</button>
+        <div class="galeria-progress" id="galeriaProgress"></div>
+      </div>
+      <div class="galeria-admin-grid" id="galeriaList"></div>
+    </div>
   </div>
 
 </div>
@@ -177,6 +204,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
 let allOrders = [];
@@ -219,11 +247,14 @@ function setMainTab(tab) {
   document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
+  document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
+  document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'stock') loadWaitingList();
+  if (tab === 'galeria') loadGaleria();
 }
 
 // ---------- Pedidos ----------
@@ -519,6 +550,81 @@ function deleteAvaliacao(id) {
   if (!confirm('Eliminar esta avaliação permanentemente?')) return;
   db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
 }
+
+// ---------- Galeria ----------
+function uploadGaleriaFoto() {
+  const fileInput = document.getElementById('galeriaFile');
+  const legenda = document.getElementById('galeriaLegenda').value.trim();
+  const progressEl = document.getElementById('galeriaProgress');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    progressEl.textContent = 'Escolhe primeiro uma imagem.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  progressEl.textContent = 'A enviar imagem...';
+  progressEl.className = 'galeria-progress';
+
+  const storagePath = 'galeria/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+  const ref = storage.ref(storagePath);
+
+  ref.put(file).then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
+    return db.collection('galeria').add({
+      url: url,
+      storagePath: storagePath,
+      legenda: legenda,
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(() => {
+    progressEl.textContent = 'Foto adicionada com sucesso!';
+    progressEl.className = 'galeria-progress ok';
+    fileInput.value = '';
+    document.getElementById('galeriaLegenda').value = '';
+    loadGaleria();
+  }).catch(err => {
+    progressEl.textContent = 'Erro ao enviar: ' + err.message;
+    progressEl.className = 'galeria-progress warn';
+    console.error(err);
+  });
+}
+
+function loadGaleria() {
+  const listEl = document.getElementById('galeriaList');
+  listEl.innerHTML = '<div class="empty-state">A carregar galeria...</div>';
+  db.collection('galeria').orderBy('criadoEm', 'desc').get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há fotos na galeria.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const g = doc.data();
+      return `
+        <div class="galeria-admin-item">
+          <img src="${g.url}" alt="${g.legenda || 'Foto da galeria'}" loading="lazy">
+          <div class="galeria-admin-item-body">
+            <div class="galeria-admin-item-legenda">${g.legenda || ''}</div>
+            <button onclick="deleteGaleriaFoto('${doc.id}', '${(g.storagePath || '').replace(/'/g, "\\'")}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar galeria.</div>';
+    console.error(err);
+  });
+}
+
+function deleteGaleriaFoto(id, storagePath) {
+  if (!confirm('Eliminar esta foto da galeria?')) return;
+  const cleanup = () => db.collection('galeria').doc(id).delete().then(loadGaleria);
+  if (storagePath) {
+    storage.ref(storagePath).delete().then(cleanup).catch(() => cleanup());
+  } else {
+    cleanup();
+  }
+}
+
 // ---------- Importar/exportar stock em Excel ----------
 function downloadStockTemplate() {
   const rows = [['ID', 'Tamanho_Idx', 'Produto', 'Tamanho', 'Stock Atual', 'Quantidade Recebida']];
