@@ -56,6 +56,18 @@
   cursor: pointer; display: none; line-height: 1; padding: 4px;
 }
 .store-search .clear-search.show { display: block; }
+.cupom-banner {
+  display: none; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: linear-gradient(135deg, var(--navy), var(--teal, #1e7a3d));
+  color: #fff; border-radius: var(--radius-card); padding: 14px 20px; margin-bottom: 22px;
+  text-align: center; font-size: 0.92rem;
+}
+.cupom-banner.show { display: flex; }
+.cupom-banner strong { font-family: var(--font-display); }
+.cupom-banner .cupom-banner-code {
+  background: rgba(255,255,255,0.18); border: 1.5px dashed rgba(255,255,255,0.6);
+  border-radius: var(--radius-pill); padding: 4px 14px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer;
+}
 .no-results { color: var(--gray); text-align: center; padding: 40px 0; grid-column: 1 / -1; }
 .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2,1fr); } }
@@ -324,6 +336,7 @@
 
 <section>
   <div class="wrap">
+    <div class="cupom-banner" id="cupomBanner"></div>
     <div class="store-search">
       <input type="text" id="storeSearch" placeholder="Pesquisar produtos..." autocomplete="off">
       <button class="clear-search" id="clearSearch" aria-label="Limpar pesquisa" type="button">✕</button>
@@ -1378,10 +1391,39 @@ function loadGaleria() {
   }).catch(err => console.error('Não foi possível carregar a galeria:', err));
 }
 
+// ---------- Banner de cupão ativo ----------
+function loadCupomBanner() {
+  db.collection('cupoes').where('ativo', '==', true).get().then(snap => {
+    if (snap.empty) return;
+    const agora = new Date();
+    const validos = snap.docs
+      .map(doc => ({ codigo: doc.id, ...doc.data() }))
+      .filter(c => !c.validade || !c.validade.toDate || c.validade.toDate() >= agora);
+    if (validos.length === 0) return;
+    const c = validos[0];
+    const valorTxt = c.tipo === 'percentagem' ? `${c.valor}%` : `${c.valor.toFixed(2)}€`;
+    const minimoTxt = c.valorMinimo > 0 ? ` em compras acima de ${c.valorMinimo.toFixed(2)}€` : '';
+    const bannerEl = document.getElementById('cupomBanner');
+    bannerEl.innerHTML = `
+      <span>🎁 Usa o código <span class="cupom-banner-code" id="cupomBannerCode" title="Clica para copiar">${c.codigo}</span> e ganha <strong>${valorTxt} de desconto</strong>${minimoTxt}</span>
+    `;
+    bannerEl.classList.add('show');
+    document.getElementById('cupomBannerCode').addEventListener('click', () => {
+      navigator.clipboard.writeText(c.codigo).then(() => {
+        const codeEl = document.getElementById('cupomBannerCode');
+        const original = codeEl.textContent;
+        codeEl.textContent = 'Copiado!';
+        setTimeout(() => { codeEl.textContent = original; }, 1500);
+      }).catch(() => {});
+    });
+  }).catch(err => console.error('Não foi possível carregar o banner de cupão:', err));
+}
+
 renderProducts();
 renderCart();
 loadStock();
 loadGaleria();
+loadCupomBanner();
 </script>
 </body>
 </html>
