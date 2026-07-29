@@ -118,6 +118,7 @@
     <div class="main-tabs">
       <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
+      <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
     </div>
 
     <div id="pedidosPanel">
@@ -131,6 +132,10 @@
     </div>
 
     <div id="stockPanel" style="display:none;">
+      <div class="stock-bulk-box" id="waitingListBox" style="display:none; background:#e3f3e8;">
+        <div class="stock-import-title">Clientes à espera de stock</div>
+        <div id="waitingListContent"></div>
+      </div>
       <div class="stock-bulk-box">
         <div class="stock-import-title">Loja ainda em construção?</div>
         <p class="stock-import-help">Marca todos os produtos como sem stock de uma só vez, para que ninguém consiga comprar enquanto ainda estás a preparar o site. Podes repor tudo depois, produto a produto, ou usar a importação de entregas em baixo.</p>
@@ -151,6 +156,10 @@
       </div>
       <input type="text" class="stock-search" id="stockSearch" placeholder="Pesquisar produto..." oninput="renderStock()">
       <div id="stockList"></div>
+    </div>
+
+    <div id="avaliacoesPanel" style="display:none;">
+      <div id="avaliacoesList"></div>
     </div>
   </div>
 
@@ -209,8 +218,12 @@ auth.onAuthStateChanged(user => {
 function setMainTab(tab) {
   document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
+  document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
+  if (tab === 'avaliacoes') loadAvaliacoes();
+  if (tab === 'stock') loadWaitingList();
 }
 
 // ---------- Pedidos ----------
@@ -425,6 +438,26 @@ function saveStock(productId, sizeIdx) {
 }
 
 // Verifica se há clientes à espera deste produto/tamanho e oferece notificá-los por e-mail
+function loadWaitingList() {
+  const box = document.getElementById('waitingListBox');
+  const content = document.getElementById('waitingListContent');
+  db.collection('avisos_stock').get().then(snap => {
+    if (snap.empty) { box.style.display = 'none'; return; }
+    const byKey = {};
+    snap.docs.forEach(d => {
+      const w = d.data();
+      byKey[w.key] = byKey[w.key] || { produtoNome: w.produtoNome, count: 0 };
+      byKey[w.key].count++;
+    });
+    box.style.display = 'block';
+    content.innerHTML = Object.entries(byKey).map(([key, info]) => `
+      <div class="stock-row" style="justify-content:space-between;">
+        <span class="stock-label" style="width:auto; flex:1;">${info.produtoNome} — ${info.count} pessoa${info.count > 1 ? 's' : ''}</span>
+        <button onclick="checkAndNotifyWaitingList('${key}')">Avisar agora</button>
+      </div>
+    `).join('');
+  }).catch(err => console.error('Não foi possível carregar a lista de espera:', err));
+}
 function checkAndNotifyWaitingList(key) {
   db.collection('avisos_stock').where('key', '==', key).get().then(snap => {
     if (snap.empty) return;
@@ -438,10 +471,54 @@ function checkAndNotifyWaitingList(key) {
     window.location.href = mailtoLink;
     // Assume que o e-mail foi (ou vai ser) enviado e limpa a lista de espera deste produto
     const deletePromises = waiting.map(w => db.collection('avisos_stock').doc(w.id).delete());
-    Promise.all(deletePromises).catch(err => console.error('Não foi possível limpar a lista de espera:', err));
+    Promise.all(deletePromises).then(loadWaitingList).catch(err => console.error('Não foi possível limpar a lista de espera:', err));
   }).catch(err => console.error('Não foi possível verificar a lista de espera:', err));
 }
 
+// ---------- Avaliações ----------
+function renderStarsDisplay(n) {
+  const rounded = Math.round(n);
+  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded);
+}
+function loadAvaliacoes() {
+  const listEl = document.getElementById('avaliacoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar avaliações...</div>';
+  db.collection('avaliacoes').orderBy('criadoEm', 'desc').limit(100).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há avaliações.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const r = doc.data();
+      const p = products.find(pr => pr.id === r.produtoId);
+      const dataStr = r.criadoEm && r.criadoEm.toDate ? r.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${p ? p.name : 'Produto #' + r.produtoId}</div>
+              <div class="order-meta">${r.nome || 'Cliente'} · ${renderStarsDisplay(r.estrelas)} · ${dataStr}${r.oculta ? ' · <strong>OCULTA</strong>' : ''}</div>
+            </div>
+          </div>
+          ${r.comentario ? `<div class="order-items"><div class="order-item-row"><span>${r.comentario}</span></div></div>` : ''}
+          <div class="order-actions">
+            <button onclick="toggleAvaliacaoOculta('${doc.id}', ${!r.oculta})">${r.oculta ? 'Mostrar' : 'Ocultar'}</button>
+            <button onclick="deleteAvaliacao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar avaliações.</div>';
+    console.error(err);
+  });
+}
+function toggleAvaliacaoOculta(id, oculta) {
+  db.collection('avaliacoes').doc(id).update({ oculta: oculta }).then(loadAvaliacoes);
+}
+function deleteAvaliacao(id) {
+  if (!confirm('Eliminar esta avaliação permanentemente?')) return;
+  db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
+}
 // ---------- Importar/exportar stock em Excel ----------
 function downloadStockTemplate() {
   const rows = [['ID', 'Tamanho_Idx', 'Produto', 'Tamanho', 'Stock Atual', 'Quantidade Recebida']];

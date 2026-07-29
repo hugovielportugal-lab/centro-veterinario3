@@ -100,6 +100,28 @@
   font-size: 0.82rem; width: 140px;
 }
 .notify-sent { font-size: 0.8rem; color: #106b3d; font-weight: 600; max-width: 180px; }
+
+/* Avaliações */
+.rating-summary { display: flex; align-items: center; gap: 8px; margin: -4px 0 10px; }
+.stars-display { color: #f5a623; font-size: 1.05rem; letter-spacing: 1px; }
+.rating-count { font-size: 0.82rem; color: var(--gray); }
+.reviews-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+.reviews-title { font-size: 1rem; margin: 0 0 12px; }
+.reviews-loading, .reviews-empty, .reviews-note { font-size: 0.85rem; color: var(--gray); }
+.reviews-note { background: var(--bg-alt); padding: 10px 12px; border-radius: 10px; margin-bottom: 14px; }
+.review-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.review-item:last-child { border-bottom: none; }
+.review-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.review-head strong { font-size: 0.85rem; }
+.review-date { font-size: 0.75rem; color: var(--gray-light); margin-left: auto; }
+.review-comment { font-size: 0.88rem; color: var(--gray); line-height: 1.5; margin: 0; }
+.review-form { background: var(--bg-alt); border-radius: 12px; padding: 14px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
+.review-stars-input { font-size: 1.6rem; color: #f5a623; cursor: pointer; letter-spacing: 2px; }
+.star-pick { cursor: pointer; }
+.review-form textarea {
+  padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font);
+  font-size: 0.88rem; resize: vertical;
+}
 /* Floating cart button */
 .cart-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 70;
@@ -444,12 +466,14 @@
   <div class="product-modal-body">
     <span class="category-tag" id="productModalTag"></span>
     <h2 id="productModalName"></h2>
+    <div class="rating-summary" id="productModalRatingSummary"></div>
     <p class="product-modal-desc" id="productModalDesc"></p>
     <div id="productModalSizes"></div>
     <div class="product-footer">
       <span class="product-price" id="productModalPrice"></span>
       <div id="productModalFooterAction"><button class="add-btn" id="productModalAddBtn">Adicionar</button></div>
     </div>
+    <div class="reviews-section" id="productModalReviews"></div>
   </div>
 </div>
 
@@ -778,11 +802,98 @@ function openProductModal(id) {
     : `<button class="add-btn" id="productModalAddBtn" onclick="addToCartFromModal(${p.id})">Adicionar</button>`;
   document.getElementById('productModal').classList.add('open');
   document.getElementById('productModalBackdrop').classList.add('open');
+  loadReviews(p.id);
 }
 function closeProductModal() {
   document.getElementById('productModal').classList.remove('open');
   document.getElementById('productModalBackdrop').classList.remove('open');
 }
+// ---- Avaliações ----
+function renderStarsDisplay(n) {
+  const rounded = Math.round(n);
+  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded);
+}
+function loadReviews(productId) {
+  const container = document.getElementById('productModalReviews');
+  const summaryEl = document.getElementById('productModalRatingSummary');
+  container.innerHTML = '<p class="reviews-loading">A carregar avaliações...</p>';
+  db.collection('avaliacoes').where('produtoId', '==', productId).orderBy('criadoEm', 'desc').limit(30).get().then(snap => {
+    const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const visible = all.filter(r => !r.oculta);
+    if (visible.length > 0) {
+      const avg = visible.reduce((s, r) => s + r.estrelas, 0) / visible.length;
+      summaryEl.innerHTML = `<span class="stars-display">${renderStarsDisplay(avg)}</span> <span class="rating-count">${avg.toFixed(1)} · ${visible.length} avaliaç${visible.length === 1 ? 'ão' : 'ões'}</span>`;
+    } else {
+      summaryEl.innerHTML = '';
+    }
+    const listHtml = visible.length === 0
+      ? '<p class="reviews-empty">Ainda sem avaliações para este produto.</p>'
+      : visible.map(r => {
+          const dataStr = r.criadoEm && r.criadoEm.toDate ? r.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+          return `
+            <div class="review-item">
+              <div class="review-head"><span class="stars-display">${renderStarsDisplay(r.estrelas)}</span><strong>${r.nome || 'Cliente'}</strong><span class="review-date">${dataStr}</span></div>
+              ${r.comentario ? `<p class="review-comment">${r.comentario}</p>` : ''}
+            </div>`;
+        }).join('');
+    renderReviewFormArea(productId, all).then(formHtml => {
+      container.innerHTML = `<h3 class="reviews-title">Avaliações</h3>${formHtml}<div class="reviews-list">${listHtml}</div>`;
+    });
+  }).catch(err => {
+    console.error('Não foi possível carregar avaliações:', err);
+    container.innerHTML = '';
+  });
+}
+function renderReviewFormArea(productId, allReviews) {
+  const user = auth.currentUser;
+  if (!user) {
+    return Promise.resolve('<p class="reviews-note">Inicia sessão para avaliar este produto (só clientes que já compraram podem avaliar).</p>');
+  }
+  const ownReview = allReviews.find(r => r.uid === user.uid);
+  if (ownReview) {
+    return Promise.resolve('<p class="reviews-note">Já avaliaste este produto. Obrigado pelo teu feedback!</p>');
+  }
+  return db.collection('compras').doc(`${user.uid}_${productId}`).get().then(doc => {
+    if (!doc.exists) {
+      return '<p class="reviews-note">Só clientes que já compraram este produto podem deixar uma avaliação.</p>';
+    }
+    return `
+      <div class="review-form" id="reviewForm-${productId}">
+        <div class="review-stars-input" id="reviewStarsInput-${productId}">
+          ${[1,2,3,4,5].map(n => `<span class="star-pick" data-value="${n}" onclick="setReviewStars(${productId}, ${n})">☆</span>`).join('')}
+        </div>
+        <textarea id="reviewComment-${productId}" placeholder="Escreve um comentário (opcional)" rows="2"></textarea>
+        <button class="btn btn-navy" style="justify-content:center;" onclick="submitReview(${productId})">Publicar avaliação</button>
+      </div>`;
+  });
+}
+function setReviewStars(productId, value) {
+  const widget = document.getElementById(`reviewStarsInput-${productId}`);
+  widget.dataset.value = value;
+  widget.querySelectorAll('.star-pick').forEach(s => {
+    s.textContent = parseInt(s.dataset.value, 10) <= value ? '★' : '☆';
+  });
+}
+function submitReview(productId) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const widget = document.getElementById(`reviewStarsInput-${productId}`);
+  const estrelas = parseInt(widget.dataset.value || '0', 10);
+  if (!estrelas) { alert('Escolhe de 1 a 5 estrelas.'); return; }
+  const comentario = document.getElementById(`reviewComment-${productId}`).value.trim();
+  db.collection('avaliacoes').add({
+    produtoId: productId,
+    uid: user.uid,
+    nome: user.displayName || user.email.split('@')[0],
+    estrelas: estrelas,
+    comentario: comentario,
+    oculta: false,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    loadReviews(productId);
+  }).catch(err => alert('Não foi possível publicar a avaliação: ' + err.message));
+}
+
 function updateModalPrice(id) {
   const p = products.find(pr => pr.id === id);
   const selected = document.querySelector(`input[name="modal-size-${id}"]:checked`);
@@ -975,6 +1086,7 @@ function submitOrder() {
     return { nome: item.name, preco: item.price, quantidade: item.qty };
   });
   const total = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
+  const productIds = [...new Set(Object.keys(cart).map(key => parseInt(key.split('_')[0], 10)))];
   decrementStockForCart(cartSnapshot).then(() => db.collection('pedidos').add({
     uid: user.uid,
     nome: user.displayName || '',
@@ -985,6 +1097,13 @@ function submitOrder() {
     estado: 'pendente',
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
   })).then(() => {
+    // Regista "compra verificada" por produto, para permitir avaliações mais tarde
+    const batch = db.batch();
+    productIds.forEach(pid => {
+      const ref = db.collection('compras').doc(`${user.uid}_${pid}`);
+      batch.set(ref, { uid: user.uid, produtoId: pid, criadoEm: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    });
+    batch.commit().catch(err => console.error('Falha ao registar compra verificada:', err));
     const itemsText = items.map(it => `${it.quantidade}x ${it.nome} — ${(it.preco * it.quantidade).toFixed(2)}€`).join('\n');
     emailjs.send('service_309ip3s', 'template_9enl1od', {
       from_name: user.displayName || user.email,
