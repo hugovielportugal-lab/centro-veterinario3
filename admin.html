@@ -94,6 +94,19 @@
   .galeria-admin-item-body { padding: 8px 10px; }
   .galeria-admin-item-legenda { font-size: 0.8rem; color: var(--gray); margin-bottom: 6px; min-height: 1.1em; }
   .galeria-admin-item button { width: 100%; padding: 6px 0; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.78rem; cursor: pointer; color: #c0392b; }
+
+  /* Cupões */
+  .cupom-form-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .cupom-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .cupom-form-row > div { flex: 1; min-width: 140px; }
+  .cupom-form-row label { display: block; font-size: 0.78rem; color: var(--gray); margin-bottom: 4px; font-weight: 600; }
+  .cupom-form-row input, .cupom-form-row select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); }
+  .cupom-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .cupom-codigo { font-weight: 700; color: var(--navy); font-family: var(--font-display); font-size: 1.05rem; }
+  .cupom-detalhes { font-size: 0.85rem; color: var(--gray); margin-top: 2px; }
+  .cupom-inativo { opacity: 0.55; }
+  .cupom-actions { display: flex; gap: 8px; }
+  .cupom-actions button { padding: 7px 14px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.8rem; cursor: pointer; color: var(--gray); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -133,6 +146,7 @@
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
+      <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
     </div>
 
     <div id="pedidosPanel">
@@ -186,6 +200,45 @@
         <div class="galeria-progress" id="galeriaProgress"></div>
       </div>
       <div class="galeria-admin-grid" id="galeriaList"></div>
+    </div>
+
+    <div id="cupoesPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title">Criar novo cupão</div>
+        <p class="stock-import-help">O código é o que o cliente escreve no carrinho. Fica sempre em maiúsculas.</p>
+        <div class="cupom-form-row">
+          <div>
+            <label>Código</label>
+            <input type="text" id="cupomCodigo" placeholder="ex: BEMVINDO10" style="text-transform:uppercase;">
+          </div>
+          <div>
+            <label>Tipo</label>
+            <select id="cupomTipo">
+              <option value="percentagem">Percentagem (%)</option>
+              <option value="fixo">Valor fixo (€)</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor</label>
+            <input type="number" id="cupomValor" placeholder="ex: 10" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="cupom-form-row">
+          <div>
+            <label>Compra mínima (opcional)</label>
+            <input type="number" id="cupomMinimo" placeholder="0 = sem mínimo" min="0" step="0.01">
+          </div>
+          <div>
+            <label>Validade (opcional)</label>
+            <input type="date" id="cupomValidade">
+          </div>
+        </div>
+        <div class="stock-import-actions" style="margin-top:14px;">
+          <button class="btn btn-navy" onclick="criarCupom()">Criar cupão</button>
+        </div>
+        <div class="galeria-progress" id="cupomProgress"></div>
+      </div>
+      <div id="cupoesList"></div>
     </div>
   </div>
 
@@ -246,13 +299,16 @@ function setMainTab(tab) {
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
   document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
+  document.getElementById('mainTabCupoes').classList.toggle('active', tab === 'cupoes');
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
   document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
+  document.getElementById('cupoesPanel').style.display = tab === 'cupoes' ? 'block' : 'none';
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'stock') loadWaitingList();
   if (tab === 'galeria') loadGaleria();
+  if (tab === 'cupoes') loadCupoes();
 }
 
 // ---------- Pedidos ----------
@@ -645,6 +701,100 @@ function loadGaleria() {
 function deleteGaleriaFoto(id) {
   if (!confirm('Eliminar esta foto da galeria?')) return;
   db.collection('galeria').doc(id).delete().then(loadGaleria);
+}
+
+// ---------- Cupões ----------
+function criarCupom() {
+  const codigo = document.getElementById('cupomCodigo').value.trim().toUpperCase();
+  const tipo = document.getElementById('cupomTipo').value;
+  const valor = parseFloat(document.getElementById('cupomValor').value);
+  const valorMinimo = parseFloat(document.getElementById('cupomMinimo').value) || 0;
+  const validadeStr = document.getElementById('cupomValidade').value;
+  const progressEl = document.getElementById('cupomProgress');
+
+  if (!codigo) {
+    progressEl.textContent = 'Escreve um código.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  if (!valor || valor <= 0) {
+    progressEl.textContent = 'Escreve um valor válido.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  if (tipo === 'percentagem' && valor > 100) {
+    progressEl.textContent = 'Uma percentagem não pode ser superior a 100.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  const dados = {
+    tipo: tipo,
+    valor: valor,
+    valorMinimo: valorMinimo,
+    ativo: true,
+    validade: validadeStr ? firebase.firestore.Timestamp.fromDate(new Date(validadeStr + 'T23:59:59')) : null,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const ref = db.collection('cupoes').doc(codigo);
+  ref.get().then(doc => {
+    if (doc.exists && !confirm(`Já existe um cupão "${codigo}". Queres substituí-lo?`)) return;
+    return ref.set(dados).then(() => {
+      progressEl.textContent = 'Cupão criado com sucesso!';
+      progressEl.className = 'galeria-progress ok';
+      document.getElementById('cupomCodigo').value = '';
+      document.getElementById('cupomValor').value = '';
+      document.getElementById('cupomMinimo').value = '';
+      document.getElementById('cupomValidade').value = '';
+      loadCupoes();
+    });
+  }).catch(err => {
+    progressEl.textContent = 'Erro: ' + err.message;
+    progressEl.className = 'galeria-progress warn';
+    console.error(err);
+  });
+}
+
+function loadCupoes() {
+  const listEl = document.getElementById('cupoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar cupões...</div>';
+  db.collection('cupoes').orderBy('criadoEm', 'desc').get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há cupões criados.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const c = doc.data();
+      const codigo = doc.id;
+      const valorTxt = c.tipo === 'percentagem' ? `${c.valor}%` : `${c.valor.toFixed(2)}€`;
+      const minimoTxt = c.valorMinimo > 0 ? ` · mínimo ${c.valorMinimo.toFixed(2)}€` : '';
+      const validadeTxt = c.validade && c.validade.toDate ? ` · válido até ${c.validade.toDate().toLocaleDateString('pt-PT')}` : '';
+      return `
+        <div class="cupom-card ${c.ativo === false ? 'cupom-inativo' : ''}">
+          <div>
+            <div class="cupom-codigo">${codigo}</div>
+            <div class="cupom-detalhes">${valorTxt} de desconto${minimoTxt}${validadeTxt}${c.ativo === false ? ' · INATIVO' : ''}</div>
+          </div>
+          <div class="cupom-actions">
+            <button onclick="toggleCupomAtivo('${codigo}', ${c.ativo === false})">${c.ativo === false ? 'Ativar' : 'Desativar'}</button>
+            <button onclick="deleteCupom('${codigo}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar cupões.</div>';
+    console.error(err);
+  });
+}
+
+function toggleCupomAtivo(codigo, ativo) {
+  db.collection('cupoes').doc(codigo).update({ ativo: ativo }).then(loadCupoes);
+}
+
+function deleteCupom(codigo) {
+  if (!confirm(`Eliminar o cupão "${codigo}" permanentemente?`)) return;
+  db.collection('cupoes').doc(codigo).delete().then(loadCupoes);
 }
 
 // ---------- Importar/exportar stock em Excel ----------

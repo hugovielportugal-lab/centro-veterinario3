@@ -170,6 +170,15 @@
 .checkout-form.open { display: flex; }
 .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
 .checkout-note { font-size: 0.8rem; color: var(--gray-light); margin-top: 6px; }
+.cart-coupon { display: flex; gap: 8px; margin: 4px 0 6px; }
+.cart-coupon input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.88rem; text-transform: uppercase; box-sizing: border-box; }
+.cart-coupon-msg { font-size: 0.82rem; margin: 0 0 10px; }
+.cart-coupon-msg.ok { color: #1e7a3d; font-weight: 600; }
+.cart-coupon-msg.warn { color: #c0392b; font-weight: 600; }
+.cart-coupon-applied { display: flex; justify-content: space-between; align-items: center; background: #e3f3e8; border-radius: 10px; padding: 10px 14px; margin: 4px 0 6px; font-size: 0.85rem; color: #1e7a3d; font-weight: 600; }
+.cart-coupon-applied button { background: none; border: none; color: #1e7a3d; text-decoration: underline; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
+.cart-subtotal-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--gray); margin-top: 10px; }
+.cart-discount-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: #1e7a3d; font-weight: 600; margin-top: 4px; }
 /* Account / auth */
 .account-btn {
   position: fixed; bottom: 24px; right: 158px; z-index: 70;
@@ -457,6 +466,7 @@
   <button class="cart-close" onclick="closeCart()">✕</button>
   <h2>O seu carrinho</h2>
   <div id="cartItems"></div>
+  <div id="cartCouponArea"></div>
   <div class="cart-total" id="cartTotal" style="display:none;"></div>
   <button class="btn btn-navy" id="goCheckoutBtn" style="display:none; justify-content:center;" onclick="showCheckout()">Pedir para levantar na loja</button>
   <div class="checkout-form" id="checkoutForm">
@@ -637,6 +647,7 @@ const icons = {
 };
 
 let cart = JSON.parse(localStorage.getItem('cvla_cart') || '{}');
+let appliedCoupon = null; // { codigo, tipo, valor, valorMinimo } quando há um cupão válido aplicado
 // Migração de segurança: se o carrinho tiver o formato antigo (id: quantidade em vez de objeto), começa vazio.
 if (Object.values(cart).some(v => typeof v !== 'object')) { cart = {}; }
 let currentFilter = 'todos';
@@ -991,16 +1002,19 @@ function renderCart() {
   const itemsEl = document.getElementById('cartItems');
   const totalEl = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('goCheckoutBtn');
+  const couponAreaEl = document.getElementById('cartCouponArea');
   if (keys.length === 0) {
     itemsEl.innerHTML = '<div class="cart-empty">O carrinho está vazio.</div>';
     totalEl.style.display = 'none';
     checkoutBtn.style.display = 'none';
+    couponAreaEl.innerHTML = '';
+    appliedCoupon = null;
     return;
   }
-  let total = 0;
+  let subtotal = 0;
   itemsEl.innerHTML = keys.map(key => {
     const item = cart[key];
-    total += item.price * item.qty;
+    subtotal += item.price * item.qty;
     return `
       <div class="cart-item">
         <div class="info">
@@ -1015,9 +1029,90 @@ function renderCart() {
       </div>
     `;
   }).join('');
+
+  // Revalida o cupão aplicado contra o novo subtotal (ex: valor mínimo deixou de ser atingido)
+  if (appliedCoupon && appliedCoupon.valorMinimo > 0 && subtotal < appliedCoupon.valorMinimo) {
+    appliedCoupon = null;
+  }
+
+  const discount = calcularDesconto(subtotal, appliedCoupon);
+  const total = Math.max(0, subtotal - discount);
+
+  couponAreaEl.innerHTML = appliedCoupon ? `
+    <div class="cart-coupon-applied">
+      <span>Cupão "${appliedCoupon.codigo}" aplicado</span>
+      <button onclick="removerCupom()">remover</button>
+    </div>
+  ` : `
+    <div class="cart-coupon">
+      <input type="text" id="cupomInput" placeholder="Código promocional">
+      <button class="btn btn-outline-navy" style="justify-content:center;" onclick="aplicarCupom()">Aplicar</button>
+    </div>
+    <div class="cart-coupon-msg" id="cupomMsg"></div>
+  `;
+
   totalEl.style.display = 'flex';
-  totalEl.innerHTML = `<span>Total</span><span>${total.toFixed(2)}€</span>`;
+  if (discount > 0) {
+    totalEl.innerHTML = `
+      <div style="width:100%;">
+        <div class="cart-subtotal-row"><span>Subtotal</span><span>${subtotal.toFixed(2)}€</span></div>
+        <div class="cart-discount-row"><span>Desconto</span><span>−${discount.toFixed(2)}€</span></div>
+        <div class="cart-total" style="margin:8px 0 0; padding:0;"><span>Total</span><span>${total.toFixed(2)}€</span></div>
+      </div>`;
+  } else {
+    totalEl.innerHTML = `<span>Total</span><span>${total.toFixed(2)}€</span>`;
+  }
   checkoutBtn.style.display = 'flex';
+}
+
+// Calcula o valor de desconto (em euros) para um subtotal e cupão dados. Nunca deixa o desconto ultrapassar o subtotal.
+function calcularDesconto(subtotal, coupon) {
+  if (!coupon) return 0;
+  let discount = coupon.tipo === 'percentagem' ? subtotal * (coupon.valor / 100) : coupon.valor;
+  return Math.min(discount, subtotal);
+}
+
+function aplicarCupom() {
+  const input = document.getElementById('cupomInput');
+  const msgEl = document.getElementById('cupomMsg');
+  const codigo = (input.value || '').trim().toUpperCase();
+  if (!codigo) {
+    msgEl.textContent = 'Escreve um código.';
+    msgEl.className = 'cart-coupon-msg warn';
+    return;
+  }
+  const subtotal = Object.keys(cart).reduce((s, k) => s + cart[k].price * cart[k].qty, 0);
+  msgEl.textContent = 'A validar...';
+  msgEl.className = 'cart-coupon-msg';
+  db.collection('cupoes').doc(codigo).get().then(doc => {
+    if (!doc.exists || doc.data().ativo === false) {
+      msgEl.textContent = 'Código inválido ou já não está ativo.';
+      msgEl.className = 'cart-coupon-msg warn';
+      return;
+    }
+    const c = doc.data();
+    if (c.validade && c.validade.toDate && c.validade.toDate() < new Date()) {
+      msgEl.textContent = 'Este código já expirou.';
+      msgEl.className = 'cart-coupon-msg warn';
+      return;
+    }
+    if (c.valorMinimo && subtotal < c.valorMinimo) {
+      msgEl.textContent = `Este código só é válido a partir de ${c.valorMinimo.toFixed(2)}€ de compra.`;
+      msgEl.className = 'cart-coupon-msg warn';
+      return;
+    }
+    appliedCoupon = { codigo: codigo, tipo: c.tipo, valor: c.valor, valorMinimo: c.valorMinimo || 0 };
+    renderCart();
+  }).catch(err => {
+    msgEl.textContent = 'Não foi possível validar o código agora. Tenta de novo.';
+    msgEl.className = 'cart-coupon-msg warn';
+    console.error(err);
+  });
+}
+
+function removerCupom() {
+  appliedCoupon = null;
+  renderCart();
 }
 function openCart() {
   document.getElementById('cartDrawer').classList.add('open');
@@ -1104,7 +1199,9 @@ function submitOrder() {
     const item = cart[key];
     return { nome: item.name, preco: item.price, quantidade: item.qty };
   });
-  const total = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
+  const subtotal = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
+  const discount = calcularDesconto(subtotal, appliedCoupon);
+  const total = Math.max(0, subtotal - discount);
   const productIds = [...new Set(Object.keys(cart).map(key => parseInt(key.split('_')[0], 10)))];
   decrementStockForCart(cartSnapshot).then(() => db.collection('pedidos').add({
     uid: user.uid,
@@ -1112,6 +1209,9 @@ function submitOrder() {
     email: user.email,
     telefone: phone,
     items: items,
+    subtotal: subtotal,
+    cupom: appliedCoupon ? appliedCoupon.codigo : null,
+    desconto: discount,
     total: total,
     estado: 'pendente',
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
@@ -1133,6 +1233,7 @@ function submitOrder() {
     }).catch(err => console.error('Falha ao enviar notificação por e-mail:', err));
     alert('Pedido enviado! Vamos avisar-vos quando estiver pronto para levantamento.');
     cart = {};
+    appliedCoupon = null;
     saveCart();
     renderCart();
     closeCart();
