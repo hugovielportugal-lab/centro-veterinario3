@@ -8,6 +8,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3">
+<style>
+.galeria-section { background: var(--bg-alt); padding: 56px 0; }
+.galeria-title { text-align: center; font-family: var(--font-display); color: var(--navy); margin-bottom: 6px; }
+.galeria-sub { text-align: center; color: var(--gray); margin-bottom: 30px; }
+.galeria-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 900px) { .galeria-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .galeria-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+.galeria-item { position: relative; border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 1/1; background: #eee; }
+.galeria-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.galeria-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 12px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: #fff; font-size: 0.82rem; font-weight: 600; }
+</style>
 </head>
 <body>
 
@@ -233,6 +244,14 @@
   </div>
 </section>
 
+<section class="galeria-section" id="galeriaSection" style="display:none;">
+  <div class="wrap">
+    <h2 class="galeria-title">🐾 Os nossos clientes</h2>
+    <p class="galeria-sub">Alguns dos patudos que já passaram por cá.</p>
+    <div class="galeria-grid" id="galeriaGrid"></div>
+  </div>
+</section>
+
 <section class="section-alt">
   <div class="wrap">
     <div class="section-head" style="margin-bottom:26px;">
@@ -274,5 +293,35 @@
   </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAiw1gMQBpE7kwLsrIFIxOmpsG0623z7gA",
+  authDomain: "centro-veterinario-lindaavelha.firebaseapp.com",
+  projectId: "centro-veterinario-lindaavelha",
+  storageBucket: "centro-veterinario-lindaavelha.firebasestorage.app",
+  messagingSenderId: "283697163487",
+  appId: "1:283697163487:web:03d5a7df648fca759a8d6a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function loadGaleria() {
+  db.collection('galeria').orderBy('criadoEm', 'desc').limit(12).get().then(snap => {
+    if (snap.empty) return;
+    document.getElementById('galeriaGrid').innerHTML = snap.docs.map(doc => {
+      const g = doc.data();
+      return `
+        <div class="galeria-item">
+          <img src="${g.url}" alt="${g.legenda || 'Foto de um cliente do Centro Veterinário Linda-a-Velha'}" loading="lazy">
+          ${g.legenda ? `<div class="galeria-caption">${g.legenda}</div>` : ''}
+        </div>`;
+    }).join('');
+    document.getElementById('galeriaSection').style.display = 'block';
+  }).catch(err => console.error('Não foi possível carregar a galeria:', err));
+}
+loadGaleria();
+</script>
 </body>
 </html>
