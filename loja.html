@@ -83,6 +83,9 @@
 .destaque-thumb svg { width: 40px; height: 40px; color: var(--navy); }
 .destaque-body { padding: 12px 14px 14px; }
 .destaque-body h4 { font-size: 0.85rem; margin: 0 0 4px; line-height: 1.3; font-weight: 600; color: var(--ink); }
+.destaque-rating { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.destaque-rating .stars-display { font-size: 0.78rem; }
+.destaque-rating .rating-count { font-size: 0.72rem; }
 .destaque-price { font-weight: 700; color: var(--navy); font-family: var(--font-display); font-size: 0.92rem; }
 .store-tabs { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; position: relative; z-index: 20; }
 .store-tab {
@@ -822,6 +825,28 @@ function saveCart() { localStorage.setItem('cvla_cart', JSON.stringify(cart)); }
 // usa-se o valor de fallback definido no próprio catálogo (products[].stock / sizes[].stock).
 let liveStock = {};
 let stockLoaded = false;
+let reviewStats = {}; // { [produtoId]: { avg, count } } — calculado a partir de toda a coleção 'avaliacoes', numa só leitura
+
+// Carrega todas as avaliações de uma vez e agrega por produto (média + contagem),
+// em vez de fazer uma pesquisa por produto — muito mais leve com um catálogo grande.
+function loadReviewStats() {
+  db.collection('avaliacoes').get().then(snap => {
+    const byProduct = {};
+    snap.forEach(doc => {
+      const r = doc.data();
+      if (r.oculta) return;
+      if (!byProduct[r.produtoId]) byProduct[r.produtoId] = [];
+      byProduct[r.produtoId].push(r.estrelas);
+    });
+    reviewStats = {};
+    Object.keys(byProduct).forEach(pid => {
+      const arr = byProduct[pid];
+      reviewStats[pid] = { avg: arr.reduce((a, b) => a + b, 0) / arr.length, count: arr.length };
+    });
+    renderProducts();
+    renderDestaques();
+  }).catch(err => console.error('Não foi possível carregar as estatísticas de avaliações:', err));
+}
 
 function stockKey(id, sizeIdx) { return sizeIdx === null || sizeIdx === undefined ? String(id) : `${id}_${sizeIdx}`; }
 
@@ -880,6 +905,8 @@ function renderProducts() {
             </label>
           `).join('')}
         </div>` : '';
+    const rs = reviewStats[p.id];
+    const ratingHtml = rs ? `<div class="rating-summary"><span class="stars-display">${renderStarsDisplay(rs.avg)}</span><span class="rating-count">${rs.avg.toFixed(1)} (${rs.count})</span></div>` : '';
     return `
     <div class="product-card">
       <div class="product-thumb" onclick="openProductModal(${p.id})">
@@ -889,6 +916,7 @@ function renderProducts() {
       <div class="product-body">
         <span class="category-tag">${p.brand ? (p.brand + (p.gama ? ' · ' + p.gama : '')) : categoryLabels[p.type]}</span>
         <h3 onclick="openProductModal(${p.id})">${p.name}</h3>
+        ${ratingHtml}
         <p>${p.desc}</p>
         ${sizesHtml}
         <div class="product-footer">
@@ -1609,6 +1637,8 @@ function renderDestaques() {
   if (destaque.length === 0) { section.style.display = 'none'; return; }
   grid.innerHTML = destaque.map(p => {
     const price = Array.isArray(p.sizes) ? p.sizes[0].price : p.price;
+    const rs = reviewStats[p.id];
+    const ratingHtml = rs ? `<div class="destaque-rating"><span class="stars-display">${renderStarsDisplay(rs.avg)}</span><span class="rating-count">${rs.avg.toFixed(1)} (${rs.count})</span></div>` : '';
     return `
       <div class="destaque-card" onclick="openProductModal(${p.id})">
         <div class="destaque-thumb">
@@ -1616,6 +1646,7 @@ function renderDestaques() {
         </div>
         <div class="destaque-body">
           <h4>${p.name}</h4>
+          ${ratingHtml}
           <span class="destaque-price">${Array.isArray(p.sizes) ? 'Desde ' : ''}${price.toFixed(2)}€</span>
         </div>
       </div>`;
@@ -1626,6 +1657,7 @@ function renderDestaques() {
 renderProducts();
 renderCart();
 loadStock();
+loadReviewStats();
 loadGaleria();
 loadCupomBanner();
 renderDestaques();
