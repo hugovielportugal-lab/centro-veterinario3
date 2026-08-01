@@ -353,8 +353,8 @@
     <a href="index.html" class="brand">
       <img src="logo.png" alt="Centro Veterinário Linda-a-Velha">
     </a>
-    <button class="nav-toggle" aria-label="Abrir menu" onclick="this.querySelector('span').textContent = document.querySelector('.nav-links').classList.toggle('open') ? '✕' : '☰'; document.querySelector('.nav-backdrop').classList.toggle('open')"><span>☰</span></button>
-    <div class="nav-backdrop" onclick="document.querySelector('.nav-links').classList.remove('open'); this.classList.remove('open'); document.querySelector('.nav-toggle span').textContent='☰'"></div>
+    <button class="nav-toggle" aria-label="Abrir menu" onclick="toggleNavMenu()"><span>☰</span></button>
+    <div class="nav-backdrop" onclick="toggleNavMenu(true)"></div>
     <div class="nav-links">
       <a href="index.html">Início</a>
       <a href="index.html#servicos">Serviços</a>
@@ -612,6 +612,19 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/SUBSTITUIR_PELO_TEU_LINK';
 
 let authMode = 'login';
 let pendingCheckout = false;
+
+// Abre/fecha o menu mobile e bloqueia o scroll da página de fundo enquanto está aberto
+// (evita o menu "andar"/ficar preso ao deslizar a página no Safari do iPhone).
+function toggleNavMenu(forceClose) {
+  const links = document.querySelector('.nav-links');
+  const backdrop = document.querySelector('.nav-backdrop');
+  const toggleSpan = document.querySelector('.nav-toggle span');
+  const isOpen = forceClose ? false : !links.classList.contains('open');
+  links.classList.toggle('open', isOpen);
+  backdrop.classList.toggle('open', isOpen);
+  toggleSpan.textContent = isOpen ? '✕' : '☰';
+  document.body.classList.toggle('nav-open', isOpen);
+}
 
 function setAuthMode(mode) {
   authMode = mode;

@@ -177,6 +177,8 @@ header.site {
   }
   .nav-backdrop.open { opacity: 1; visibility: visible; }
 
+body.nav-open { overflow: hidden; }
+
   .nav-links {
     position: fixed;
     top: 50%;
