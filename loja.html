@@ -182,6 +182,14 @@
 .checkout-form.open { display: flex; }
 .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
 .checkout-note { font-size: 0.8rem; color: var(--gray-light); margin-top: 6px; }
+.pay-method-select { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 2px; }
+.pay-method-label { font-weight: 600; font-size: 0.88rem; color: var(--ink); }
+.pay-method-opt { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--gray); cursor: pointer; }
+.payment-step { display: none; flex-direction: column; gap: 12px; margin-top: 6px; text-align: center; }
+.payment-step.open { display: flex; }
+.payment-step .payment-order-id { font-size: 0.8rem; color: var(--gray-light); }
+.payment-step .payment-total { font-size: 1.3rem; font-weight: 700; color: var(--navy); font-family: var(--font-display); margin-top: 2px; }
+.payment-note { font-size: 0.82rem; color: var(--gray); line-height: 1.5; background: var(--bg-alt); border-radius: 10px; padding: 12px 14px; text-align: left; }
 .cart-coupon { display: flex; gap: 8px; margin: 4px 0 6px; }
 .cart-coupon input { flex: 1; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.88rem; text-transform: uppercase; box-sizing: border-box; }
 .cart-coupon-msg { font-size: 0.82rem; margin: 0 0 10px; }
@@ -488,8 +496,22 @@
       <button onclick="resendVerification()">Reenviar e-mail de confirmação</button>
     </div>
     <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
+    <div class="pay-method-select" id="payMethodSelect">
+      <span class="pay-method-label">Como prefere pagar?</span>
+      <label class="pay-method-opt"><input type="radio" name="payMethod" value="online" checked> Pagar agora online (MB WAY, Multibanco ou cartão)</label>
+      <label class="pay-method-opt"><input type="radio" name="payMethod" value="loja"> Pagar na loja, ao levantar</label>
+    </div>
     <button class="btn btn-navy" id="confirmOrderBtn" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
     <p class="checkout-note">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.</p>
+  </div>
+  <div class="payment-step" id="paymentStep">
+    <div>
+      <div class="payment-order-id">Pedido nº <span id="payOrderId"></span> confirmado</div>
+      <div class="payment-total" id="payTotal"></div>
+    </div>
+    <a class="btn btn-navy" id="payNowBtn" target="_blank" rel="noopener" style="justify-content:center;">Pagar agora online</a>
+    <div class="payment-note" id="paymentNote"></div>
+    <button class="btn btn-outline-navy" style="justify-content:center;" onclick="closeCart()">Fechar</button>
   </div>
 </div>
 
@@ -542,6 +564,12 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 emailjs.init({ publicKey: "NJxFDw-frdjZmQFCD" });
+
+// ---------- Pagamento online (Stripe) ----------
+// Payment Link do tipo "Customers choose what to pay", criado no Stripe Dashboard.
+// O cliente escreve o valor total do pedido (mostrado no site) e paga por MB WAY, Multibanco ou cartão.
+// TODO: substituir por 'https://buy.stripe.com/xxxxxxxx' assim que o link estiver criado.
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/SUBSTITUIR_PELO_TEU_LINK';
 
 let authMode = 'login';
 let pendingCheckout = false;
@@ -1149,6 +1177,7 @@ function closeCart() {
   document.getElementById('cartDrawer').classList.remove('open');
   document.getElementById('cartBackdrop').classList.remove('open');
   document.getElementById('checkoutForm').classList.remove('open');
+  document.getElementById('paymentStep').classList.remove('open');
 }
 function showCheckout() {
   if (!auth.currentUser) {
@@ -1217,6 +1246,7 @@ function decrementStockForCart(cartSnapshot) {
 
 function submitOrder() {
   const phone = document.getElementById('ckPhone').value.trim();
+  const payMethod = document.querySelector('input[name="payMethod"]:checked').value;
   const user = auth.currentUser;
   if (!user) { showCheckout(); return; }
   if (!user.emailVerified) { alert('Precisa de confirmar o seu e-mail antes de finalizar a compra. Verifique a caixa de entrada, ou use o botão "Reenviar e-mail de confirmação".'); return; }
@@ -1230,15 +1260,15 @@ function submitOrder() {
         appliedCoupon = null;
         renderCart();
       } else {
-        finalizarSubmitOrder(user, phone);
+        finalizarSubmitOrder(user, phone, payMethod);
       }
-    }).catch(() => finalizarSubmitOrder(user, phone));
+    }).catch(() => finalizarSubmitOrder(user, phone, payMethod));
   } else {
-    finalizarSubmitOrder(user, phone);
+    finalizarSubmitOrder(user, phone, payMethod);
   }
 }
 
-function finalizarSubmitOrder(user, phone) {
+function finalizarSubmitOrder(user, phone, payMethod) {
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
@@ -1260,8 +1290,10 @@ function finalizarSubmitOrder(user, phone) {
     desconto: discount,
     total: total,
     estado: 'pendente',
+    pago: false,
+    metodoPagamento: payMethod,
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-  })).then(() => {
+  })).then((docRef) => {
     // Regista "compra verificada" por produto, para permitir avaliações mais tarde
     const batch = db.batch();
     productIds.forEach(pid => {
@@ -1281,16 +1313,40 @@ function finalizarSubmitOrder(user, phone) {
       order_items: itemsText,
       order_total: total.toFixed(2)
     }).catch(err => console.error('Falha ao enviar notificação por e-mail:', err));
-    alert('Pedido enviado! Vamos avisar-vos quando estiver pronto para levantamento.');
+    showPaymentStep(docRef.id, total, payMethod);
     cart = {};
     appliedCoupon = null;
     saveCart();
     renderCart();
-    closeCart();
     renderProducts();
   }).catch(err => {
     alert('Não foi possível enviar o pedido. Tente novamente. (' + err.message + ')');
   });
+}
+
+// Referência curta e legível do pedido (últimos 6 caracteres do ID do Firestore),
+// usada tanto para mostrar ao cliente como para enviar ao Stripe (client_reference_id),
+// para ser fácil cruzar um pagamento no dashboard Stripe com o pedido certo.
+function shortOrderRef(id) {
+  return id.slice(-6).toUpperCase();
+}
+
+function showPaymentStep(orderId, total, payMethod) {
+  document.getElementById('checkoutForm').classList.remove('open');
+  const ref = shortOrderRef(orderId);
+  document.getElementById('payOrderId').textContent = ref;
+  document.getElementById('payTotal').textContent = 'Total: ' + total.toFixed(2) + '€';
+  const payBtn = document.getElementById('payNowBtn');
+  const noteEl = document.getElementById('paymentNote');
+  if (payMethod === 'online') {
+    payBtn.style.display = 'flex';
+    payBtn.href = `${STRIPE_PAYMENT_LINK}?client_reference_id=${ref}`;
+    noteEl.textContent = 'Ao clicar, escreva o valor exato indicado acima na página de pagamento (MB WAY, Multibanco ou cartão).';
+  } else {
+    payBtn.style.display = 'none';
+    noteEl.textContent = 'Pedido confirmado! Pode pagar em dinheiro ou MB WAY diretamente na loja, no momento do levantamento.';
+  }
+  document.getElementById('paymentStep').classList.add('open');
 }
 
 function setActiveTab(el) {
