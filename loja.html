@@ -10,6 +10,39 @@
 <link rel="stylesheet" href="style.css?v=3">
 <style>
 /* ---------- Store-specific styles ---------- */
+.store-hero {
+  position: relative;
+  background: var(--navy);
+  padding: 64px 0 56px;
+  overflow: hidden;
+}
+.store-hero-icon {
+  position: absolute;
+  top: 50%;
+  right: -50px;
+  transform: translateY(-50%);
+  height: 460px;
+  width: auto;
+  opacity: 0.08;
+  pointer-events: none;
+  user-select: none;
+}
+.store-hero-inner { position: relative; z-index: 1; max-width: 620px; }
+.store-hero-inner .eyebrow { color: var(--teal); }
+.store-hero-inner h1 { color: #fff; margin-bottom: 18px; }
+.store-hero-lead { color: rgba(255,255,255,0.82); font-size: 1.05rem; max-width: 52ch; margin-bottom: 28px; }
+.store-hero-steps { display: flex; gap: 24px; flex-wrap: wrap; }
+.store-hero-step { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; font-weight: 600; color: rgba(255,255,255,0.92); }
+.store-hero-step span {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--teal); color: var(--navy); font-weight: 800; font-size: 0.78rem;
+}
+@media (max-width: 700px) {
+  .store-hero-icon { display: none; }
+  .store-hero { padding: 48px 0 40px; }
+  .store-hero-steps { flex-direction: column; gap: 10px; }
+}
 .store-tabs { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; position: relative; z-index: 20; }
 .store-tab {
   padding: 10px 20px; border-radius: var(--radius-pill); border: 1.5px solid var(--border);
@@ -334,11 +367,17 @@
   </nav>
 </header>
 
-<section class="page-hero">
-  <div class="wrap">
+<section class="store-hero">
+  <img class="store-hero-icon" src="icon-white.png" alt="" aria-hidden="true">
+  <div class="wrap store-hero-inner">
     <span class="eyebrow">Loja</span>
-    <h1>Encomende online, levante na loja</h1>
-    <p>Escolha produtos e serviços, adicione ao carrinho e venha levantar a sua encomenda no Centro Veterinário Linda-a-Velha. Sem entregas, sem complicações.</p>
+    <h1>Encomende online,<br>levante na loja</h1>
+    <p class="store-hero-lead">Escolha produtos e serviços, adicione ao carrinho e venha levantar a sua encomenda no Centro Veterinário Linda-a-Velha. Sem entregas, sem complicações.</p>
+    <div class="store-hero-steps">
+      <div class="store-hero-step"><span>1</span> Escolha os produtos</div>
+      <div class="store-hero-step"><span>2</span> Pague online ou na loja</div>
+      <div class="store-hero-step"><span>3</span> Levante no centro</div>
+    </div>
   </div>
 </section>
 
