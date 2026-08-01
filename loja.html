@@ -43,6 +43,23 @@
   .store-hero { padding: 48px 0 40px; }
   .store-hero-steps { flex-direction: column; gap: 10px; }
 }
+.trust-strip { background: var(--bg-alt); padding: 20px 0; border-bottom: 1px solid var(--border); }
+.trust-strip-grid { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.trust-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 600; color: var(--ink); flex: 1; min-width: 200px; }
+.trust-icon { font-size: 1.25rem; flex-shrink: 0; }
+@media (max-width: 700px) { .trust-strip-grid { flex-direction: column; } }
+.destaques-section { padding: 44px 0 6px; }
+.destaques-title { font-size: 1.3rem; margin-bottom: 18px; }
+.destaques-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 900px) { .destaques-grid { grid-template-columns: repeat(2, 1fr); } }
+.destaque-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; cursor: pointer; transition: transform .15s ease; }
+.destaque-card:hover { transform: translateY(-3px); }
+.destaque-thumb { height: 130px; background: var(--blue-soft); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.destaque-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; background: #fff; }
+.destaque-thumb svg { width: 40px; height: 40px; color: var(--navy); }
+.destaque-body { padding: 12px 14px 14px; }
+.destaque-body h4 { font-size: 0.85rem; margin: 0 0 4px; line-height: 1.3; font-weight: 600; color: var(--ink); }
+.destaque-price { font-weight: 700; color: var(--navy); font-family: var(--font-display); font-size: 0.92rem; }
 .store-tabs { display: flex; gap: 10px; margin-bottom: 32px; flex-wrap: wrap; position: relative; z-index: 20; }
 .store-tab {
   padding: 10px 20px; border-radius: var(--radius-pill); border: 1.5px solid var(--border);
@@ -381,6 +398,22 @@
   </div>
 </section>
 
+<section class="trust-strip">
+  <div class="wrap trust-strip-grid">
+    <div class="trust-item"><span class="trust-icon">🐾</span> Levantamento gratuito na loja</div>
+    <div class="trust-item"><span class="trust-icon">💳</span> Pague online ou no levantamento</div>
+    <div class="trust-item"><span class="trust-icon">📦</span> Stock sempre atualizado</div>
+    <div class="trust-item"><span class="trust-icon">🎁</span> Promoções exclusivas para clientes</div>
+  </div>
+</section>
+
+<section class="destaques-section" id="destaquesSection" style="display:none;">
+  <div class="wrap">
+    <h2 class="destaques-title">Produtos em destaque</h2>
+    <div class="destaques-grid" id="destaquesGrid"></div>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <div class="cupom-banner" id="cupomBanner"></div>
@@ -584,6 +617,7 @@
   <div class="wrap">
     <div class="footer-bottom" style="border-top:none; margin-top:0; padding-top:0;">
       <span>Copyright 2026 Centro Veterinário Linda-a-Velha. Todos os direitos reservados.</span>
+      <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener">Livro de Reclamações</a>
     </div>
   </div>
 </footer>
@@ -1527,11 +1561,39 @@ function loadCupomBanner() {
   }).catch(err => console.error('Não foi possível carregar o banner de cupão:', err));
 }
 
+// ---------- Produtos em destaque ----------
+// Mostra até 8 produtos marcados com "destaque: true" em produtos-data.js;
+// se nenhum estiver marcado, mostra os primeiros 8 do catálogo como recurso.
+// Clicar num destaque abre o mesmo modal do produto (sem duplicar a lógica de carrinho/stock).
+function renderDestaques() {
+  const section = document.getElementById('destaquesSection');
+  const grid = document.getElementById('destaquesGrid');
+  if (!section || !grid) return;
+  let destaque = products.filter(p => p.destaque === true);
+  destaque = (destaque.length > 0 ? destaque : products).slice(0, 8);
+  if (destaque.length === 0) { section.style.display = 'none'; return; }
+  grid.innerHTML = destaque.map(p => {
+    const price = Array.isArray(p.sizes) ? p.sizes[0].price : p.price;
+    return `
+      <div class="destaque-card" onclick="openProductModal(${p.id})">
+        <div class="destaque-thumb">
+          ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : icons[p.icon]}
+        </div>
+        <div class="destaque-body">
+          <h4>${p.name}</h4>
+          <span class="destaque-price">${Array.isArray(p.sizes) ? 'Desde ' : ''}${price.toFixed(2)}€</span>
+        </div>
+      </div>`;
+  }).join('');
+  section.style.display = 'block';
+}
+
 renderProducts();
 renderCart();
 loadStock();
 loadGaleria();
 loadCupomBanner();
+renderDestaques();
 </script>
 </body>
 </html>
