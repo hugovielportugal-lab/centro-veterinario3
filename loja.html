@@ -20,12 +20,21 @@
   position: absolute;
   top: 50%;
   right: -50px;
-  transform: translateY(-50%);
+  transform-origin: center;
+  transform: translateY(-50%) rotate(0deg);
   height: 460px;
   width: auto;
   opacity: 0.08;
   pointer-events: none;
   user-select: none;
+  animation: store-hero-icon-spin 60s linear infinite;
+}
+@keyframes store-hero-icon-spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-hero-icon { animation: none; }
 }
 .store-hero-inner { position: relative; z-index: 1; max-width: 620px; }
 .store-hero-inner .eyebrow { color: var(--teal); }
