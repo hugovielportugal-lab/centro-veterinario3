@@ -26,6 +26,7 @@
   .status-pendente { background: #fef3e0; color: #b8720a; }
   .status-pronto { background: #e3f3e8; color: #1e7a3d; }
   .status-entregue { background: var(--bg-alt); color: var(--gray); }
+  .status-cancelado { background: #fde3e3; color: #c0392b; }
   .order-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .pay-badge { padding: 5px 12px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
   .pay-badge-pago { background: var(--blue-soft); color: var(--teal); }
@@ -158,6 +159,7 @@
         <button class="active" data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
         <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
         <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+        <button data-f="cancelado" onclick="setFilter('cancelado', this)">Cancelados</button>
         <button data-f="todos" onclick="setFilter('todos', this)">Todos</button>
       </div>
       <div id="ordersList"></div>
@@ -338,8 +340,12 @@ function setFilter(f, btn) {
 }
 
 function statusLabel(s) {
-  return { pendente: 'Pendente', pronto: 'Pronto para levantar', entregue: 'Entregue' }[s] || s;
+  return { pendente: 'Pendente', pronto: 'Pronto para levantar', entregue: 'Entregue', cancelado: 'Cancelado' }[s] || s;
 }
+
+// Número de dias a partir dos quais um pedido ainda não levantado é assinalado como parado.
+// É só uma constante no código — muda-se facilmente se quiseres outro prazo.
+const DIAS_PARA_ALERTA = 5;
 
 // Formata um telefone português (ou já internacional) num link wa.me
 function waLink(phone) {
@@ -379,10 +385,14 @@ function renderOrders() {
 
     let actions = '';
     if (o.estado === 'pendente') {
-      actions = `<button class="primary" onclick="updateStatus('${o.id}','pronto')">Marcar como pronto</button>`;
+      actions = `<button class="primary" onclick="updateStatus('${o.id}','pronto')">Marcar como pronto</button>
+                 <button onclick="cancelOrder('${o.id}')">Cancelar pedido</button>`;
     } else if (o.estado === 'pronto') {
       actions = `<button class="primary" onclick="updateStatus('${o.id}','entregue')">Marcar como entregue</button>
-                 <button onclick="updateStatus('${o.id}','pendente')">Voltar a pendente</button>`;
+                 <button onclick="updateStatus('${o.id}','pendente')">Voltar a pendente</button>
+                 <button onclick="cancelOrder('${o.id}')">Cancelar pedido</button>`;
+    } else if (o.estado === 'cancelado') {
+      actions = `<button onclick="updateStatus('${o.id}','pendente')">Reabrir</button>`;
     } else {
       actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>`;
     }
@@ -397,6 +407,10 @@ function renderOrders() {
       ? `<button onclick="togglePago('${o.id}', false)">Desmarcar pago</button>`
       : `<button class="primary" onclick="togglePago('${o.id}', true)">Marcar como pago</button>`;
     actions = payAction + actions;
+
+    const diasParado = o.criadoEm ? Math.floor((Date.now() - o.criadoEm.toDate().getTime()) / 86400000) : null;
+    const parado = (o.estado === 'pendente' || o.estado === 'pronto') && diasParado !== null && diasParado >= DIAS_PARA_ALERTA;
+    const staleHtml = parado ? `<span class="pay-badge pay-badge-porpagar">⚠ Há ${diasParado} dias por levantar</span>` : '';
 
     const wa = waLink(o.telefone);
     const contactHtml = `
@@ -430,6 +444,7 @@ function renderOrders() {
           <div class="order-top-right">
             <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
             ${payBadgeHtml}
+            ${staleHtml}
           </div>
         </div>
         <div class="order-items">${itemsHtml}</div>
@@ -447,6 +462,42 @@ function updateStatus(id, novoEstado) {
 
 function togglePago(id, pago) {
   db.collection('pedidos').doc(id).update({ pago: pago });
+}
+
+function cancelOrder(id) {
+  const order = allOrders.find(o => o.id === id);
+  if (!order) return;
+
+  const jaPago = !!order.pago && order.metodoPagamento === 'online';
+  const aviso = jaPago
+    ? 'Este pedido já foi pago online. Cancelar aqui NÃO devolve o dinheiro automaticamente — se avançares, o reembolso tem de ser feito à parte no Stripe. Cancelar mesmo assim?'
+    : 'Cancelar este pedido e repor o stock reservado? Não é possível desfazer esta ação.';
+  if (!confirm(aviso)) return;
+
+  const items = order.items || [];
+  const temChaves = items.length > 0 && items.every(it => it.chave);
+
+  const restaurarStock = !temChaves ? Promise.resolve() : db.runTransaction(tx => {
+    const refs = items.map(it => db.collection('estoque').doc(it.chave));
+    return Promise.all(refs.map(r => tx.get(r))).then(snaps => {
+      snaps.forEach((snap, i) => {
+        const it = items[i];
+        const atual = snap.exists ? (snap.data().qty || 0) : 0;
+        tx.set(refs[i], { qty: atual + it.quantidade }, { merge: true });
+      });
+    });
+  }).then(() => {
+    items.forEach(it => { liveStock[it.chave] = (liveStock[it.chave] || 0) + it.quantidade; });
+  });
+
+  restaurarStock
+    .then(() => db.collection('pedidos').doc(id).update({ estado: 'cancelado' }))
+    .then(() => {
+      if (!temChaves) {
+        alert('Pedido cancelado. Como é um pedido anterior a esta funcionalidade, o stock não foi reposto automaticamente — ajusta manualmente no separador Stock, se for preciso.');
+      }
+    })
+    .catch(err => alert('Não foi possível cancelar o pedido: ' + err.message));
 }
 
 // Referência curta do pedido (últimos 6 caracteres do ID), a mesma que aparece

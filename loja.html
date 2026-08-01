@@ -1311,7 +1311,7 @@ function finalizarSubmitOrder(user, phone, payMethod) {
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
-    return { nome: item.name, preco: item.price, quantidade: item.qty };
+    return { nome: item.name, preco: item.price, quantidade: item.qty, chave: key };
   });
   const subtotal = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
   const discount = calcularDesconto(subtotal, appliedCoupon);
