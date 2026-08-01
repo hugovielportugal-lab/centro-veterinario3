@@ -59,9 +59,24 @@
 @media (max-width: 700px) { .trust-strip-grid { flex-direction: column; } }
 .destaques-section { padding: 44px 0 6px; }
 .destaques-title { font-size: 1.3rem; margin-bottom: 18px; }
-.destaques-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-@media (max-width: 900px) { .destaques-grid { grid-template-columns: repeat(2, 1fr); } }
-.destaque-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; cursor: pointer; transition: transform .15s ease; }
+.destaques-carousel { position: relative; }
+.destaques-grid {
+  display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory;
+  scroll-behavior: smooth; padding-bottom: 4px; margin: 0 -2px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.destaques-grid::-webkit-scrollbar { display: none; }
+.destaques-nav {
+  position: absolute; top: 45%; transform: translateY(-50%);
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border);
+  background: #fff; box-shadow: 0 4px 14px rgba(15,59,96,0.16);
+  font-size: 1.3rem; line-height: 1; color: var(--navy); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; z-index: 2; padding: 0;
+}
+.destaques-nav.prev { left: -8px; }
+.destaques-nav.next { right: -8px; }
+@media (max-width: 700px) { .destaques-nav { display: none; } }
+.destaque-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; cursor: pointer; transition: transform .15s ease; flex: 0 0 200px; scroll-snap-align: start; }
 .destaque-card:hover { transform: translateY(-3px); }
 .destaque-thumb { height: 130px; background: var(--blue-soft); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .destaque-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; background: #fff; }
@@ -419,7 +434,11 @@
 <section class="destaques-section" id="destaquesSection" style="display:none;">
   <div class="wrap">
     <h2 class="destaques-title">Produtos em destaque</h2>
-    <div class="destaques-grid" id="destaquesGrid"></div>
+    <div class="destaques-carousel">
+      <button class="destaques-nav prev" onclick="scrollDestaques(-1)" aria-label="Produtos anteriores">‹</button>
+      <div class="destaques-grid" id="destaquesGrid"></div>
+      <button class="destaques-nav next" onclick="scrollDestaques(1)" aria-label="Próximos produtos">›</button>
+    </div>
   </div>
 </section>
 
@@ -1574,6 +1593,13 @@ function loadCupomBanner() {
 // Mostra até 8 produtos marcados com "destaque: true" em produtos-data.js;
 // se nenhum estiver marcado, mostra os primeiros 8 do catálogo como recurso.
 // Clicar num destaque abre o mesmo modal do produto (sem duplicar a lógica de carrinho/stock).
+// Desliza o carrossel de destaques uma "página" de cada vez (aprox. 80% da largura visível)
+function scrollDestaques(dir) {
+  const grid = document.getElementById('destaquesGrid');
+  if (!grid) return;
+  grid.scrollBy({ left: grid.clientWidth * 0.8 * dir, behavior: 'smooth' });
+}
+
 function renderDestaques() {
   const section = document.getElementById('destaquesSection');
   const grid = document.getElementById('destaquesGrid');
