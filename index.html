@@ -6,7 +6,7 @@
 <title>Centro Veterinário Linda-a-Velha | Consultório Veterinário</title>
 <meta name="description" content="Cuidados veterinários próximos, preventivos e atentos em Linda-a-Velha para cães, gatos e outros animais de companhia.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3">
 <style>
 .galeria-section { background: var(--bg-alt); padding: 56px 0; }
@@ -26,7 +26,7 @@
 .cupom-banner.show { display: flex; }
 .cupom-banner strong { font-family: var(--font-display); }
 .cupom-banner .cupom-banner-code {
-  background: rgba(255,255,255,0.18); border: 1.5px dashed rgba(255,255,255,0.6);
+  background: #fff; color: var(--navy); border: none;
   border-radius: var(--radius-pill); padding: 4px 14px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer;
 }
 .cupom-banner .cupom-banner-cta {
@@ -56,15 +56,15 @@
     <a href="#inicio" class="brand">
       <img src="logo.png" alt="Centro Veterinário Linda-a-Velha">
     </a>
-    <button class="nav-toggle" aria-label="Abrir menu" onclick="this.querySelector('span').textContent = document.querySelector('.nav-links').classList.toggle('open') ? '✕' : '☰'; document.querySelector('.nav-backdrop').classList.toggle('open')"><span>☰</span></button>
-    <div class="nav-backdrop" onclick="document.querySelector('.nav-links').classList.remove('open'); this.classList.remove('open'); document.querySelector('.nav-toggle span').textContent='☰'"></div>
+    <button class="nav-toggle" aria-label="Abrir menu" onclick="toggleNavMenu()"><span>☰</span></button>
+    <div class="nav-backdrop" onclick="toggleNavMenu(true)"></div>
     <div class="nav-links">
-      <a href="#inicio">Início</a>
-      <a href="#servicos">Serviços</a>
-      <a href="loja.html">Loja</a>
-      <a href="#sobre">Sobre nós</a>
-      <a href="#contactos">Contactos</a>
-      <a class="btn btn-navy nav-links-cta" href="mailto:geral@centroveterinariolindaavelha.pt">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a href="#inicio" onclick="toggleNavMenu(true)">Início</a>
+      <a href="#servicos" onclick="toggleNavMenu(true)">Serviços</a>
+      <a href="loja.html" onclick="toggleNavMenu(true)">Loja</a>
+      <a href="#sobre" onclick="toggleNavMenu(true)">Sobre nós</a>
+      <a href="#contactos" onclick="toggleNavMenu(true)">Contactos</a>
+      <a class="btn btn-navy nav-links-cta" href="mailto:geral@centroveterinariolindaavelha.pt" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
     </div>
     <a class="btn btn-navy nav-cta-desktop" href="mailto:geral@centroveterinariolindaavelha.pt">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
   </nav>
@@ -304,6 +304,20 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+// Abre/fecha o menu mobile e bloqueia o scroll da página de fundo enquanto está aberto
+// (evita o menu ficar "preso" ao deslizar a página no Safari do iPhone); fecha também
+// sempre que se clica num link do menu, já que a maioria são âncoras da própria página.
+function toggleNavMenu(forceClose) {
+  const links = document.querySelector('.nav-links');
+  const backdrop = document.querySelector('.nav-backdrop');
+  const toggleSpan = document.querySelector('.nav-toggle span');
+  const isOpen = forceClose ? false : !links.classList.contains('open');
+  links.classList.toggle('open', isOpen);
+  backdrop.classList.toggle('open', isOpen);
+  toggleSpan.textContent = isOpen ? '✕' : '☰';
+  document.body.classList.toggle('nav-open', isOpen);
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyAiw1gMQBpE7kwLsrIFIxOmpsG0623z7gA",
   authDomain: "centro-veterinario-lindaavelha.firebaseapp.com",
