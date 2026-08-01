@@ -6,7 +6,7 @@
 <title>Gestão | Centro Veterinário Linda-a-Velha</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3">
 <style>
   .admin-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
@@ -26,6 +26,10 @@
   .status-pendente { background: #fef3e0; color: #b8720a; }
   .status-pronto { background: #e3f3e8; color: #1e7a3d; }
   .status-entregue { background: var(--bg-alt); color: var(--gray); }
+  .order-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .pay-badge { padding: 5px 12px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+  .pay-badge-pago { background: var(--blue-soft); color: var(--teal); }
+  .pay-badge-porpagar { background: #fde3e3; color: #c0392b; }
 
   .order-items { margin: 12px 0; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .order-item-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; color: var(--gray); }
@@ -383,6 +387,17 @@ function renderOrders() {
       actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>`;
     }
 
+    // Pedidos anteriores a esta funcionalidade não têm "metodoPagamento" gravado — assume-se pagamento na loja.
+    const metodo = o.metodoPagamento || 'loja';
+    const pago = !!o.pago;
+    const metodoLabel = metodo === 'online' ? 'Online' : 'Na loja';
+    const refHtml = metodo === 'online' ? ` · ref. ${shortOrderRef(o.id)}` : '';
+    const payBadgeHtml = `<span class="pay-badge ${pago ? 'pay-badge-pago' : 'pay-badge-porpagar'}">${pago ? '✓ Pago' : 'Por pagar'} · ${metodoLabel}${refHtml}</span>`;
+    const payAction = pago
+      ? `<button onclick="togglePago('${o.id}', false)">Desmarcar pago</button>`
+      : `<button class="primary" onclick="togglePago('${o.id}', true)">Marcar como pago</button>`;
+    actions = payAction + actions;
+
     const wa = waLink(o.telefone);
     const contactHtml = `
       ${o.email ? `<a href="mailto:${o.email}">${o.email}</a>` : ''}
@@ -412,7 +427,10 @@ function renderOrders() {
             <div class="order-client">${o.nome || o.email}</div>
             <div class="order-meta">${contactHtml}</div>
           </div>
-          <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
+          <div class="order-top-right">
+            <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
+            ${payBadgeHtml}
+          </div>
         </div>
         <div class="order-items">${itemsHtml}</div>
         <div class="order-total">Total: ${(o.total || 0).toFixed(2)}€</div>
@@ -425,6 +443,17 @@ function renderOrders() {
 
 function updateStatus(id, novoEstado) {
   db.collection('pedidos').doc(id).update({ estado: novoEstado });
+}
+
+function togglePago(id, pago) {
+  db.collection('pedidos').doc(id).update({ pago: pago });
+}
+
+// Referência curta do pedido (últimos 6 caracteres do ID), a mesma que aparece
+// ao cliente no site e no client_reference_id enviado ao Stripe — para cruzar
+// facilmente um pagamento visto no dashboard Stripe com o pedido certo aqui.
+function shortOrderRef(id) {
+  return id.slice(-6).toUpperCase();
 }
 
 // ---------- Stock ----------
