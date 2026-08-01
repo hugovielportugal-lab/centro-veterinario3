@@ -394,7 +394,8 @@ function renderOrders() {
     } else if (o.estado === 'cancelado') {
       actions = `<button onclick="updateStatus('${o.id}','pendente')">Reabrir</button>`;
     } else {
-      actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>`;
+      actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>
+                 <button onclick="pedirAvaliacao('${o.id}')">Pedir avaliação</button>`;
     }
 
     // Pedidos anteriores a esta funcionalidade não têm "metodoPagamento" gravado — assume-se pagamento na loja.
@@ -458,6 +459,22 @@ function renderOrders() {
 
 function updateStatus(id, novoEstado) {
   db.collection('pedidos').doc(id).update({ estado: novoEstado });
+}
+
+// Abre o cliente de e-mail do próprio utilizador (mailto:), já pronto para pedir uma avaliação
+// dos produtos do pedido — sem depender do EmailJS (limite de 200 envios/mês no plano grátis).
+// Fica como botão manual em vez de disparo automático, para o admin decidir quando enviar.
+function pedirAvaliacao(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order || !order.email) { alert('Este pedido não tem e-mail associado.'); return; }
+  const itemsText = (order.items || []).map(it => it.nome).join(', ');
+  const assunto = 'O que achou da sua compra? 🐾';
+  const corpo = `Olá ${order.nome || ''},\n\n` +
+    `Esperamos que ${itemsText} esteja a fazer sucesso!\n\n` +
+    `Se tiver um minuto, adorávamos saber a sua opinião — a avaliação fica visível na loja e ajuda outros tutores a escolher melhor.\n\n` +
+    `Pode avaliar aqui: https://centroveterinariolindaavelha.pt/loja.html\n\n` +
+    `Obrigado,\nCentro Veterinário Linda-a-Velha`;
+  window.open(`mailto:${order.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`, '_blank');
 }
 
 function togglePago(id, pago) {
