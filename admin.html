@@ -278,6 +278,10 @@
           <label>Conteúdo</label>
           <textarea id="blogConteudo" rows="10" placeholder="Escreve o artigo aqui. Deixa uma linha em branco entre parágrafos." style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:0.92rem; resize:vertical;"></textarea>
         </div>
+        <div style="margin-top:12px;">
+          <label>Imagem de capa (opcional)</label>
+          <input type="file" id="blogImagem" accept="image/*">
+        </div>
         <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
           <input type="checkbox" id="blogPublicado" style="width:auto;" checked>
           <label for="blogPublicado" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Publicado (visível na loja já)</label>
@@ -951,6 +955,8 @@ function publicarArtigo() {
   const resumo = document.getElementById('blogResumo').value.trim();
   const conteudo = document.getElementById('blogConteudo').value.trim();
   const publicado = document.getElementById('blogPublicado').checked;
+  const fileInput = document.getElementById('blogImagem');
+  const file = fileInput.files[0];
   const progressEl = document.getElementById('blogProgress');
 
   if (!titulo || !resumo || !conteudo) {
@@ -959,9 +965,21 @@ function publicarArtigo() {
     return;
   }
 
-  db.collection('artigos').add({
-    titulo, categoria, resumo, conteudo, publicado,
-    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  progressEl.textContent = 'A guardar...';
+  progressEl.className = 'galeria-progress';
+
+  const imagemPromise = !file ? Promise.resolve(null) :
+    resizeImageToDataURL(file, 900, 0.7)
+      .then(dataUrl => dataUrl.length > 700000 ? resizeImageToDataURL(file, 600, 0.55) : dataUrl)
+      .then(dataUrl => {
+        if (dataUrl.length > 700000) throw new Error('Esta imagem continua grande demais mesmo comprimida. Tenta outra foto mais simples.');
+        return dataUrl;
+      });
+
+  imagemPromise.then(imagemCapa => {
+    const dados = { titulo, categoria, resumo, conteudo, publicado, criadoEm: firebase.firestore.FieldValue.serverTimestamp() };
+    if (imagemCapa) dados.imagemCapa = imagemCapa;
+    return db.collection('artigos').add(dados);
   }).then(() => {
     progressEl.textContent = 'Artigo guardado com sucesso!';
     progressEl.className = 'galeria-progress ok';
@@ -969,6 +987,7 @@ function publicarArtigo() {
     document.getElementById('blogResumo').value = '';
     document.getElementById('blogConteudo').value = '';
     document.getElementById('blogPublicado').checked = true;
+    fileInput.value = '';
     loadBlog();
   }).catch(err => {
     progressEl.textContent = 'Erro: ' + err.message;
@@ -987,9 +1006,11 @@ function loadBlog() {
     }
     listEl.innerHTML = snap.docs.map(doc => {
       const a = doc.data();
+      const thumbHtml = a.imagemCapa ? `<img src="${a.imagemCapa}" style="width:52px; height:52px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : '';
       return `
-        <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}">
-          <div>
+        <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}" style="align-items:center; gap:14px;">
+          ${thumbHtml}
+          <div style="flex:1;">
             <div class="cupom-codigo">${a.titulo}</div>
             <div class="cupom-detalhes">${a.categoria || ''} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
           </div>

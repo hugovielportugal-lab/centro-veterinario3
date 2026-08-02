@@ -19,16 +19,17 @@
 @media (max-width: 900px) { .blog-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 620px) { .blog-grid { grid-template-columns: 1fr; } }
 
-.blog-card {
-  background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06);
-  padding: 24px 24px 22px; cursor: pointer; transition: transform .15s ease;
-}
+.blog-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; cursor: pointer; transition: transform .15s ease; }
 .blog-card:hover { transform: translateY(-3px); }
-.blog-card .eyebrow { margin-bottom: 10px; }
-.blog-card h3 { margin-bottom: 8px; }
-.blog-card p { font-size: 0.92rem; margin: 0; }
+.blog-card-thumb { height: 160px; background: var(--blue-soft); overflow: hidden; }
+.blog-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.blog-card-body { padding: 22px 24px 24px; }
+.blog-card-body .eyebrow { margin-bottom: 10px; }
+.blog-card-body h3 { margin-bottom: 8px; }
+.blog-card-body p { font-size: 0.92rem; margin: 0; }
 .blog-card .blog-read-more { display: inline-block; margin-top: 14px; color: var(--navy); font-weight: 700; font-size: 0.85rem; }
 
+.blog-article-cover { width: 100%; max-height: 340px; object-fit: cover; border-radius: var(--radius-card); margin-bottom: 28px; }
 .blog-article { max-width: 720px; }
 .blog-article .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--gray); font-weight: 600; font-size: 0.9rem; margin-bottom: 22px; }
 .blog-article .back-link:hover { color: var(--navy); }
@@ -90,6 +91,7 @@
     </div>
     <div id="blogArticleView" class="blog-article" style="display:none;">
       <a href="#" class="back-link" onclick="showBlogList(); return false;">← Voltar aos artigos</a>
+      <img id="articleCapa" class="blog-article-cover" style="display:none;" alt="">
       <span class="eyebrow" id="articleCategoria"></span>
       <h1 id="articleTitulo"></h1>
       <div class="blog-meta" id="articleMeta"></div>
@@ -139,8 +141,8 @@ const db = firebase.firestore();
 let artigos = [];
 
 function loadArtigos() {
-  db.collection('artigos').where('publicado', '==', true).orderBy('criadoEm', 'desc').get().then(snap => {
-    artigos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  db.collection('artigos').orderBy('criadoEm', 'desc').get().then(snap => {
+    artigos = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.publicado !== false);
     renderBlogGrid();
   }).catch(err => {
     document.getElementById('blogGrid').innerHTML = '<div class="empty-state">Não foi possível carregar os artigos de momento.</div>';
@@ -156,10 +158,13 @@ function renderBlogGrid() {
   }
   grid.innerHTML = artigos.map(a => `
     <div class="blog-card" onclick="showArticle('${a.id}')">
-      <span class="eyebrow">${a.categoria || ''}</span>
-      <h3>${a.titulo}</h3>
-      <p>${a.resumo}</p>
-      <span class="blog-read-more">Ler artigo →</span>
+      ${a.imagemCapa ? `<div class="blog-card-thumb"><img src="${a.imagemCapa}" alt="${a.titulo}" loading="lazy"></div>` : ''}
+      <div class="blog-card-body">
+        <span class="eyebrow">${a.categoria || ''}</span>
+        <h3>${a.titulo}</h3>
+        <p>${a.resumo}</p>
+        <span class="blog-read-more">Ler artigo →</span>
+      </div>
     </div>
   `).join('');
 }
@@ -168,6 +173,9 @@ function showArticle(id) {
   const a = artigos.find(x => x.id === id);
   if (!a) return;
   document.getElementById('blogListView').style.display = 'none';
+  const capaEl = document.getElementById('articleCapa');
+  if (a.imagemCapa) { capaEl.src = a.imagemCapa; capaEl.alt = a.titulo; capaEl.style.display = 'block'; }
+  else { capaEl.style.display = 'none'; }
   document.getElementById('articleCategoria').textContent = a.categoria || '';
   document.getElementById('articleTitulo').textContent = a.titulo;
   const data = a.criadoEm && a.criadoEm.toDate ? a.criadoEm.toDate().toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
