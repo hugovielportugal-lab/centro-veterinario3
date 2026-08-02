@@ -1055,13 +1055,18 @@ function loadBlog() {
     }
     listEl.innerHTML = allArtigos.map(a => {
       const thumbHtml = a.imagemCapa ? `<img src="${a.imagemCapa}" style="width:52px; height:52px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : '';
-      const faixaTxt = a.faixaEtaria ? ' · ' + a.faixaEtaria : '';
+      const faixaAtual = a.faixaEtaria || 'Todas as idades';
+      const faixaSelect = `
+        <select onchange="atualizarFaixaEtaria('${a.id}', this.value)" style="margin-top:6px; font-size:0.8rem; padding:4px 8px; width:auto;">
+          ${['Todas as idades', 'Cachorro ou Gatinho', 'Adulto', 'Sénior'].map(f => `<option value="${f}" ${f === faixaAtual ? 'selected' : ''}>${f}</option>`).join('')}
+        </select>`;
       return `
         <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}" style="align-items:center; gap:14px;">
           ${thumbHtml}
           <div style="flex:1;">
             <div class="cupom-codigo">${a.titulo}</div>
-            <div class="cupom-detalhes">${a.categoria || ''}${faixaTxt} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
+            <div class="cupom-detalhes">${a.categoria || ''} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
+            ${faixaSelect}
           </div>
           <div class="cupom-actions">
             <button onclick="editarArtigo('${a.id}')">Editar</button>
@@ -1078,6 +1083,13 @@ function loadBlog() {
 
 function togglePublicadoArtigo(id, publicado) {
   db.collection('artigos').doc(id).update({ publicado: publicado }).then(loadBlog);
+}
+
+// Atualiza só o ciclo de idade, direto a partir do menu na lista — sem abrir o formulário de edição.
+function atualizarFaixaEtaria(id, faixaEtaria) {
+  db.collection('artigos').doc(id).update({ faixaEtaria: faixaEtaria });
+  const artigo = allArtigos.find(a => a.id === id);
+  if (artigo) artigo.faixaEtaria = faixaEtaria;
 }
 
 function deleteArtigo(id) {
