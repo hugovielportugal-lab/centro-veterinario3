@@ -136,7 +136,7 @@
     <p>Acesso restrito à equipa do Centro Veterinário Linda-a-Velha.</p>
     <div class="admin-error" id="loginError"></div>
     <input type="email" id="adminEmail" placeholder="E-mail" value="cvlindaavelha@outlook.com">
-    <input type="password" id="adminPassword" placeholder="Senha">
+    <input type="password" id="adminPassword" placeholder="Palavra-passe">
     <button class="btn btn-navy" style="width:100%; justify-content:center;" onclick="doLogin()">Entrar</button>
   </div>
 
@@ -339,7 +339,7 @@ function doLogin() {
 
   auth.signInWithEmailAndPassword(email, password)
     .catch(err => {
-      errEl.textContent = 'E-mail ou senha incorretos.';
+      errEl.textContent = 'E-mail ou palavra-passe incorretos.';
       errEl.classList.add('show');
     });
 }
@@ -708,7 +708,7 @@ function checkAndNotifyWaitingList(key) {
     const emails = waiting.map(w => w.email);
     if (!confirm(`${waiting.length} pessoa(s) pediram para ser avisadas quando "${produtoNome}" voltasse a ter stock.\n\nVamos abrir o teu e-mail com todos os destinatários prontos — só falta clicares em enviar. Continuar?`)) return;
     const subject = encodeURIComponent(`${produtoNome} já está disponível!`);
-    const body = encodeURIComponent(`Olá!\n\nO produto "${produtoNome}" que pediste para seres avisado(a) já está disponível no Centro Veterinário Linda-a-Velha.\n\nVem levantar quando quiseres!\n\nAté já.`);
+    const body = encodeURIComponent(`Olá!\n\nO produto "${produtoNome}" que pediu para ser avisado(a) já está disponível no Centro Veterinário Linda-a-Velha.\n\nVenha levantar quando quiser!\n\nAté já.`);
     const mailtoLink = `mailto:?bcc=${emails.join(',')}&subject=${subject}&body=${body}`;
     window.location.href = mailtoLink;
     // Assume que o e-mail foi (ou vai ser) enviado e limpa a lista de espera deste produto

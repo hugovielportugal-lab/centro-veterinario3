@@ -578,11 +578,11 @@
       <label><input type="checkbox" id="authAnimalGato"> Gato</label>
     </div>
     <input type="email" id="authEmail" placeholder="E-mail">
-    <input type="password" id="authPassword" placeholder="Senha">
+    <input type="password" id="authPassword" placeholder="Palavra-passe">
     <div class="auth-hint" id="authPasswordHint" style="display:none;">Mínimo 8 caracteres, com pelo menos uma letra e um número.</div>
     <div class="auth-error" id="authError"></div>
     <button class="btn btn-navy" style="justify-content:center;" onclick="submitAuth()" id="authSubmitBtn">Entrar</button>
-    <button type="button" id="forgotPasswordLink" onclick="submitForgotPassword()" style="background:none; border:none; color:var(--gray); font-size:0.82rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Esqueci-me da senha</button>
+    <button type="button" id="forgotPasswordLink" onclick="submitForgotPassword()" style="background:none; border:none; color:var(--gray); font-size:0.82rem; text-decoration:underline; cursor:pointer; align-self:center; margin-top:2px;">Esqueci-me da palavra-passe</button>
   </div>
 </div>
 
@@ -725,7 +725,7 @@ function submitForgotPassword() {
   const email = document.getElementById('authEmail').value.trim();
   if (!email) { showAuthError('Escreva o seu e-mail em cima e clique de novo.'); return; }
   auth.sendPasswordResetEmail(email).then(() => {
-    showAuthError('E-mail enviado! Verifique a caixa de entrada de ' + email + ' para definir uma nova senha.', true);
+    showAuthError('E-mail enviado! Verifique a caixa de entrada de ' + email + ' para definir uma nova palavra-passe.', true);
   }).catch(err => showAuthError(traduzErro(err.code)));
 }
 function isStrongPassword(pw) {
@@ -735,7 +735,7 @@ function submitAuth() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const name = document.getElementById('authName').value.trim();
-  if (!email || !password) { showAuthError('Preencha e-mail e senha.'); return; }
+  if (!email || !password) { showAuthError('Preencha e-mail e palavra-passe.'); return; }
   if (authMode === 'register') {
     if (!name) { showAuthError('Preencha o seu nome.'); return; }
     const phone = document.getElementById('authPhone').value.trim();
@@ -743,7 +743,7 @@ function submitAuth() {
     const temCao = document.getElementById('authAnimalCao').checked;
     const temGato = document.getElementById('authAnimalGato').checked;
     if (!temCao && !temGato) { showAuthError('Selecione pelo menos um: Cão ou Gato.'); return; }
-    if (!isStrongPassword(password)) { showAuthError('A senha precisa de pelo menos 8 caracteres, com uma letra e um número.'); return; }
+    if (!isStrongPassword(password)) { showAuthError('A palavra-passe precisa de pelo menos 8 caracteres, com uma letra e um número.'); return; }
     const animais = [];
     if (temCao) animais.push('cao');
     if (temGato) animais.push('gato');
@@ -772,10 +772,10 @@ function traduzErro(code) {
   const map = {
     'auth/email-already-in-use': 'Este e-mail já tem conta. Tente entrar em vez de criar.',
     'auth/invalid-email': 'E-mail inválido.',
-    'auth/weak-password': 'A senha deve ter pelo menos 6 caracteres.',
+    'auth/weak-password': 'A palavra-passe deve ter pelo menos 6 caracteres.',
     'auth/user-not-found': 'Não existe conta com este e-mail.',
-    'auth/wrong-password': 'Senha incorreta.',
-    'auth/invalid-credential': 'E-mail ou senha incorretos.'
+    'auth/wrong-password': 'Palavra-passe incorreta.',
+    'auth/invalid-credential': 'E-mail ou palavra-passe incorretos.'
   };
   return map[code] || 'Ocorreu um erro. Tente novamente.';
 }
@@ -951,7 +951,7 @@ function showNotifyForm(id, ctx) {
   const defaultEmail = (auth.currentUser && auth.currentUser.email) || '';
   container.innerHTML = `
     <div class="notify-form">
-      <input type="email" id="notifyemail-${ctx}-${id}" placeholder="O teu e-mail" value="${defaultEmail}">
+      <input type="email" id="notifyemail-${ctx}-${id}" placeholder="O seu e-mail" value="${defaultEmail}">
       <button class="add-btn" onclick="submitNotifyMe(${id}, '${ctx}')">Avisar</button>
     </div>`;
 }
@@ -960,7 +960,7 @@ function submitNotifyMe(id, ctx) {
   const p = products.find(pr => pr.id === id);
   const emailInput = document.getElementById(`notifyemail-${ctx}-${id}`);
   const email = emailInput.value.trim();
-  if (!email || !email.includes('@') || !email.includes('.')) { alert('Escreve um e-mail válido.'); return; }
+  if (!email || !email.includes('@') || !email.includes('.')) { alert('Escreva um e-mail válido.'); return; }
   let idx = null;
   let sizeLabel = '';
   if (Array.isArray(p.sizes)) {
@@ -1065,7 +1065,7 @@ function renderReviewFormArea(productId, allReviews) {
   }
   const ownReview = allReviews.find(r => r.uid === user.uid);
   if (ownReview) {
-    return Promise.resolve('<p class="reviews-note">Já avaliaste este produto. Obrigado pelo teu feedback!</p>');
+    return Promise.resolve('<p class="reviews-note">Já avaliou este produto. Obrigado pelo seu feedback!</p>');
   }
   return db.collection('compras').doc(`${user.uid}_${productId}`).get().then(doc => {
     if (!doc.exists) {
@@ -1076,7 +1076,7 @@ function renderReviewFormArea(productId, allReviews) {
         <div class="review-stars-input" id="reviewStarsInput-${productId}">
           ${[1,2,3,4,5].map(n => `<span class="star-pick" data-value="${n}" onclick="setReviewStars(${productId}, ${n})">☆</span>`).join('')}
         </div>
-        <textarea id="reviewComment-${productId}" placeholder="Escreve um comentário (opcional)" rows="2"></textarea>
+        <textarea id="reviewComment-${productId}" placeholder="Escreva um comentário (opcional)" rows="2"></textarea>
         <button class="btn btn-navy" style="justify-content:center;" onclick="submitReview(${productId})">Publicar avaliação</button>
       </div>`;
   });
@@ -1093,7 +1093,7 @@ function submitReview(productId) {
   if (!user) return;
   const widget = document.getElementById(`reviewStarsInput-${productId}`);
   const estrelas = parseInt(widget.dataset.value || '0', 10);
-  if (!estrelas) { alert('Escolhe de 1 a 5 estrelas.'); return; }
+  if (!estrelas) { alert('Escolha de 1 a 5 estrelas.'); return; }
   const comentario = document.getElementById(`reviewComment-${productId}`).value.trim();
   db.collection('avaliacoes').add({
     produtoId: productId,
@@ -1261,7 +1261,7 @@ function aplicarCupom() {
   const msgEl = document.getElementById('cupomMsg');
   const codigo = (input.value || '').trim().toUpperCase();
   if (!codigo) {
-    msgEl.textContent = 'Escreve um código.';
+    msgEl.textContent = 'Escreva um código.';
     msgEl.className = 'cart-coupon-msg warn';
     return;
   }
