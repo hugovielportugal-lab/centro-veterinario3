@@ -152,6 +152,7 @@
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
       <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
+      <button id="mainTabBlog" onclick="setMainTab('blog')">Blog</button>
     </div>
 
     <div id="pedidosPanel">
@@ -250,6 +251,44 @@
       </div>
       <div id="cupoesList"></div>
     </div>
+    <div id="blogPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title">Novo artigo</div>
+        <p class="stock-import-help">Fica guardado como rascunho até marcares "Publicado" — só aí aparece na loja.</p>
+        <div class="cupom-form-row">
+          <div>
+            <label>Título</label>
+            <input type="text" id="blogTitulo" placeholder="ex: Leishmaniose Canina: sintomas e prevenção">
+          </div>
+          <div>
+            <label>Categoria</label>
+            <select id="blogCategoria">
+              <option value="Doenças">Doenças</option>
+              <option value="Prevenção">Prevenção</option>
+              <option value="Bem-estar">Bem-estar</option>
+              <option value="Nutrição">Nutrição</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <label>Resumo (aparece na lista de artigos)</label>
+          <input type="text" id="blogResumo" placeholder="Uma frase curta a resumir o artigo" style="width:100%;">
+        </div>
+        <div style="margin-top:12px;">
+          <label>Conteúdo</label>
+          <textarea id="blogConteudo" rows="10" placeholder="Escreve o artigo aqui. Deixa uma linha em branco entre parágrafos." style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:0.92rem; resize:vertical;"></textarea>
+        </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="blogPublicado" style="width:auto;" checked>
+          <label for="blogPublicado" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Publicado (visível na loja já)</label>
+        </div>
+        <div class="stock-import-actions" style="margin-top:14px;">
+          <button class="btn btn-navy" onclick="publicarArtigo()">Guardar artigo</button>
+        </div>
+        <div class="galeria-progress" id="blogProgress"></div>
+      </div>
+      <div id="blogList"></div>
+    </div>
   </div>
 
 </div>
@@ -315,6 +354,9 @@ function setMainTab(tab) {
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
   document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
   document.getElementById('cupoesPanel').style.display = tab === 'cupoes' ? 'block' : 'none';
+  document.getElementById('mainTabBlog').classList.toggle('active', tab === 'blog');
+  document.getElementById('blogPanel').style.display = tab === 'blog' ? 'block' : 'none';
+  if (tab === 'blog') loadBlog();
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'stock') loadWaitingList();
   if (tab === 'galeria') loadGaleria();
@@ -900,6 +942,76 @@ function toggleCupomAtivo(codigo, ativo) {
 function deleteCupom(codigo) {
   if (!confirm(`Eliminar o cupão "${codigo}" permanentemente?`)) return;
   db.collection('cupoes').doc(codigo).delete().then(loadCupoes);
+}
+
+// ---------- Blog ----------
+function publicarArtigo() {
+  const titulo = document.getElementById('blogTitulo').value.trim();
+  const categoria = document.getElementById('blogCategoria').value;
+  const resumo = document.getElementById('blogResumo').value.trim();
+  const conteudo = document.getElementById('blogConteudo').value.trim();
+  const publicado = document.getElementById('blogPublicado').checked;
+  const progressEl = document.getElementById('blogProgress');
+
+  if (!titulo || !resumo || !conteudo) {
+    progressEl.textContent = 'Preenche o título, o resumo e o conteúdo.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  db.collection('artigos').add({
+    titulo, categoria, resumo, conteudo, publicado,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    progressEl.textContent = 'Artigo guardado com sucesso!';
+    progressEl.className = 'galeria-progress ok';
+    document.getElementById('blogTitulo').value = '';
+    document.getElementById('blogResumo').value = '';
+    document.getElementById('blogConteudo').value = '';
+    document.getElementById('blogPublicado').checked = true;
+    loadBlog();
+  }).catch(err => {
+    progressEl.textContent = 'Erro: ' + err.message;
+    progressEl.className = 'galeria-progress warn';
+    console.error(err);
+  });
+}
+
+function loadBlog() {
+  const listEl = document.getElementById('blogList');
+  listEl.innerHTML = '<div class="empty-state">A carregar artigos...</div>';
+  db.collection('artigos').orderBy('criadoEm', 'desc').get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há artigos criados.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const a = doc.data();
+      return `
+        <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}">
+          <div>
+            <div class="cupom-codigo">${a.titulo}</div>
+            <div class="cupom-detalhes">${a.categoria || ''} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
+          </div>
+          <div class="cupom-actions">
+            <button onclick="togglePublicadoArtigo('${doc.id}', ${a.publicado === false})">${a.publicado === false ? 'Publicar' : 'Passar a rascunho'}</button>
+            <button onclick="deleteArtigo('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar artigos.</div>';
+    console.error(err);
+  });
+}
+
+function togglePublicadoArtigo(id, publicado) {
+  db.collection('artigos').doc(id).update({ publicado: publicado }).then(loadBlog);
+}
+
+function deleteArtigo(id) {
+  if (!confirm('Eliminar este artigo permanentemente?')) return;
+  db.collection('artigos').doc(id).delete().then(loadBlog);
 }
 
 // ---------- Importar/exportar stock em Excel ----------
