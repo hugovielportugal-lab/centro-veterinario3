@@ -18,6 +18,15 @@
 .galeria-item { position: relative; border-radius: var(--radius-card); overflow: hidden; aspect-ratio: 1/1; background: #eee; }
 .galeria-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .galeria-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 12px 8px; background: linear-gradient(transparent, rgba(0,0,0,0.6)); color: #fff; font-size: 0.82rem; font-weight: 600; }
+.blog-preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+@media (max-width: 700px) { .blog-preview-grid { grid-template-columns: 1fr; } }
+.blog-preview-card { display: block; border-radius: var(--radius-card); overflow: hidden; box-shadow: 0 2px 18px rgba(15,59,96,0.06); background: #fff; transition: transform .15s ease; }
+.blog-preview-card:hover { transform: translateY(-3px); }
+.blog-preview-card img { width: 100%; height: 220px; object-fit: cover; display: block; }
+.blog-preview-body { padding: 18px 20px 20px; }
+.blog-preview-meta { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gray-light); margin-bottom: 8px; }
+.blog-preview-meta .cat { color: var(--teal); }
+.blog-preview-body h3 { margin: 0; font-size: 1.05rem; }
 .cupom-banner {
   display: none; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
   background: linear-gradient(135deg, var(--navy), var(--teal, #1e7a3d));
@@ -261,6 +270,19 @@
   </div>
 </section>
 
+<section class="blog-preview-section" id="blogPreviewSection" style="display:none;">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:26px; display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div>
+        <span class="eyebrow">Blog</span>
+        <h2 style="margin-bottom:0;">Últimos artigos</h2>
+      </div>
+      <a href="blog.html" style="color:var(--teal); font-weight:700;">Ver blog →</a>
+    </div>
+    <div class="blog-preview-grid" id="blogPreviewGrid"></div>
+  </div>
+</section>
+
 <section class="section-alt">
   <div class="wrap">
     <div class="section-head" style="margin-bottom:26px;">
@@ -375,8 +397,30 @@ function loadCupomBanner() {
     });
   }).catch(err => console.error('Não foi possível carregar o banner de cupão:', err));
 }
+// ---------- Últimos 2 artigos do blog, mostrados na página inicial ----------
+function loadBlogPreview() {
+  db.collection('artigos').orderBy('criadoEm', 'desc').limit(6).get().then(snap => {
+    const recentes = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => a.publicado !== false).slice(0, 2);
+    if (recentes.length === 0) return;
+    document.getElementById('blogPreviewGrid').innerHTML = recentes.map(a => {
+      const data = a.criadoEm && a.criadoEm.toDate ? a.criadoEm.toDate().toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      const imgHtml = a.imagemCapa ? `<img src="${a.imagemCapa}" alt="${a.titulo}" loading="lazy">` : '';
+      return `
+        <a class="blog-preview-card" href="blog.html?id=${a.id}">
+          ${imgHtml}
+          <div class="blog-preview-body">
+            <div class="blog-preview-meta">${data ? data + ' · ' : ''}<span class="cat">${(a.categoria || '').toUpperCase()}</span></div>
+            <h3>${a.titulo}</h3>
+          </div>
+        </a>`;
+    }).join('');
+    document.getElementById('blogPreviewSection').style.display = 'block';
+  }).catch(err => console.error('Não foi possível carregar os últimos artigos:', err));
+}
+
 loadGaleria();
 loadCupomBanner();
+loadBlogPreview();
 </script>
 </body>
 </html>
