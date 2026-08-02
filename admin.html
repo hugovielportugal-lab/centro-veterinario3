@@ -253,7 +253,7 @@
     </div>
     <div id="blogPanel" style="display:none;">
       <div class="cupom-form-box">
-        <div class="stock-import-title">Novo artigo</div>
+        <div class="stock-import-title" id="blogFormTitle">Novo artigo</div>
         <p class="stock-import-help">Fica guardado como rascunho até marcares "Publicado" — só aí aparece na loja.</p>
         <div class="cupom-form-row">
           <div>
@@ -271,6 +271,15 @@
           </div>
         </div>
         <div style="margin-top:12px;">
+          <label>Ciclo de idade</label>
+          <select id="blogFaixaEtaria" style="width:100%;">
+            <option value="Todas as idades">Todas as idades</option>
+            <option value="Cachorro ou Gatinho">Cachorro ou Gatinho</option>
+            <option value="Adulto">Adulto</option>
+            <option value="Sénior">Sénior</option>
+          </select>
+        </div>
+        <div style="margin-top:12px;">
           <label>Resumo (aparece na lista de artigos)</label>
           <input type="text" id="blogResumo" placeholder="Uma frase curta a resumir o artigo" style="width:100%;">
         </div>
@@ -286,8 +295,9 @@
           <input type="checkbox" id="blogPublicado" style="width:auto;" checked>
           <label for="blogPublicado" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Publicado (visível na loja já)</label>
         </div>
-        <div class="stock-import-actions" style="margin-top:14px;">
-          <button class="btn btn-navy" onclick="publicarArtigo()">Guardar artigo</button>
+        <div class="stock-import-actions" style="margin-top:14px; gap:10px;">
+          <button class="btn btn-navy" id="blogSaveBtn" onclick="publicarArtigo()">Guardar artigo</button>
+          <button id="blogCancelEditBtn" onclick="cancelarEdicaoArtigo()" style="display:none;">Cancelar edição</button>
         </div>
         <div class="galeria-progress" id="blogProgress"></div>
       </div>
@@ -949,9 +959,13 @@ function deleteCupom(codigo) {
 }
 
 // ---------- Blog ----------
+let editingArtigoId = null;
+let allArtigos = [];
+
 function publicarArtigo() {
   const titulo = document.getElementById('blogTitulo').value.trim();
   const categoria = document.getElementById('blogCategoria').value;
+  const faixaEtaria = document.getElementById('blogFaixaEtaria').value;
   const resumo = document.getElementById('blogResumo').value.trim();
   const conteudo = document.getElementById('blogConteudo').value.trim();
   const publicado = document.getElementById('blogPublicado').checked;
@@ -977,17 +991,18 @@ function publicarArtigo() {
       });
 
   imagemPromise.then(imagemCapa => {
-    const dados = { titulo, categoria, resumo, conteudo, publicado, criadoEm: firebase.firestore.FieldValue.serverTimestamp() };
+    const dados = { titulo, categoria, faixaEtaria, resumo, conteudo, publicado };
     if (imagemCapa) dados.imagemCapa = imagemCapa;
-    return db.collection('artigos').add(dados);
+    if (editingArtigoId) {
+      return db.collection('artigos').doc(editingArtigoId).update(dados);
+    } else {
+      dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+      return db.collection('artigos').add(dados);
+    }
   }).then(() => {
-    progressEl.textContent = 'Artigo guardado com sucesso!';
+    progressEl.textContent = editingArtigoId ? 'Artigo atualizado com sucesso!' : 'Artigo guardado com sucesso!';
     progressEl.className = 'galeria-progress ok';
-    document.getElementById('blogTitulo').value = '';
-    document.getElementById('blogResumo').value = '';
-    document.getElementById('blogConteudo').value = '';
-    document.getElementById('blogPublicado').checked = true;
-    fileInput.value = '';
+    cancelarEdicaoArtigo();
     loadBlog();
   }).catch(err => {
     progressEl.textContent = 'Erro: ' + err.message;
@@ -996,27 +1011,62 @@ function publicarArtigo() {
   });
 }
 
+function editarArtigo(id) {
+  const a = allArtigos.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('blogTitulo').value = a.titulo || '';
+  document.getElementById('blogCategoria').value = a.categoria || 'Doenças';
+  document.getElementById('blogFaixaEtaria').value = a.faixaEtaria || 'Todas as idades';
+  document.getElementById('blogResumo').value = a.resumo || '';
+  document.getElementById('blogConteudo').value = a.conteudo || '';
+  document.getElementById('blogPublicado').checked = a.publicado !== false;
+  document.getElementById('blogImagem').value = '';
+  editingArtigoId = id;
+  document.getElementById('blogFormTitle').textContent = 'A editar: ' + a.titulo;
+  document.getElementById('blogSaveBtn').textContent = 'Guardar alterações';
+  document.getElementById('blogCancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('blogProgress').textContent = a.imagemCapa ? 'Já tem imagem de capa — escolhe outra só se quiseres substituir.' : '';
+  document.getElementById('blogProgress').className = 'galeria-progress';
+  document.querySelector('.cupom-form-box').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelarEdicaoArtigo() {
+  editingArtigoId = null;
+  document.getElementById('blogTitulo').value = '';
+  document.getElementById('blogCategoria').value = 'Doenças';
+  document.getElementById('blogFaixaEtaria').value = 'Todas as idades';
+  document.getElementById('blogResumo').value = '';
+  document.getElementById('blogConteudo').value = '';
+  document.getElementById('blogPublicado').checked = true;
+  document.getElementById('blogImagem').value = '';
+  document.getElementById('blogFormTitle').textContent = 'Novo artigo';
+  document.getElementById('blogSaveBtn').textContent = 'Guardar artigo';
+  document.getElementById('blogCancelEditBtn').style.display = 'none';
+}
+
 function loadBlog() {
   const listEl = document.getElementById('blogList');
   listEl.innerHTML = '<div class="empty-state">A carregar artigos...</div>';
   db.collection('artigos').orderBy('criadoEm', 'desc').get().then(snap => {
-    if (snap.empty) {
+    allArtigos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (allArtigos.length === 0) {
       listEl.innerHTML = '<div class="empty-state">Ainda não há artigos criados.</div>';
       return;
     }
-    listEl.innerHTML = snap.docs.map(doc => {
-      const a = doc.data();
+    listEl.innerHTML = allArtigos.map(a => {
       const thumbHtml = a.imagemCapa ? `<img src="${a.imagemCapa}" style="width:52px; height:52px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : '';
+      const faixaTxt = a.faixaEtaria ? ' · ' + a.faixaEtaria : '';
       return `
         <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}" style="align-items:center; gap:14px;">
           ${thumbHtml}
           <div style="flex:1;">
             <div class="cupom-codigo">${a.titulo}</div>
-            <div class="cupom-detalhes">${a.categoria || ''} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
+            <div class="cupom-detalhes">${a.categoria || ''}${faixaTxt} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
           </div>
           <div class="cupom-actions">
-            <button onclick="togglePublicadoArtigo('${doc.id}', ${a.publicado === false})">${a.publicado === false ? 'Publicar' : 'Passar a rascunho'}</button>
-            <button onclick="deleteArtigo('${doc.id}')">Eliminar</button>
+            <button onclick="editarArtigo('${a.id}')">Editar</button>
+            <button onclick="togglePublicadoArtigo('${a.id}', ${a.publicado === false})">${a.publicado === false ? 'Publicar' : 'Passar a rascunho'}</button>
+            <button onclick="deleteArtigo('${a.id}')">Eliminar</button>
           </div>
         </div>`;
     }).join('');
