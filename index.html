@@ -38,30 +38,6 @@
   .contact-merged { grid-template-columns: 1fr; }
   .contact-merged .map-embed { min-height: 260px; }
 }
-.clinicas-panel {
-  display: grid; grid-template-columns: 1fr 1fr; align-items: stretch;
-  background: var(--blue-soft); border-radius: 28px; overflow: hidden;
-}
-.clinicas-panel-text { padding: 48px 44px; }
-.clinicas-panel-text h2 { font-size: clamp(1.6rem, 2.6vw, 2.1rem); margin-bottom: 24px; }
-.clinicas-panel-text h2 .teal { color: var(--teal); display: block; }
-.clinicas-pills { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-.clinica-pill {
-  display: flex; align-items: center; gap: 10px;
-  background: #fff; border-radius: var(--radius-pill); padding: 12px 22px 12px 16px;
-  font-weight: 700; font-size: 0.94rem; color: var(--ink);
-  box-shadow: 0 2px 10px rgba(15,59,96,0.06); transition: transform .15s ease;
-}
-.clinica-pill:hover { transform: translateX(3px); }
-.clinica-pill svg { width: 20px; height: 20px; color: var(--teal); flex-shrink: 0; }
-.clinica-pill .pill-sub { font-weight: 500; color: var(--gray); font-size: 0.82rem; }
-.clinicas-panel-media { position: relative; background: var(--navy); display: flex; align-items: center; justify-content: center; padding: 30px; min-height: 260px; }
-.clinicas-panel-media img { width: 62%; max-width: 220px; opacity: 0.92; }
-@media (max-width: 860px) {
-  .clinicas-panel { grid-template-columns: 1fr; }
-  .clinicas-panel-text { padding: 36px 28px; }
-  .clinicas-panel-media { min-height: 180px; padding: 24px; }
-}
 .cupom-banner {
   display: none; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap;
   background: linear-gradient(135deg, var(--navy), var(--teal, #1e7a3d));
@@ -296,29 +272,6 @@
   </div>
 </section>
 
-<section>
-  <div class="wrap">
-    <div class="clinicas-panel">
-      <div class="clinicas-panel-text">
-        <h2>Conheça as nossas <span class="teal">Clínicas Veterinárias</span></h2>
-        <div class="clinicas-pills">
-          <a class="clinica-pill" href="https://www.google.com/maps/place/Centro+Veterinario+Linda-A-Velha/@38.7115323,-9.2460121,16z/data=!4m7!3m6!1s0xd1ecd691adfc461:0x90562d5131b7186b!8m2!3d38.7155891!4d-9.2409936!15sCiBjZW50cm8gdmV0ZXJpbmFyaW8gbGluZGEgYSB2ZWxoYZIBDHZldGVyaW5hcmlhbuABAA!16s%2Fg%2F11zh65cz9y" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            Centro Veterinário Linda-a-Velha
-          </a>
-          <a class="clinica-pill" href="https://www.google.com/maps/place/O+Médico+Veterinário+melhor+amigo+do+meu+amigo/@38.6311607,-8.9502009,11.75z/data=!4m6!3m5!1s0xd1937c86f56e5c5:0x65a0cd62433fe0b6!8m2!3d38.6400774!4d-9.0448413!16s%2Fg%2F11qr9y2w24" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-7-11a7 7 0 0114 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            Clínica Veterinária Pinhal Novo
-          </a>
-        </div>
-      </div>
-      <div class="clinicas-panel-media">
-        <img src="icon-white.png" alt="Grupo do meu melhor amigo">
-      </div>
-    </div>
-  </div>
-</section>
-
 <section class="section-alt" id="contactos">
   <div class="wrap">
     <div class="section-head" style="margin-bottom:26px;">
@@ -359,7 +312,7 @@
     <div class="footer-grid" style="grid-template-columns: 1fr 1fr; align-items:start;">
       <div>
         <h4>Centro Veterinário Linda-a-Velha</h4>
-        <p style="color:var(--gray); margin:0;">Faz parte do Grupo do meu melhor amigo.</p>
+        <p style="color:var(--gray); margin:0;">Cuidados veterinários e loja especializada, em Linda-a-Velha.</p>
       </div>
       <div>
         <h4>Siga-nos nas redes sociais!</h4>
