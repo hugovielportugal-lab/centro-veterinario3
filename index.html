@@ -17,6 +17,26 @@
   margin-bottom: 18px;
 }
 .opening-soon-badge::before { content: "🎉"; font-size: 0.95rem; }
+.opening-notify-section { padding: 40px 0; }
+.opening-notify-panel {
+  background: var(--blue-soft); border-radius: 24px; padding: 34px 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 30px; flex-wrap: wrap;
+}
+.opening-notify-text h2 { font-size: 1.4rem; margin-bottom: 6px; }
+.opening-notify-text p { margin: 0; max-width: 42ch; }
+.opening-notify-form { display: flex; gap: 10px; flex-wrap: wrap; }
+.opening-notify-form input {
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 0.9rem; min-width: 160px;
+}
+.opening-notify-msg { margin-top: 14px; font-size: 0.88rem; font-weight: 600; }
+.opening-notify-msg.ok { color: var(--teal); }
+.opening-notify-msg.warn { color: #c0392b; }
+@media (max-width: 760px) {
+  .opening-notify-panel { flex-direction: column; align-items: stretch; text-align: center; padding: 30px 24px; }
+  .opening-notify-form { flex-direction: column; }
+  .opening-notify-form input, .opening-notify-form button { width: 100%; justify-content: center; }
+}
 .galeria-section { background: var(--bg-alt); padding: 56px 0; }
 .galeria-title { text-align: center; font-family: var(--font-display); color: var(--navy); margin-bottom: 6px; }
 .galeria-sub { text-align: center; color: var(--gray); margin-bottom: 30px; }
@@ -120,6 +140,24 @@
     <div class="hero-media">
       <img src="https://silviocardosodev.github.io/centro-veterinario-lindaavelha/_next/static/media/herobg-dog-clinicaveterinaria-lindaavelha.3ou3k0u8j-t5f.webp" alt="Cão atendido no Centro Veterinário Linda-a-Velha">
     </div>
+  </div>
+</section>
+
+<section class="opening-notify-section">
+  <div class="wrap">
+    <div class="opening-notify-panel">
+      <div class="opening-notify-text">
+        <h2>Seja o primeiro a saber</h2>
+        <p>Deixe o seu contacto e avisamos assim que abrirmos portas — sem spam, é só isso.</p>
+      </div>
+      <form class="opening-notify-form" onsubmit="submitAberturaNotify(event)">
+        <input type="text" id="abrNome" placeholder="O seu nome" required>
+        <input type="email" id="abrEmail" placeholder="O seu e-mail" required>
+        <input type="tel" id="abrTelefone" placeholder="Telefone (opcional)">
+        <button type="submit" class="btn btn-navy">Avisem-me</button>
+      </form>
+    </div>
+    <div id="abrMsg" class="opening-notify-msg"></div>
   </div>
 </section>
 
@@ -382,6 +420,37 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// ---------- Formulário "avise-me na abertura" ----------
+function submitAberturaNotify(e) {
+  e.preventDefault();
+  const nome = document.getElementById('abrNome').value.trim();
+  const email = document.getElementById('abrEmail').value.trim();
+  const telefone = document.getElementById('abrTelefone').value.trim();
+  const msgEl = document.getElementById('abrMsg');
+
+  if (!nome || !email) {
+    msgEl.textContent = 'Preencha o nome e o e-mail.';
+    msgEl.className = 'opening-notify-msg warn';
+    return;
+  }
+
+  db.collection('avisos_abertura').add({
+    nome, email,
+    telefone: telefone || null,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    msgEl.textContent = 'Obrigado! Vamos avisá-lo assim que abrirmos.';
+    msgEl.className = 'opening-notify-msg ok';
+    document.getElementById('abrNome').value = '';
+    document.getElementById('abrEmail').value = '';
+    document.getElementById('abrTelefone').value = '';
+  }).catch(err => {
+    msgEl.textContent = 'Não foi possível enviar. Tente novamente.';
+    msgEl.className = 'opening-notify-msg warn';
+    console.error(err);
+  });
+}
 
 function loadGaleria() {
   db.collection('galeria').orderBy('criadoEm', 'desc').limit(12).get().then(snap => {

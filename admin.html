@@ -153,6 +153,7 @@
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
       <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
       <button id="mainTabBlog" onclick="setMainTab('blog')">Blog</button>
+      <button id="mainTabAbertura" onclick="setMainTab('abertura')">Abertura</button>
     </div>
 
     <div id="pedidosPanel">
@@ -303,6 +304,17 @@
       </div>
       <div id="blogList"></div>
     </div>
+    <div id="aberturaPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title">Inscrições "avise-me na abertura"</div>
+        <p class="stock-import-help">Pessoas que deixaram o contacto no site para serem avisadas assim que abrirem. Usa "Copiar e-mails" para colar no campo BCC de um e-mail em massa.</p>
+        <div class="stock-import-actions">
+          <button class="btn btn-navy" onclick="copiarEmailsAbertura()">Copiar e-mails</button>
+        </div>
+        <div class="galeria-progress" id="aberturaProgress"></div>
+      </div>
+      <div id="aberturaList"></div>
+    </div>
   </div>
 
 </div>
@@ -371,6 +383,9 @@ function setMainTab(tab) {
   document.getElementById('mainTabBlog').classList.toggle('active', tab === 'blog');
   document.getElementById('blogPanel').style.display = tab === 'blog' ? 'block' : 'none';
   if (tab === 'blog') loadBlog();
+  document.getElementById('mainTabAbertura').classList.toggle('active', tab === 'abertura');
+  document.getElementById('aberturaPanel').style.display = tab === 'abertura' ? 'block' : 'none';
+  if (tab === 'abertura') loadAberturaAvisos();
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'stock') loadWaitingList();
   if (tab === 'galeria') loadGaleria();
@@ -1095,6 +1110,56 @@ function atualizarFaixaEtaria(id, faixaEtaria) {
 function deleteArtigo(id) {
   if (!confirm('Eliminar este artigo permanentemente?')) return;
   db.collection('artigos').doc(id).delete().then(loadBlog);
+}
+
+// ---------- Abertura ----------
+let allAberturaAvisos = [];
+
+function loadAberturaAvisos() {
+  const listEl = document.getElementById('aberturaList');
+  listEl.innerHTML = '<div class="empty-state">A carregar...</div>';
+  db.collection('avisos_abertura').orderBy('criadoEm', 'desc').get().then(snap => {
+    allAberturaAvisos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (allAberturaAvisos.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">Ainda ninguém se inscreveu.</div>';
+      return;
+    }
+    listEl.innerHTML = allAberturaAvisos.map(a => `
+      <div class="cupom-card">
+        <div>
+          <div class="cupom-codigo">${a.nome}</div>
+          <div class="cupom-detalhes">${a.email}${a.telefone ? ' · ' + a.telefone : ''}</div>
+        </div>
+        <div class="cupom-actions">
+          <button onclick="deleteAberturaAviso('${a.id}')">Eliminar</button>
+        </div>
+      </div>`).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar.</div>';
+    console.error(err);
+  });
+}
+
+function deleteAberturaAviso(id) {
+  if (!confirm('Eliminar esta inscrição?')) return;
+  db.collection('avisos_abertura').doc(id).delete().then(loadAberturaAvisos);
+}
+
+function copiarEmailsAbertura() {
+  const progressEl = document.getElementById('aberturaProgress');
+  if (allAberturaAvisos.length === 0) {
+    progressEl.textContent = 'Ainda não há e-mails para copiar.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  const emails = allAberturaAvisos.map(a => a.email).join(', ');
+  navigator.clipboard.writeText(emails).then(() => {
+    progressEl.textContent = `${allAberturaAvisos.length} e-mail(s) copiado(s) para a área de transferência.`;
+    progressEl.className = 'galeria-progress ok';
+  }).catch(() => {
+    progressEl.textContent = 'Não foi possível copiar automaticamente. Lista: ' + emails;
+    progressEl.className = 'galeria-progress warn';
+  });
 }
 
 // ---------- Importar/exportar stock em Excel ----------
