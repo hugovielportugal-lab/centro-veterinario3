@@ -516,20 +516,20 @@
           <button data-species="gato" data-filter="racoes-vet">Só gato</button>
           <hr>
           <span class="submenu-label">Marcas</span>
-          <button data-species="todas" data-filter="racoes-vet" data-brand="Royal Canin">Royal Canin Veterinary</button>
-          <button data-species="todas" data-filter="racoes-vet" data-brand="Ownat" data-gama="Care">Ownat Care</button>
-          <button data-species="todas" data-filter="racoes-vet" data-brand="Advance">Advance Veterinary Diets</button>
+          <button data-filter="racoes-vet" data-brand="Royal Canin">Royal Canin Veterinary</button>
+          <button data-filter="racoes-vet" data-brand="Ownat" data-gama="Care">Ownat Care</button>
+          <button data-filter="racoes-vet" data-brand="Advance">Advance Veterinary Diets</button>
           <hr>
           <span class="submenu-label">Por condição</span>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Renal">Renal</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Urinária">Urinária</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Digestiva">Digestiva</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Hipoalergénico">Hipoalergénica / Dermatológica</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Peso">Controlo de peso</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Mobilidade">Mobilidade articular</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Diabética">Diabética</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Hepática">Hepática</button>
-          <button data-species="todas" data-filter="racoes-vet" data-condicao="Cardíaca">Cardíaca</button>
+          <button data-filter="racoes-vet" data-condicao="Renal">Renal</button>
+          <button data-filter="racoes-vet" data-condicao="Urinária">Urinária</button>
+          <button data-filter="racoes-vet" data-condicao="Digestiva">Digestiva</button>
+          <button data-filter="racoes-vet" data-condicao="Hipoalergénico">Hipoalergénica / Dermatológica</button>
+          <button data-filter="racoes-vet" data-condicao="Peso">Controlo de peso</button>
+          <button data-filter="racoes-vet" data-condicao="Mobilidade">Mobilidade articular</button>
+          <button data-filter="racoes-vet" data-condicao="Diabética">Diabética</button>
+          <button data-filter="racoes-vet" data-condicao="Hepática">Hepática</button>
+          <button data-filter="racoes-vet" data-condicao="Cardíaca">Cardíaca</button>
         </div>
       </div>
 
@@ -1549,7 +1549,7 @@ document.querySelectorAll('.store-tab-menu').forEach(menu => {
   menu.querySelectorAll('.store-submenu button').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      currentSpecies = btn.dataset.species;
+      currentSpecies = btn.dataset.species || currentSpecies;
       currentFilter = btn.dataset.filter || 'todos';
       currentBrand = btn.dataset.brand || null;
       currentGama = btn.dataset.gama || null;
