@@ -150,6 +150,7 @@
       <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
+      <button id="mainTabSugestoes" onclick="setMainTab('sugestoes')">Sugestões</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
       <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
       <button id="mainTabBlog" onclick="setMainTab('blog')">Blog</button>
@@ -196,6 +197,10 @@
 
     <div id="avaliacoesPanel" style="display:none;">
       <div id="avaliacoesList"></div>
+    </div>
+
+    <div id="sugestoesPanel" style="display:none;">
+      <div id="sugestoesList"></div>
     </div>
 
     <div id="galeriaPanel" style="display:none;">
@@ -373,11 +378,13 @@ function setMainTab(tab) {
   document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
+  document.getElementById('mainTabSugestoes').classList.toggle('active', tab === 'sugestoes');
   document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
   document.getElementById('mainTabCupoes').classList.toggle('active', tab === 'cupoes');
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
+  document.getElementById('sugestoesPanel').style.display = tab === 'sugestoes' ? 'block' : 'none';
   document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
   document.getElementById('cupoesPanel').style.display = tab === 'cupoes' ? 'block' : 'none';
   document.getElementById('mainTabBlog').classList.toggle('active', tab === 'blog');
@@ -387,6 +394,7 @@ function setMainTab(tab) {
   document.getElementById('aberturaPanel').style.display = tab === 'abertura' ? 'block' : 'none';
   if (tab === 'abertura') loadAberturaAvisos();
   if (tab === 'avaliacoes') loadAvaliacoes();
+  if (tab === 'sugestoes') loadSugestoes();
   if (tab === 'stock') loadWaitingList();
   if (tab === 'galeria') loadGaleria();
   if (tab === 'cupoes') loadCupoes();
@@ -775,6 +783,46 @@ function toggleAvaliacaoOculta(id, oculta) {
 function deleteAvaliacao(id) {
   if (!confirm('Eliminar esta avaliação permanentemente?')) return;
   db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
+}
+
+// ---------- Sugestões ----------
+function loadSugestoes() {
+  const listEl = document.getElementById('sugestoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar sugestões...</div>';
+  db.collection('sugestoes').orderBy('criadoEm', 'desc').limit(100).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há sugestões.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const s = doc.data();
+      const dataStr = s.criadoEm && s.criadoEm.toDate ? s.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${s.email ? s.email : 'Anónimo'}</div>
+              <div class="order-meta">${dataStr}${s.lida ? ' · <strong>LIDA</strong>' : ''}</div>
+            </div>
+          </div>
+          <div class="order-items"><div class="order-item-row"><span>${s.texto}</span></div></div>
+          <div class="order-actions">
+            <button onclick="toggleSugestaoLida('${doc.id}', ${!s.lida})">${s.lida ? 'Marcar por ler' : 'Marcar como lida'}</button>
+            <button onclick="deleteSugestao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar sugestões.</div>';
+    console.error(err);
+  });
+}
+function toggleSugestaoLida(id, lida) {
+  db.collection('sugestoes').doc(id).update({ lida: lida }).then(loadSugestoes);
+}
+function deleteSugestao(id) {
+  if (!confirm('Eliminar esta sugestão permanentemente?')) return;
+  db.collection('sugestoes').doc(id).delete().then(loadSugestoes);
 }
 
 // ---------- Galeria ----------

@@ -37,6 +37,31 @@
   .opening-notify-form { flex-direction: column; }
   .opening-notify-form input, .opening-notify-form button { width: 100%; justify-content: center; }
 }
+.suggestion-section { padding: 10px 0 40px; }
+.suggestion-panel {
+  background: var(--bg-alt); border: 1px solid var(--border); border-radius: 24px; padding: 34px 40px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap;
+}
+.suggestion-text h2 { font-size: 1.3rem; margin-bottom: 6px; }
+.suggestion-text p { margin: 0; max-width: 42ch; }
+.suggestion-form { display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 260px; }
+.suggestion-form textarea {
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: 16px;
+  font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 90px;
+}
+.suggestion-form input {
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 0.9rem;
+}
+.suggestion-form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.suggestion-form-row input { flex: 1; min-width: 160px; }
+.suggestion-msg { margin-top: 4px; font-size: 0.88rem; font-weight: 600; }
+.suggestion-msg.ok { color: var(--teal); }
+.suggestion-msg.warn { color: #c0392b; }
+@media (max-width: 760px) {
+  .suggestion-panel { flex-direction: column; align-items: stretch; text-align: center; padding: 30px 24px; }
+  .suggestion-form-row { flex-direction: column; }
+}
 .galeria-section { background: var(--bg-alt); padding: 56px 0; }
 .galeria-title { text-align: center; font-family: var(--font-display); color: var(--navy); margin-bottom: 6px; }
 .galeria-sub { text-align: center; color: var(--gray); margin-bottom: 30px; }
@@ -354,6 +379,25 @@
   </div>
 </section>
 
+<section class="suggestion-section">
+  <div class="wrap">
+    <div class="suggestion-panel">
+      <div class="suggestion-text">
+        <h2>Tem uma sugestão para nós?</h2>
+        <p>A sua opinião ajuda-nos a melhorar. Pode enviar de forma anónima — o e-mail é opcional, só se quiser resposta.</p>
+      </div>
+      <form class="suggestion-form" onsubmit="submitSugestao(event)">
+        <textarea id="sugTexto" placeholder="Escreva aqui a sua sugestão..." required></textarea>
+        <div class="suggestion-form-row">
+          <input type="email" id="sugEmail" placeholder="O seu e-mail (opcional)">
+          <button type="submit" class="btn btn-navy">Enviar sugestão</button>
+        </div>
+        <div id="sugMsg" class="suggestion-msg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
 <footer class="site">
   <div class="wrap">
     <div class="footer-grid" style="grid-template-columns: 1fr 1fr; align-items:start;">
@@ -448,6 +492,36 @@ function submitAberturaNotify(e) {
   }).catch(err => {
     msgEl.textContent = 'Não foi possível enviar. Tente novamente.';
     msgEl.className = 'opening-notify-msg warn';
+    console.error(err);
+  });
+}
+
+// ---------- Caixa de sugestões (anónima, e-mail opcional) ----------
+function submitSugestao(e) {
+  e.preventDefault();
+  const texto = document.getElementById('sugTexto').value.trim();
+  const email = document.getElementById('sugEmail').value.trim();
+  const msgEl = document.getElementById('sugMsg');
+
+  if (!texto) {
+    msgEl.textContent = 'Escreva a sua sugestão antes de enviar.';
+    msgEl.className = 'suggestion-msg warn';
+    return;
+  }
+
+  db.collection('sugestoes').add({
+    texto,
+    email: email || null,
+    lida: false,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    msgEl.textContent = 'Obrigado! A sua sugestão foi recebida.';
+    msgEl.className = 'suggestion-msg ok';
+    document.getElementById('sugTexto').value = '';
+    document.getElementById('sugEmail').value = '';
+  }).catch(err => {
+    msgEl.textContent = 'Não foi possível enviar. Tente novamente.';
+    msgEl.className = 'suggestion-msg warn';
     console.error(err);
   });
 }
