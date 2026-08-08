@@ -637,8 +637,8 @@ function formatLocalDate(d) {
 }
 
 // Interruptor geral: enquanto for false, TODOS os dias do calendário ficam bloqueados
-// (ninguém consegue marcar). Muda para true quando quiseres abrir a agenda a sério.
-const AGENDA_ATIVA = true;
+// (ninguém consegue marcar). Controlado no admin (separador Marcações), não precisa de código.
+let AGENDA_ATIVA = false; // valor por omissão enquanto a configuração não chega do Firestore
 
 // Configuração dos dias e horas de consulta. 0=domingo, 1=segunda, 2=terça, 3=quarta, 4=quinta, 5=sexta, 6=sábado.
 const HORARIO_CONSULTAS = {
@@ -683,6 +683,20 @@ const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
   if (wrap) wrap.style.display = 'none';
   const nascimentoEl = document.getElementById('mcAnimalNascimento');
   if (nascimentoEl) nascimentoEl.max = formatLocalDate(new Date());
+
+  db.collection('configuracoes').doc('agenda').get().then(doc => {
+    AGENDA_ATIVA = !!(doc.exists && doc.data().ativa);
+    montarCalendarioMarcacao();
+  }).catch(err => {
+    console.error('Não foi possível ler a configuração da agenda:', err);
+    AGENDA_ATIVA = false;
+    montarCalendarioMarcacao();
+  });
+})();
+
+function montarCalendarioMarcacao() {
+  const wrap = document.getElementById('mcSlotsWrap');
+  const el = document.getElementById('mcData');
   if (!AGENDA_ATIVA) {
     const hint = document.getElementById('mcHint');
     if (hint) hint.textContent = 'As marcações online ainda não estão abertas. Contacte-nos por e-mail ou telefone para marcar.';
@@ -693,7 +707,7 @@ const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
   if (proximo) { el.value = proximo; }
   renderMcCalendar();
   if (proximo) onMcDataChange();
-})();
+}
 
 function mcCalNav(delta) {
   mcCalCurrentMonth.setMonth(mcCalCurrentMonth.getMonth() + delta);
@@ -797,6 +811,7 @@ function onMcDataChange() {
 // Importante: esta função NUNCA lê dados — só escreve os campos que o próprio site público tem
 // autorização para tocar (ver regras do Firestore). O telefone (só dígitos) é o ID do cliente, e o
 // nome do animal (convertido num slug) é o ID do animal, para nunca duplicar mesmo sem ler antes.
+
 function sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento }) {
   const clienteId = (telefone || '').replace(/\D/g, '');
   if (!clienteId) return;

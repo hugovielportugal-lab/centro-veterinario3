@@ -16,6 +16,10 @@
   .admin-error.show { display: block; }
 
   .order-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .agenda-toggle-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 22px; margin-bottom: 18px; font-weight: 600; }
+  .agenda-toggle-bar button { padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; font-family: inherit; }
+  .agenda-toggle-bar button.aberta { background: #d4edda; color: #155724; }
+  .agenda-toggle-bar button.fechada { background: #f8d7da; color: #721c24; }
   .clientes-toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
   .clientes-toolbar input { flex: 1; min-width: 220px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-family: inherit; }
   .cliente-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
@@ -221,6 +225,10 @@
     </div>
 
     <div id="marcacoesPanel" style="display:none;">
+      <div class="agenda-toggle-bar" id="agendaToggleBar">
+        <span>Agenda de marcações online:</span>
+        <button type="button" id="agendaToggleBtn" onclick="toggleAgendaAtiva()">A carregar...</button>
+      </div>
       <div id="marcacoesList"></div>
     </div>
 
@@ -1028,7 +1036,38 @@ function deleteCliente(id) {
 }
 
 // ---------- Marcações ----------
+// ---------- Interruptor da agenda de marcações online ----------
+function loadAgendaToggle() {
+  const btn = document.getElementById('agendaToggleBtn');
+  db.collection('configuracoes').doc('agenda').get().then(doc => {
+    const ativa = !!(doc.exists && doc.data().ativa);
+    pintarAgendaToggle(ativa);
+  }).catch(err => {
+    btn.textContent = 'Erro ao carregar';
+    console.error(err);
+  });
+}
+function pintarAgendaToggle(ativa) {
+  const btn = document.getElementById('agendaToggleBtn');
+  btn.textContent = ativa ? 'ABERTA — clicar para fechar' : 'FECHADA — clicar para abrir';
+  btn.className = ativa ? 'aberta' : 'fechada';
+}
+function toggleAgendaAtiva() {
+  const btn = document.getElementById('agendaToggleBtn');
+  const estaAberta = btn.className === 'aberta';
+  const novoValor = !estaAberta;
+  btn.textContent = 'A atualizar...';
+  db.collection('configuracoes').doc('agenda').set({ ativa: novoValor }, { merge: true }).then(() => {
+    pintarAgendaToggle(novoValor);
+  }).catch(err => {
+    alert('Não foi possível atualizar. Tente novamente.');
+    pintarAgendaToggle(estaAberta);
+    console.error(err);
+  });
+}
+
 function loadMarcacoes() {
+  loadAgendaToggle();
   const listEl = document.getElementById('marcacoesList');
   listEl.innerHTML = '<div class="empty-state">A carregar marcações...</div>';
   db.collection('marcacoes').orderBy('data', 'asc').limit(150).get().then(snap => {
