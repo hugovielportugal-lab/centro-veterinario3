@@ -829,11 +829,30 @@ function deleteAvaliacao(id) {
 let allClientes = [];
 let clienteEmEdicaoId = null;
 
+// Mesma lógica usada no index.html para gerar o ID do animal (nome -> slug), para os animais
+// criados manualmente aqui coincidirem com os que chegam via marcação online, sem duplicar.
+function animalSlug(nome) {
+  return (nome || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'animal';
+}
+
 function loadClientes() {
   const listEl = document.getElementById('clientesList');
   listEl.innerHTML = '<div class="empty-state">A carregar clientes...</div>';
-  db.collection('clientes_registo').orderBy('nome', 'asc').limit(500).get().then(snap => {
-    allClientes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  Promise.all([
+    db.collection('clientes_registo').orderBy('nome', 'asc').limit(500).get(),
+    db.collectionGroup('animais').get()
+  ]).then(([clientesSnap, animaisSnap]) => {
+    const animaisPorCliente = {};
+    animaisSnap.forEach(doc => {
+      const clienteId = doc.ref.parent.parent.id;
+      (animaisPorCliente[clienteId] = animaisPorCliente[clienteId] || []).push({ id: doc.id, ...doc.data() });
+    });
+    allClientes = clientesSnap.docs.map(doc => ({
+      id: doc.id, ...doc.data(),
+      animais: animaisPorCliente[doc.id] || []
+    }));
     renderClientesList();
   }).catch(err => {
     listEl.innerHTML = '<div class="empty-state">Erro ao carregar clientes.</div>';
@@ -918,6 +937,7 @@ function addAnimalRow(a) {
   const list = document.getElementById('cfAnimaisList');
   const row = document.createElement('div');
   row.className = 'cliente-animal-row';
+  row.dataset.origId = a.id || ''; // id original na subcoleção, para saber o que foi removido ao guardar
   row.innerHTML = `
     <input type="text" data-f="nome" placeholder="Nome do animal" value="${a.nome || ''}">
     <select data-f="especie">
@@ -946,7 +966,9 @@ function salvarCliente() {
   const email = document.getElementById('cfEmail').value.trim();
   const morada = document.getElementById('cfMorada').value.trim();
 
-  const animais = Array.from(document.querySelectorAll('#cfAnimaisList .cliente-animal-row')).map(row => ({
+  const linhasAnimais = Array.from(document.querySelectorAll('#cfAnimaisList .cliente-animal-row'));
+  const animaisNovos = linhasAnimais.map(row => ({
+    origId: row.dataset.origId || '',
     nome: row.querySelector('[data-f="nome"]').value.trim(),
     especie: row.querySelector('[data-f="especie"]').value,
     sexo: row.querySelector('[data-f="sexo"]').value,
@@ -956,18 +978,39 @@ function salvarCliente() {
     notas: row.querySelector('[data-f="notas"]').value.trim(),
   })).filter(a => a.nome);
 
+  // ID do cliente: mantém o mesmo se já existir; se for novo e tiver telefone, usa o telefone
+  // (mesmo critério do formulário público), para os dois lados baterem certo no mesmo cliente.
+  const telefoneDigits = telefone.replace(/\D/g, '');
+  const clienteId = clienteEmEdicaoId || (telefoneDigits || db.collection('clientes_registo').doc().id);
+  const ref = db.collection('clientes_registo').doc(clienteId);
+
   const dados = {
     nome, nif: nif || null, telefone: telefone || null, email: email || null, morada: morada || null,
-    animais,
+    origem: clienteEmEdicaoId ? undefined : 'admin',
     atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
   };
-
-  const ref = clienteEmEdicaoId
-    ? db.collection('clientes_registo').doc(clienteEmEdicaoId)
-    : db.collection('clientes_registo').doc();
   if (!clienteEmEdicaoId) dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+  Object.keys(dados).forEach(k => dados[k] === undefined && delete dados[k]);
 
-  ref.set(dados, { merge: true }).then(() => {
+  const animaisOriginaisIds = new Set((clienteEmEdicaoId ? (allClientes.find(c => c.id === clienteEmEdicaoId)?.animais || []) : []).map(a => a.id));
+  const idsMantidos = new Set();
+
+  const escritas = [ref.set(dados, { merge: true })];
+  animaisNovos.forEach(a => {
+    const animalId = a.origId || animalSlug(a.nome);
+    idsMantidos.add(animalId);
+    escritas.push(ref.collection('animais').doc(animalId).set({
+      nome: a.nome, especie: a.especie, sexo: a.sexo, raca: a.raca,
+      nascimento: a.nascimento, chip: a.chip, notas: a.notas,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }));
+  });
+  // Remove da subcoleção os animais que existiam antes e foram apagados no formulário
+  animaisOriginaisIds.forEach(id => {
+    if (!idsMantidos.has(id)) escritas.push(ref.collection('animais').doc(id).delete());
+  });
+
+  Promise.all(escritas).then(() => {
     fecharFormCliente();
     loadClientes();
   }).catch(err => {
@@ -978,7 +1021,10 @@ function salvarCliente() {
 
 function deleteCliente(id) {
   if (!confirm('Eliminar este cliente e os dados dos animais dele permanentemente?')) return;
-  db.collection('clientes_registo').doc(id).delete().then(loadClientes);
+  const ref = db.collection('clientes_registo').doc(id);
+  ref.collection('animais').get().then(snap => {
+    return Promise.all(snap.docs.map(d => d.ref.delete()));
+  }).then(() => ref.delete()).then(loadClientes);
 }
 
 // ---------- Marcações ----------

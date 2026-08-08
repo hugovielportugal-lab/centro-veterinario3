@@ -46,6 +46,8 @@
 .booking-text h2 { font-size: 1.5rem; margin: 8px 0; }
 .booking-text p { max-width: 48ch; margin: 0 auto; }
 .booking-form { display: flex; flex-direction: column; gap: 12px; }
+.booking-consent { display: flex; align-items: flex-start; gap: 10px; font-size: 0.78rem; color: #666; line-height: 1.4; margin: 2px 0; }
+.booking-consent input { margin-top: 3px; flex-shrink: 0; width: 16px; height: 16px; }
 .booking-hint { font-size: 0.82rem; color: #888; margin: -6px 0 4px; }
 .mc-calendar { border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
 .mc-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-weight: 600; color: var(--navy); }
@@ -375,6 +377,10 @@
           <input type="hidden" id="mcHora" required>
         </div>
         <textarea id="mcObservacoes" placeholder="Observações (opcional)"></textarea>
+        <label class="booking-consent">
+          <input type="checkbox" id="mcConsentimento" required>
+          <span>Autorizo o Centro Veterinário Linda-a-Velha a guardar os meus dados e os do meu animal (nome, contacto, dados de saúde do animal) para gerir esta marcação e o histórico de cliente. Não são partilhados com terceiros. Pode pedir a eliminação a qualquer momento por e-mail.</span>
+        </label>
         <button type="submit" class="btn btn-navy">Pedir Marcação</button>
         <div id="mcMsg" class="booking-msg"></div>
       </form>
@@ -790,36 +796,34 @@ function onMcDataChange() {
 }
 
 // Cria ou atualiza o cliente na base de dados (clientes_registo) a partir de uma marcação online.
-// Usa o telefone (só dígitos) como identificador do cliente, para encontrar sempre o mesmo registo
-// em marcações seguintes, em vez de criar um cliente novo de cada vez. Corre em segundo plano —
-// se falhar, não afeta a confirmação da marcação ao cliente (já foi gravada à parte).
+// Importante: esta função NUNCA lê dados — só escreve os campos que o próprio site público tem
+// autorização para tocar (ver regras do Firestore). O telefone (só dígitos) é o ID do cliente, e o
+// nome do animal (convertido num slug) é o ID do animal, para nunca duplicar mesmo sem ler antes.
 function sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento }) {
   const clienteId = (telefone || '').replace(/\D/g, '');
   if (!clienteId) return;
-  const ref = db.collection('clientes_registo').doc(clienteId);
-  ref.get().then(snap => {
-    const existente = snap.exists ? snap.data() : {};
-    let animais = existente.animais || [];
-    if (animal) {
-      const idx = animais.findIndex(a => (a.nome || '').toLowerCase() === animal.toLowerCase());
-      if (idx === -1) {
-        animais = animais.concat([{ nome: animal, especie: especie || '', sexo: '', raca: '', nascimento: animalNascimento || '', chip: '', notas: '' }]);
-      } else if (animalNascimento && !animais[idx].nascimento) {
-        animais = animais.slice();
-        animais[idx] = { ...animais[idx], nascimento: animalNascimento };
-      }
-    }
-    const dados = {
-      nome: existente.nome || nome,
-      telefone,
-      email: email || existente.email || null,
-      animais,
-      origem: existente.origem || 'marcacao_online',
-      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-    if (!snap.exists) dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
-    return ref.set(dados, { merge: true });
-  }).catch(err => console.error('Não foi possível sincronizar o cliente:', err));
+  const agora = firebase.firestore.FieldValue.serverTimestamp();
+  const clienteRef = db.collection('clientes_registo').doc(clienteId);
+
+  clienteRef.set({
+    nome, telefone,
+    email: email || null,
+    origem: 'marcacao_online',
+    atualizadoEm: agora,
+  }, { merge: true }).catch(err => console.error('Não foi possível sincronizar o cliente:', err));
+
+  if (animal) {
+    const animalId = animal.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'animal';
+    clienteRef.collection('animais').doc(animalId).set({
+      nome: animal,
+      especie: especie || '',
+      nascimento: animalNascimento || '',
+      origem: 'marcacao_online',
+      atualizadoEm: agora,
+    }, { merge: true }).catch(err => console.error('Não foi possível sincronizar o animal:', err));
+  }
 }
 
 function submitMarcacao(e) {
@@ -834,10 +838,16 @@ function submitMarcacao(e) {
   const data = document.getElementById('mcData').value;
   const hora = document.getElementById('mcHora').value;
   const observacoes = document.getElementById('mcObservacoes').value.trim();
+  const consentimento = document.getElementById('mcConsentimento').checked;
   const msgEl = document.getElementById('mcMsg');
 
   if (!nome || !telefone || !animal || !especie || !animalNascimento || !tipo || !data || !hora) {
     msgEl.textContent = 'Preencha os campos obrigatórios e escolha um horário disponível.';
+    msgEl.className = 'booking-msg warn';
+    return;
+  }
+  if (!consentimento) {
+    msgEl.textContent = 'É necessário aceitar o tratamento dos dados para enviar o pedido.';
     msgEl.className = 'booking-msg warn';
     return;
   }
@@ -869,6 +879,7 @@ function submitMarcacao(e) {
       document.getElementById('mcAnimal').value = '';
       document.getElementById('mcEspecie').value = '';
       document.getElementById('mcAnimalNascimento').value = '';
+      document.getElementById('mcConsentimento').checked = false;
       document.getElementById('mcTipo').value = '';
       document.getElementById('mcObservacoes').value = '';
       onMcDataChange();
