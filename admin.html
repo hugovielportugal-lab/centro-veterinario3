@@ -1005,7 +1005,7 @@ function loadMarcacoes() {
           <div class="order-top">
             <div>
               <div class="order-client">${m.nome} — ${dataStr} às ${m.hora || ''}</div>
-              <div class="order-meta">${m.tipo} · ${m.especie}${m.animal ? ' · ' + m.animal : ''} · ${m.telefone}${m.email ? ' · ' + m.email : ''} · <strong>${estadoLabel[m.estado] || m.estado}</strong></div>
+              <div class="order-meta">${m.tipo} · ${m.especie}${m.animal ? ' · ' + m.animal : ''}${m.animalNascimento ? ' (nasc. ' + m.animalNascimento.split('-').reverse().join('/') + ')' : ''} · ${m.telefone}${m.email ? ' · ' + m.email : ''} · <strong>${estadoLabel[m.estado] || m.estado}</strong></div>
             </div>
           </div>
           ${m.observacoes ? `<div class="order-items"><div class="order-item-row"><span>${m.observacoes}</span></div></div>` : ''}

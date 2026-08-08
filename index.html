@@ -333,7 +333,7 @@
         </div>
         <div class="booking-form-row">
           <input type="email" id="mcEmail" placeholder="E-mail (opcional)">
-          <input type="text" id="mcAnimal" placeholder="Nome do animal">
+          <input type="text" id="mcAnimal" placeholder="Nome do animal" required>
         </div>
         <div class="booking-form-row">
           <select id="mcEspecie" required>
@@ -343,6 +343,9 @@
             <option value="Exótico">Exótico</option>
             <option value="Outro">Outro</option>
           </select>
+          <input type="date" id="mcAnimalNascimento" placeholder="Data de nascimento do animal" required>
+        </div>
+        <div class="booking-form-row">
           <select id="mcTipo" required>
             <option value="" disabled selected>Tipo de consulta</option>
             <option value="Consulta geral">Consulta geral</option>
@@ -671,6 +674,8 @@ const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
   const el = document.getElementById('mcData');
   if (!el) return;
   if (wrap) wrap.style.display = 'none';
+  const nascimentoEl = document.getElementById('mcAnimalNascimento');
+  if (nascimentoEl) nascimentoEl.max = formatLocalDate(new Date());
   if (!AGENDA_ATIVA) {
     const hint = document.getElementById('mcHint');
     if (hint) hint.textContent = 'As marcações online ainda não estão abertas. Contacte-nos por e-mail ou telefone para marcar.';
@@ -788,7 +793,7 @@ function onMcDataChange() {
 // Usa o telefone (só dígitos) como identificador do cliente, para encontrar sempre o mesmo registo
 // em marcações seguintes, em vez de criar um cliente novo de cada vez. Corre em segundo plano —
 // se falhar, não afeta a confirmação da marcação ao cliente (já foi gravada à parte).
-function sincronizarClienteRegisto({ nome, telefone, email, animal, especie }) {
+function sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento }) {
   const clienteId = (telefone || '').replace(/\D/g, '');
   if (!clienteId) return;
   const ref = db.collection('clientes_registo').doc(clienteId);
@@ -796,9 +801,12 @@ function sincronizarClienteRegisto({ nome, telefone, email, animal, especie }) {
     const existente = snap.exists ? snap.data() : {};
     let animais = existente.animais || [];
     if (animal) {
-      const jaTemEsteAnimal = animais.some(a => (a.nome || '').toLowerCase() === animal.toLowerCase());
-      if (!jaTemEsteAnimal) {
-        animais = animais.concat([{ nome: animal, especie: especie || '', sexo: '', raca: '', nascimento: '', chip: '', notas: '' }]);
+      const idx = animais.findIndex(a => (a.nome || '').toLowerCase() === animal.toLowerCase());
+      if (idx === -1) {
+        animais = animais.concat([{ nome: animal, especie: especie || '', sexo: '', raca: '', nascimento: animalNascimento || '', chip: '', notas: '' }]);
+      } else if (animalNascimento && !animais[idx].nascimento) {
+        animais = animais.slice();
+        animais[idx] = { ...animais[idx], nascimento: animalNascimento };
       }
     }
     const dados = {
@@ -821,13 +829,14 @@ function submitMarcacao(e) {
   const email = document.getElementById('mcEmail').value.trim();
   const animal = document.getElementById('mcAnimal').value.trim();
   const especie = document.getElementById('mcEspecie').value;
+  const animalNascimento = document.getElementById('mcAnimalNascimento').value;
   const tipo = document.getElementById('mcTipo').value;
   const data = document.getElementById('mcData').value;
   const hora = document.getElementById('mcHora').value;
   const observacoes = document.getElementById('mcObservacoes').value.trim();
   const msgEl = document.getElementById('mcMsg');
 
-  if (!nome || !telefone || !especie || !tipo || !data || !hora) {
+  if (!nome || !telefone || !animal || !especie || !animalNascimento || !tipo || !data || !hora) {
     msgEl.textContent = 'Preencha os campos obrigatórios e escolha um horário disponível.';
     msgEl.className = 'booking-msg warn';
     return;
@@ -845,14 +854,13 @@ function submitMarcacao(e) {
     return db.collection('marcacoes').add({
       nome, telefone,
       email: email || null,
-      animal: animal || null,
-      especie, tipo,
+      animal, especie, animalNascimento, tipo,
       data, hora,
       observacoes: observacoes || null,
       estado: 'pendente',
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
-      sincronizarClienteRegisto({ nome, telefone, email, animal, especie });
+      sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento });
       msgEl.textContent = 'Pedido enviado! Vamos entrar em contacto para confirmar a marcação.';
       msgEl.className = 'booking-msg ok';
       document.getElementById('mcNome').value = '';
@@ -860,6 +868,7 @@ function submitMarcacao(e) {
       document.getElementById('mcEmail').value = '';
       document.getElementById('mcAnimal').value = '';
       document.getElementById('mcEspecie').value = '';
+      document.getElementById('mcAnimalNascimento').value = '';
       document.getElementById('mcTipo').value = '';
       document.getElementById('mcObservacoes').value = '';
       onMcDataChange();
