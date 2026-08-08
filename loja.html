@@ -338,6 +338,18 @@
 .auth-hint { font-size: 0.78rem; color: var(--gray-light); margin-top: -4px; }
 .verify-banner { background: #fef3e0; color: #8a5a00; border-radius: 10px; padding: 12px 14px; font-size: 0.85rem; margin: 10px 0; }
 .verify-banner button { background: none; border: none; color: #8a5a00; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; font-size: 0.85rem; }
+.conta-drawer { width: min(460px, 92vw); }
+.conta-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; font-size: 0.88rem; }
+.conta-item .conta-item-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--navy); }
+.conta-item .conta-item-meta { color: var(--gray); font-size: 0.82rem; margin-top: 3px; }
+.conta-item .conta-item-status { font-size: 0.72rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+.conta-item-status.pendente { background: #fef3e0; color: #8a5a00; }
+.conta-item-status.confirmada { background: #d4edda; color: #155724; }
+.conta-item-status.cancelada { background: #f8d7da; color: #721c24; }
+.conta-animal-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; background: var(--bg-alt); padding: 8px; border-radius: 10px; margin-bottom: 6px; }
+.conta-animal-row input, .conta-animal-row select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 0.82rem; flex: 1; min-width: 80px; }
+.conta-animal-row button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+.conta-empty { color: var(--gray); text-align: center; padding: 24px 0; font-size: 0.88rem; }
 /* Product detail modal */
 .product-thumb, .product-body h3 { cursor: pointer; }
 .product-modal-backdrop {
@@ -593,6 +605,21 @@
   </div>
 </div>
 
+<div class="cart-backdrop" id="contaBackdrop" onclick="closeConta()"></div>
+<div class="cart-drawer conta-drawer" id="contaDrawer">
+  <button class="cart-close" onclick="closeConta()">✕</button>
+  <h2>A Minha Conta</h2>
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="contaTabDados" onclick="setContaTab('dados')">Dados & Animais</button>
+    <button class="auth-tab" id="contaTabMarcacoes" onclick="setContaTab('marcacoes')">Marcações</button>
+    <button class="auth-tab" id="contaTabCompras" onclick="setContaTab('compras')">Compras</button>
+  </div>
+  <div id="contaPanelDados"></div>
+  <div id="contaPanelMarcacoes" style="display:none;"></div>
+  <div id="contaPanelCompras" style="display:none;"></div>
+  <button class="btn btn-outline-navy" style="justify-content:center; margin-top:16px;" onclick="auth.signOut(); closeConta();">Sair da conta</button>
+</div>
+
 <div class="cart-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cartDrawer">
   <button class="cart-close" onclick="closeCart()">✕</button>
@@ -714,10 +741,199 @@ function setAuthMode(mode) {
   document.getElementById('authError').classList.remove('show', 'success');
 }
 function openAuth() {
-  if (auth.currentUser) { auth.signOut(); return; }
+  if (auth.currentUser) { openConta(); return; }
   document.getElementById('authDrawer').classList.add('open');
   document.getElementById('authBackdrop').classList.add('open');
 }
+function openConta() {
+  document.getElementById('contaDrawer').classList.add('open');
+  document.getElementById('contaBackdrop').classList.add('open');
+  setContaTab('dados');
+}
+function closeConta() {
+  document.getElementById('contaDrawer').classList.remove('open');
+  document.getElementById('contaBackdrop').classList.remove('open');
+}
+function setContaTab(tab) {
+  document.getElementById('contaTabDados').classList.toggle('active', tab === 'dados');
+  document.getElementById('contaTabMarcacoes').classList.toggle('active', tab === 'marcacoes');
+  document.getElementById('contaTabCompras').classList.toggle('active', tab === 'compras');
+  document.getElementById('contaPanelDados').style.display = tab === 'dados' ? 'block' : 'none';
+  document.getElementById('contaPanelMarcacoes').style.display = tab === 'marcacoes' ? 'block' : 'none';
+  document.getElementById('contaPanelCompras').style.display = tab === 'compras' ? 'block' : 'none';
+  if (tab === 'dados') loadContaDados();
+  if (tab === 'marcacoes') loadContaMarcacoes();
+  if (tab === 'compras') loadContaCompras();
+}
+
+// ---- Dados & Animais ----
+function contaAnimalSlug(nome) {
+  return (nome || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'animal';
+}
+function loadContaDados() {
+  const panel = document.getElementById('contaPanelDados');
+  const user = auth.currentUser;
+  if (!user) return;
+  panel.innerHTML = '<div class="conta-empty">A carregar...</div>';
+  Promise.all([
+    db.collection('clientes').doc(user.uid).get(),
+    db.collection('clientes').doc(user.uid).collection('animais').get()
+  ]).then(([clienteDoc, animaisSnap]) => {
+    const c = clienteDoc.exists ? clienteDoc.data() : {};
+    const animais = animaisSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    panel.innerHTML = `
+      <div class="checkout-form open" style="margin-top:0;">
+        <input type="text" id="cdNome" placeholder="O seu nome" value="${c.nome || ''}">
+        <input type="tel" id="cdTelefone" placeholder="Telefone" value="${c.telefone || ''}">
+        <input type="email" value="${user.email}" disabled style="background:var(--bg-alt);color:var(--gray);">
+      </div>
+      <h4 style="margin:16px 0 8px;">Os seus animais</h4>
+      <div id="cdAnimaisList"></div>
+      <button type="button" class="btn btn-outline-navy" style="justify-content:center;margin-top:6px;" onclick="addContaAnimalRow()">+ Adicionar animal</button>
+      <button class="btn btn-navy" style="justify-content:center;margin-top:14px;" onclick="salvarContaDados()">Guardar alterações</button>
+      <div class="auth-error" id="cdMsg"></div>`;
+    const lista = animais.length ? animais : [{}];
+    lista.forEach(a => addContaAnimalRow(a));
+  }).catch(err => {
+    panel.innerHTML = '<div class="conta-empty">Erro ao carregar os seus dados.</div>';
+    console.error(err);
+  });
+}
+function addContaAnimalRow(a) {
+  a = a || {};
+  const list = document.getElementById('cdAnimaisList');
+  const row = document.createElement('div');
+  row.className = 'conta-animal-row';
+  row.dataset.origId = a.id || '';
+  row.innerHTML = `
+    <input type="text" data-f="nome" placeholder="Nome" value="${a.nome || ''}">
+    <select data-f="especie">
+      <option value="Cão" ${a.especie === 'Cão' ? 'selected' : ''}>Cão</option>
+      <option value="Gato" ${a.especie === 'Gato' ? 'selected' : ''}>Gato</option>
+      <option value="Outro" ${a.especie === 'Outro' ? 'selected' : ''}>Outro</option>
+    </select>
+    <input type="date" data-f="nascimento" value="${a.nascimento || ''}">
+    <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+  list.appendChild(row);
+}
+function salvarContaDados() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const nome = document.getElementById('cdNome').value.trim();
+  const telefone = document.getElementById('cdTelefone').value.trim();
+  const msgEl = document.getElementById('cdMsg');
+  const ref = db.collection('clientes').doc(user.uid);
+
+  const linhas = Array.from(document.querySelectorAll('#cdAnimaisList .conta-animal-row'));
+  const animaisNovos = linhas.map(row => ({
+    origId: row.dataset.origId || '',
+    nome: row.querySelector('[data-f="nome"]').value.trim(),
+    especie: row.querySelector('[data-f="especie"]').value,
+    nascimento: row.querySelector('[data-f="nascimento"]').value,
+  })).filter(a => a.nome);
+
+  const escritas = [ref.set({ nome, telefone }, { merge: true })];
+  const idsMantidos = new Set();
+  animaisNovos.forEach(a => {
+    const id = a.origId || contaAnimalSlug(a.nome);
+    idsMantidos.add(id);
+    escritas.push(ref.collection('animais').doc(id).set({
+      nome: a.nome, especie: a.especie, nascimento: a.nascimento
+    }, { merge: true }));
+  });
+
+  ref.collection('animais').get().then(snap => {
+    snap.forEach(doc => {
+      if (!idsMantidos.has(doc.id)) escritas.push(doc.ref.delete());
+    });
+    return Promise.all(escritas);
+  }).then(() => {
+    if (user.displayName !== nome) user.updateProfile({ displayName: nome }).catch(() => {});
+    msgEl.textContent = 'Dados guardados!';
+    msgEl.classList.add('show', 'success');
+    const label = document.getElementById('accountLabel');
+    if (label) label.textContent = nome + ' · Sair';
+  }).catch(err => {
+    msgEl.textContent = 'Não foi possível guardar. Tente novamente.';
+    msgEl.classList.add('show');
+    console.error(err);
+  });
+}
+
+// ---- Marcações ----
+function loadContaMarcacoes() {
+  const panel = document.getElementById('contaPanelMarcacoes');
+  const user = auth.currentUser;
+  if (!user) return;
+  panel.innerHTML = '<div class="conta-empty">A carregar...</div>';
+  db.collection('marcacoes').where('uid', '==', user.uid).limit(50).get().then(snap => {
+    const docs = snap.docs.slice().sort((a, b) => {
+      const da = a.data(), db_ = b.data();
+      if (da.data !== db_.data) return da.data < db_.data ? 1 : -1;
+      return (db_.hora || '').localeCompare(da.hora || '');
+    });
+    if (!docs.length) {
+      panel.innerHTML = '<div class="conta-empty">Ainda não fez nenhuma marcação online.</div>';
+      return;
+    }
+    const estadoLabel = { pendente: 'Pendente', confirmada: 'Confirmada', cancelada: 'Cancelada' };
+    panel.innerHTML = docs.map(doc => {
+      const m = doc.data();
+      const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
+      return `
+        <div class="conta-item">
+          <div class="conta-item-top">
+            <span>${dataStr} às ${m.hora}</span>
+            <span class="conta-item-status ${m.estado}">${estadoLabel[m.estado] || m.estado}</span>
+          </div>
+          <div class="conta-item-meta">${m.tipo} · ${m.especie}${m.animal ? ' · ' + m.animal : ''}</div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    panel.innerHTML = '<div class="conta-empty">Erro ao carregar marcações.</div>';
+    console.error(err);
+  });
+}
+
+// ---- Histórico de compras ----
+function loadContaCompras() {
+  const panel = document.getElementById('contaPanelCompras');
+  const user = auth.currentUser;
+  if (!user) return;
+  panel.innerHTML = '<div class="conta-empty">A carregar...</div>';
+  db.collection('pedidos').where('uid', '==', user.uid).limit(50).get().then(snap => {
+    const docs = snap.docs.slice().sort((a, b) => {
+      const ta = a.data().criadoEm ? a.data().criadoEm.toMillis() : 0;
+      const tb = b.data().criadoEm ? b.data().criadoEm.toMillis() : 0;
+      return tb - ta;
+    });
+    if (!docs.length) {
+      panel.innerHTML = '<div class="conta-empty">Ainda não fez nenhuma compra online.</div>';
+      return;
+    }
+    const estadoLabel = { pendente: 'Pendente', pronto: 'Pronto p/ levantar', concluido: 'Concluído' };
+    panel.innerHTML = docs.map(doc => {
+      const p = doc.data();
+      const dataStr = p.criadoEm && p.criadoEm.toDate ? p.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+      const itemsTxt = (p.items || []).map(it => `${it.quantidade}x ${it.nome}`).join(', ');
+      return `
+        <div class="conta-item">
+          <div class="conta-item-top">
+            <span>${dataStr}</span>
+            <span class="conta-item-status ${p.pago ? 'confirmada' : 'pendente'}">${estadoLabel[p.estado] || p.estado}</span>
+          </div>
+          <div class="conta-item-meta">${itemsTxt}</div>
+          <div class="conta-item-meta" style="font-weight:700;color:var(--navy);">${(p.total || 0).toFixed(2)}€</div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    panel.innerHTML = '<div class="conta-empty">Erro ao carregar compras.</div>';
+    console.error(err);
+  });
+}
+
 function closeAuth() {
   document.getElementById('authDrawer').classList.remove('open');
   document.getElementById('authBackdrop').classList.remove('open');

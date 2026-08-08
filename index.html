@@ -569,6 +569,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 // Abre/fecha o menu mobile e bloqueia o scroll da página de fundo enquanto está aberto
 // (evita o menu ficar "preso" ao deslizar a página no Safari do iPhone); fecha também
@@ -594,6 +595,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 // ---------- Formulário "avise-me na abertura" ----------
 function submitAberturaNotify(e) {
@@ -885,6 +887,7 @@ function submitMarcacao(e) {
       data, hora,
       observacoes: observacoes || null,
       estado: 'pendente',
+      uid: auth.currentUser ? auth.currentUser.uid : null,
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     });
   })).then(() => {
