@@ -16,6 +16,23 @@
   .admin-error.show { display: block; }
 
   .order-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .clientes-toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .clientes-toolbar input { flex: 1; min-width: 220px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-family: inherit; }
+  .cliente-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .cliente-form h3 { margin-top: 0; }
+  .cliente-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .cliente-form-row input { flex: 1; min-width: 180px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; }
+  .cliente-animais-list { margin: 10px 0; }
+  .cliente-animal-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: #f7f9fb; padding: 10px; border-radius: 10px; margin-bottom: 8px; }
+  .cliente-animal-row input, .cliente-animal-row select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+  .cliente-animal-row input[data-f="nome"] { flex: 1.2; min-width: 110px; }
+  .cliente-animal-row select[data-f="especie"] { flex: 0.8; min-width: 90px; }
+  .cliente-animal-row input[data-f="raca"] { flex: 1; min-width: 110px; }
+  .cliente-animal-row input[data-f="nascimento"] { flex: 0.9; min-width: 130px; }
+  .cliente-animal-row input[data-f="notas"] { flex: 1.5; min-width: 140px; }
+  .cliente-animal-row button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1.1rem; }
+  .cliente-card .animais-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .animal-tag { background: #eaf4ff; color: var(--navy); padding: 4px 12px; border-radius: 14px; font-size: 0.82rem; }
   .order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
   .order-client { font-weight: 700; color: var(--ink); }
   .order-meta { font-size: 0.85rem; color: var(--gray); }
@@ -150,6 +167,7 @@
       <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
       <button id="mainTabMarcacoes" onclick="setMainTab('marcacoes')">Marcações</button>
+      <button id="mainTabClientes" onclick="setMainTab('clientes')">Clientes</button>
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
       <button id="mainTabSugestoes" onclick="setMainTab('sugestoes')">Sugestões</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
@@ -202,6 +220,15 @@
 
     <div id="marcacoesPanel" style="display:none;">
       <div id="marcacoesList"></div>
+    </div>
+
+    <div id="clientesPanel" style="display:none;">
+      <div class="clientes-toolbar">
+        <input type="text" id="clientesSearch" placeholder="Pesquisar por nome, NIF ou telefone..." oninput="renderClientesList()">
+        <button type="button" class="primary" onclick="abrirFormCliente()">+ Novo cliente</button>
+      </div>
+      <div id="clienteFormWrap" style="display:none;"></div>
+      <div id="clientesList"></div>
     </div>
 
     <div id="sugestoesPanel" style="display:none;">
@@ -383,6 +410,7 @@ function setMainTab(tab) {
   document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
   document.getElementById('mainTabMarcacoes').classList.toggle('active', tab === 'marcacoes');
+  document.getElementById('mainTabClientes').classList.toggle('active', tab === 'clientes');
   document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
   document.getElementById('mainTabSugestoes').classList.toggle('active', tab === 'sugestoes');
   document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
@@ -390,6 +418,7 @@ function setMainTab(tab) {
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
   document.getElementById('marcacoesPanel').style.display = tab === 'marcacoes' ? 'block' : 'none';
+  document.getElementById('clientesPanel').style.display = tab === 'clientes' ? 'block' : 'none';
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
   document.getElementById('sugestoesPanel').style.display = tab === 'sugestoes' ? 'block' : 'none';
   document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
@@ -401,6 +430,7 @@ function setMainTab(tab) {
   document.getElementById('aberturaPanel').style.display = tab === 'abertura' ? 'block' : 'none';
   if (tab === 'abertura') loadAberturaAvisos();
   if (tab === 'marcacoes') loadMarcacoes();
+  if (tab === 'clientes') loadClientes();
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'sugestoes') loadSugestoes();
   if (tab === 'stock') loadWaitingList();
@@ -791,6 +821,154 @@ function toggleAvaliacaoOculta(id, oculta) {
 function deleteAvaliacao(id) {
   if (!confirm('Eliminar esta avaliação permanentemente?')) return;
   db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
+}
+
+// ---------- Clientes ----------
+let allClientes = [];
+let clienteEmEdicaoId = null;
+
+function loadClientes() {
+  const listEl = document.getElementById('clientesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar clientes...</div>';
+  db.collection('clientes_registo').orderBy('nome', 'asc').limit(500).get().then(snap => {
+    allClientes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderClientesList();
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar clientes.</div>';
+    console.error(err);
+  });
+}
+
+function renderClientesList() {
+  const listEl = document.getElementById('clientesList');
+  const termo = (document.getElementById('clientesSearch').value || '').toLowerCase().trim();
+  const filtrados = !termo ? allClientes : allClientes.filter(c =>
+    (c.nome || '').toLowerCase().includes(termo) ||
+    (c.nif || '').includes(termo) ||
+    (c.telefone || '').includes(termo)
+  );
+  if (!filtrados.length) {
+    listEl.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+    return;
+  }
+  listEl.innerHTML = filtrados.map(c => {
+    const wa = waLink(c.telefone);
+    const animaisTags = (c.animais || []).map(a =>
+      `<span class="animal-tag">${a.nome}${a.especie ? ' · ' + a.especie : ''}${a.raca ? ' · ' + a.raca : ''}</span>`
+    ).join('');
+    return `
+      <div class="order-card cliente-card">
+        <div class="order-top">
+          <div>
+            <div class="order-client">${c.nome}${c.nif ? ' · NIF ' + c.nif : ''}</div>
+            <div class="order-meta">${c.telefone || ''}${c.email ? ' · ' + c.email : ''}${c.morada ? ' · ' + c.morada : ''}</div>
+          </div>
+        </div>
+        ${animaisTags ? `<div class="animais-tags">${animaisTags}</div>` : ''}
+        <div class="order-actions">
+          ${wa ? `<a href="${wa}" target="_blank"><button type="button">WhatsApp</button></a>` : ''}
+          <button onclick="abrirFormCliente('${c.id}')">Editar</button>
+          <button onclick="deleteCliente('${c.id}')">Eliminar</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function abrirFormCliente(id) {
+  clienteEmEdicaoId = id || null;
+  const c = id ? allClientes.find(x => x.id === id) : null;
+  const wrap = document.getElementById('clienteFormWrap');
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div class="cliente-form">
+      <h3>${c ? 'Editar cliente' : 'Novo cliente'}</h3>
+      <div class="cliente-form-row">
+        <input type="text" id="cfNome" placeholder="Nome completo *" value="${c?.nome || ''}">
+        <input type="text" id="cfNif" placeholder="NIF" value="${c?.nif || ''}">
+      </div>
+      <div class="cliente-form-row">
+        <input type="tel" id="cfTelefone" placeholder="Telefone" value="${c?.telefone || ''}">
+        <input type="email" id="cfEmail" placeholder="E-mail" value="${c?.email || ''}">
+      </div>
+      <div class="cliente-form-row">
+        <input type="text" id="cfMorada" placeholder="Morada" value="${c?.morada || ''}">
+      </div>
+      <h4>Animais</h4>
+      <div class="cliente-animais-list" id="cfAnimaisList"></div>
+      <button type="button" onclick="addAnimalRow()">+ Adicionar animal</button>
+      <div class="order-actions" style="margin-top:16px;">
+        <button class="primary" onclick="salvarCliente()">Guardar</button>
+        <button onclick="fecharFormCliente()">Cancelar</button>
+      </div>
+    </div>`;
+  const animais = (c?.animais && c.animais.length) ? c.animais : [{}];
+  animais.forEach(a => addAnimalRow(a));
+}
+
+function fecharFormCliente() {
+  document.getElementById('clienteFormWrap').style.display = 'none';
+  document.getElementById('clienteFormWrap').innerHTML = '';
+  clienteEmEdicaoId = null;
+}
+
+function addAnimalRow(a) {
+  a = a || {};
+  const list = document.getElementById('cfAnimaisList');
+  const row = document.createElement('div');
+  row.className = 'cliente-animal-row';
+  row.innerHTML = `
+    <input type="text" data-f="nome" placeholder="Nome do animal" value="${a.nome || ''}">
+    <select data-f="especie">
+      <option value="Cão" ${a.especie === 'Cão' ? 'selected' : ''}>Cão</option>
+      <option value="Gato" ${a.especie === 'Gato' ? 'selected' : ''}>Gato</option>
+      <option value="Outro" ${a.especie === 'Outro' ? 'selected' : ''}>Outro</option>
+    </select>
+    <input type="text" data-f="raca" placeholder="Raça" value="${a.raca || ''}">
+    <input type="date" data-f="nascimento" value="${a.nascimento || ''}">
+    <input type="text" data-f="notas" placeholder="Notas (alergias, etc.)" value="${a.notas || ''}">
+    <button type="button" onclick="this.parentElement.remove()" title="Remover animal">✕</button>`;
+  list.appendChild(row);
+}
+
+function salvarCliente() {
+  const nome = document.getElementById('cfNome').value.trim();
+  if (!nome) { alert('O nome do cliente é obrigatório.'); return; }
+  const nif = document.getElementById('cfNif').value.trim();
+  const telefone = document.getElementById('cfTelefone').value.trim();
+  const email = document.getElementById('cfEmail').value.trim();
+  const morada = document.getElementById('cfMorada').value.trim();
+
+  const animais = Array.from(document.querySelectorAll('#cfAnimaisList .cliente-animal-row')).map(row => ({
+    nome: row.querySelector('[data-f="nome"]').value.trim(),
+    especie: row.querySelector('[data-f="especie"]').value,
+    raca: row.querySelector('[data-f="raca"]').value.trim(),
+    nascimento: row.querySelector('[data-f="nascimento"]').value,
+    notas: row.querySelector('[data-f="notas"]').value.trim(),
+  })).filter(a => a.nome);
+
+  const dados = {
+    nome, nif: nif || null, telefone: telefone || null, email: email || null, morada: morada || null,
+    animais,
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const ref = clienteEmEdicaoId
+    ? db.collection('clientes_registo').doc(clienteEmEdicaoId)
+    : db.collection('clientes_registo').doc();
+  if (!clienteEmEdicaoId) dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+
+  ref.set(dados, { merge: true }).then(() => {
+    fecharFormCliente();
+    loadClientes();
+  }).catch(err => {
+    alert('Não foi possível guardar o cliente.');
+    console.error(err);
+  });
+}
+
+function deleteCliente(id) {
+  if (!confirm('Eliminar este cliente e os dados dos animais dele permanentemente?')) return;
+  db.collection('clientes_registo').doc(id).delete().then(loadClientes);
 }
 
 // ---------- Marcações ----------
