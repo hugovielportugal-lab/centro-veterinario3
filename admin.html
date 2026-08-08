@@ -25,11 +25,13 @@
   .cliente-animais-list { margin: 10px 0; }
   .cliente-animal-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: #f7f9fb; padding: 10px; border-radius: 10px; margin-bottom: 8px; }
   .cliente-animal-row input, .cliente-animal-row select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
-  .cliente-animal-row input[data-f="nome"] { flex: 1.2; min-width: 110px; }
-  .cliente-animal-row select[data-f="especie"] { flex: 0.8; min-width: 90px; }
-  .cliente-animal-row input[data-f="raca"] { flex: 1; min-width: 110px; }
-  .cliente-animal-row input[data-f="nascimento"] { flex: 0.9; min-width: 130px; }
-  .cliente-animal-row input[data-f="notas"] { flex: 1.5; min-width: 140px; }
+  .cliente-animal-row input[data-f="nome"] { flex: 1.1; min-width: 100px; }
+  .cliente-animal-row select[data-f="especie"] { flex: 0.7; min-width: 80px; }
+  .cliente-animal-row select[data-f="sexo"] { flex: 0.7; min-width: 90px; }
+  .cliente-animal-row input[data-f="raca"] { flex: 0.9; min-width: 100px; }
+  .cliente-animal-row input[data-f="nascimento"] { flex: 0.85; min-width: 125px; }
+  .cliente-animal-row input[data-f="chip"] { flex: 0.9; min-width: 110px; }
+  .cliente-animal-row input[data-f="notas"] { flex: 1.3; min-width: 130px; }
   .cliente-animal-row button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1.1rem; }
   .cliente-card .animais-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .animal-tag { background: #eaf4ff; color: var(--navy); padding: 4px 12px; border-radius: 14px; font-size: 0.82rem; }
@@ -854,7 +856,7 @@ function renderClientesList() {
   listEl.innerHTML = filtrados.map(c => {
     const wa = waLink(c.telefone);
     const animaisTags = (c.animais || []).map(a =>
-      `<span class="animal-tag">${a.nome}${a.especie ? ' · ' + a.especie : ''}${a.raca ? ' · ' + a.raca : ''}</span>`
+      `<span class="animal-tag">${a.nome}${a.especie ? ' · ' + a.especie : ''}${a.sexo ? ' · ' + a.sexo : ''}${a.raca ? ' · ' + a.raca : ''}${a.chip ? ' · chip ' + a.chip : ''}</span>`
     ).join('');
     return `
       <div class="order-card cliente-card">
@@ -923,8 +925,14 @@ function addAnimalRow(a) {
       <option value="Gato" ${a.especie === 'Gato' ? 'selected' : ''}>Gato</option>
       <option value="Outro" ${a.especie === 'Outro' ? 'selected' : ''}>Outro</option>
     </select>
+    <select data-f="sexo">
+      <option value="" ${!a.sexo ? 'selected' : ''}>Sexo</option>
+      <option value="Macho" ${a.sexo === 'Macho' ? 'selected' : ''}>Macho</option>
+      <option value="Fêmea" ${a.sexo === 'Fêmea' ? 'selected' : ''}>Fêmea</option>
+    </select>
     <input type="text" data-f="raca" placeholder="Raça" value="${a.raca || ''}">
     <input type="date" data-f="nascimento" value="${a.nascimento || ''}">
+    <input type="text" data-f="chip" placeholder="Nº de chip" value="${a.chip || ''}">
     <input type="text" data-f="notas" placeholder="Notas (alergias, etc.)" value="${a.notas || ''}">
     <button type="button" onclick="this.parentElement.remove()" title="Remover animal">✕</button>`;
   list.appendChild(row);
@@ -941,8 +949,10 @@ function salvarCliente() {
   const animais = Array.from(document.querySelectorAll('#cfAnimaisList .cliente-animal-row')).map(row => ({
     nome: row.querySelector('[data-f="nome"]').value.trim(),
     especie: row.querySelector('[data-f="especie"]').value,
+    sexo: row.querySelector('[data-f="sexo"]').value,
     raca: row.querySelector('[data-f="raca"]').value.trim(),
     nascimento: row.querySelector('[data-f="nascimento"]').value,
+    chip: row.querySelector('[data-f="chip"]').value.trim(),
     notas: row.querySelector('[data-f="notas"]').value.trim(),
   })).filter(a => a.nome);
 
