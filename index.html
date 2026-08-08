@@ -47,6 +47,23 @@
 .booking-text p { max-width: 48ch; margin: 0 auto; }
 .booking-form { display: flex; flex-direction: column; gap: 12px; }
 .booking-hint { font-size: 0.82rem; color: #888; margin: -6px 0 4px; }
+.mc-calendar { border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+.mc-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-weight: 600; color: var(--navy); }
+.mc-cal-header button {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: #fff;
+  cursor: pointer; font-size: 1rem; line-height: 1;
+}
+.mc-cal-header button:hover { border-color: var(--navy); }
+.mc-cal-weekdays, .mc-cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.mc-cal-weekdays span { font-size: 0.75rem; color: #999; padding: 4px 0; }
+.mc-cal-days button {
+  aspect-ratio: 1; border-radius: 50%; border: 1px solid transparent; background: none;
+  font-family: inherit; font-size: 0.85rem; cursor: pointer; color: var(--ink, #1a1a1a);
+}
+.mc-cal-days button.mc-day-active:hover { border-color: var(--navy); }
+.mc-cal-days button.mc-day-selected { background: var(--navy); color: #fff; }
+.mc-cal-days button.mc-day-disabled { color: #ccc; cursor: not-allowed; }
+.mc-cal-days span.mc-day-empty { visibility: hidden; }
 .slots-wrap { margin-top: 4px; }
 .slots-label { font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
 .slots-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -336,10 +353,19 @@
             <option value="Outro">Outro</option>
           </select>
         </div>
-        <div class="booking-form-row">
-          <input type="date" id="mcData" required onchange="onMcDataChange()">
+        <p class="booking-hint">Consultas às segundas-feiras (tarde), quartas e sextas-feiras (manhã) — escolha um dos dias ativos no calendário.</p>
+        <div class="mc-calendar">
+          <div class="mc-cal-header">
+            <button type="button" onclick="mcCalNav(-1)" aria-label="Mês anterior">‹</button>
+            <span id="mcCalMonthLabel"></span>
+            <button type="button" onclick="mcCalNav(1)" aria-label="Mês seguinte">›</button>
+          </div>
+          <div class="mc-cal-weekdays">
+            <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+          </div>
+          <div id="mcCalDays" class="mc-cal-days"></div>
+          <input type="hidden" id="mcData" required>
         </div>
-        <p class="booking-hint">Consultas às segundas-feiras (tarde), quartas e sextas-feiras (manhã).</p>
         <div id="mcSlotsWrap" class="slots-wrap" style="display:none;">
           <div class="slots-label">Horários disponíveis</div>
           <div id="mcSlots" class="slots-grid"></div>
@@ -622,14 +648,70 @@ function proximoDiaValido(fromDateStr) {
   return null;
 }
 
+let mcCalCurrentMonth = new Date();
+mcCalCurrentMonth.setDate(1);
+const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
 (function initMarcacaoData() {
+  const wrap = document.getElementById('mcSlotsWrap');
   const el = document.getElementById('mcData');
   if (!el) return;
+  if (wrap) wrap.style.display = 'none';
   const proximo = proximoDiaValido(new Date().toISOString().split('T')[0]);
-  el.min = new Date().toISOString().split('T')[0];
-  if (proximo) el.value = proximo;
-  onMcDataChange();
+  mcCalCurrentMonth = proximo ? new Date(proximo + 'T00:00:00') : new Date();
+  mcCalCurrentMonth.setDate(1);
+  if (proximo) { el.value = proximo; }
+  renderMcCalendar();
+  if (proximo) onMcDataChange();
 })();
+
+function mcCalNav(delta) {
+  mcCalCurrentMonth.setMonth(mcCalCurrentMonth.getMonth() + delta);
+  renderMcCalendar();
+}
+
+function renderMcCalendar() {
+  const label = document.getElementById('mcCalMonthLabel');
+  const daysEl = document.getElementById('mcCalDays');
+  if (!label || !daysEl) return;
+
+  label.textContent = MC_MESES[mcCalCurrentMonth.getMonth()] + ' ' + mcCalCurrentMonth.getFullYear();
+  daysEl.innerHTML = '';
+
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const primeiroDia = new Date(mcCalCurrentMonth.getFullYear(), mcCalCurrentMonth.getMonth(), 1);
+  const diasNoMes = new Date(mcCalCurrentMonth.getFullYear(), mcCalCurrentMonth.getMonth() + 1, 0).getDate();
+  const offset = primeiroDia.getDay(); // 0=domingo
+  const dataSelecionada = document.getElementById('mcData').value;
+
+  for (let i = 0; i < offset; i++) {
+    const span = document.createElement('span');
+    span.className = 'mc-day-empty';
+    daysEl.appendChild(span);
+  }
+
+  for (let dia = 1; dia <= diasNoMes; dia++) {
+    const d = new Date(mcCalCurrentMonth.getFullYear(), mcCalCurrentMonth.getMonth(), dia);
+    const dataStr = d.toISOString().split('T')[0];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = dia;
+
+    const ehValido = !!HORARIO_CONSULTAS[d.getDay()] && d >= hoje;
+    if (ehValido) {
+      btn.className = 'mc-day-active' + (dataStr === dataSelecionada ? ' mc-day-selected' : '');
+      btn.onclick = () => {
+        document.getElementById('mcData').value = dataStr;
+        renderMcCalendar();
+        onMcDataChange();
+      };
+    } else {
+      btn.className = 'mc-day-disabled';
+      btn.disabled = true;
+    }
+    daysEl.appendChild(btn);
+  }
+}
 
 function onMcDataChange() {
   const el = document.getElementById('mcData');
