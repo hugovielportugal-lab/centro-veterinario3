@@ -862,7 +862,7 @@ function renderClientesList() {
       <div class="order-card cliente-card">
         <div class="order-top">
           <div>
-            <div class="order-client">${c.nome}${c.nif ? ' · NIF ' + c.nif : ''}</div>
+            <div class="order-client">${c.nome}${c.nif ? ' · NIF ' + c.nif : ''}${c.origem === 'marcacao_online' ? ' <span class="animal-tag" style="background:#fff3cd;color:#8a6d00;">via marcação online</span>' : ''}</div>
             <div class="order-meta">${c.telefone || ''}${c.email ? ' · ' + c.email : ''}${c.morada ? ' · ' + c.morada : ''}</div>
           </div>
         </div>

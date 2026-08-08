@@ -784,6 +784,36 @@ function onMcDataChange() {
   });
 }
 
+// Cria ou atualiza o cliente na base de dados (clientes_registo) a partir de uma marcação online.
+// Usa o telefone (só dígitos) como identificador do cliente, para encontrar sempre o mesmo registo
+// em marcações seguintes, em vez de criar um cliente novo de cada vez. Corre em segundo plano —
+// se falhar, não afeta a confirmação da marcação ao cliente (já foi gravada à parte).
+function sincronizarClienteRegisto({ nome, telefone, email, animal, especie }) {
+  const clienteId = (telefone || '').replace(/\D/g, '');
+  if (!clienteId) return;
+  const ref = db.collection('clientes_registo').doc(clienteId);
+  ref.get().then(snap => {
+    const existente = snap.exists ? snap.data() : {};
+    let animais = existente.animais || [];
+    if (animal) {
+      const jaTemEsteAnimal = animais.some(a => (a.nome || '').toLowerCase() === animal.toLowerCase());
+      if (!jaTemEsteAnimal) {
+        animais = animais.concat([{ nome: animal, especie: especie || '', sexo: '', raca: '', nascimento: '', chip: '', notas: '' }]);
+      }
+    }
+    const dados = {
+      nome: existente.nome || nome,
+      telefone,
+      email: email || existente.email || null,
+      animais,
+      origem: existente.origem || 'marcacao_online',
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    if (!snap.exists) dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+    return ref.set(dados, { merge: true });
+  }).catch(err => console.error('Não foi possível sincronizar o cliente:', err));
+}
+
 function submitMarcacao(e) {
   e.preventDefault();
   const nome = document.getElementById('mcNome').value.trim();
@@ -822,6 +852,7 @@ function submitMarcacao(e) {
       estado: 'pendente',
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
+      sincronizarClienteRegisto({ nome, telefone, email, animal, especie });
       msgEl.textContent = 'Pedido enviado! Vamos entrar em contacto para confirmar a marcação.';
       msgEl.className = 'booking-msg ok';
       document.getElementById('mcNome').value = '';
