@@ -640,8 +640,10 @@ function formatLocalDate(d) {
 // (ninguém consegue marcar). Controlado no admin (separador Marcações), não precisa de código.
 let AGENDA_ATIVA = false; // valor por omissão enquanto a configuração não chega do Firestore
 
-// Configuração dos dias e horas de consulta. 0=domingo, 1=segunda, 2=terça, 3=quarta, 4=quinta, 5=sexta, 6=sábado.
-const HORARIO_CONSULTAS = {
+// Dias e horas de consulta — agora editável no admin (separador Marcações → Editar horários).
+// 0=domingo, 1=segunda, 2=terça, 3=quarta, 4=quinta, 5=sexta, 6=sábado.
+// Este valor aqui é só uma reserva, para o caso de a ligação ao Firestore falhar.
+let HORARIO_CONSULTAS = {
   1: { inicio: '15:00', fim: '19:00' }, // segunda à tarde
   3: { inicio: '09:00', fim: '14:00' }, // quarta de manhã
   5: { inicio: '09:00', fim: '14:00' }, // sexta de manhã
@@ -685,7 +687,9 @@ const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
   if (nascimentoEl) nascimentoEl.max = formatLocalDate(new Date());
 
   db.collection('configuracoes').doc('agenda').get().then(doc => {
-    AGENDA_ATIVA = !!(doc.exists && doc.data().ativa);
+    const cfg = doc.exists ? doc.data() : {};
+    AGENDA_ATIVA = !!cfg.ativa;
+    if (cfg.horarios && Object.keys(cfg.horarios).length) HORARIO_CONSULTAS = cfg.horarios;
     montarCalendarioMarcacao();
   }).catch(err => {
     console.error('Não foi possível ler a configuração da agenda:', err);

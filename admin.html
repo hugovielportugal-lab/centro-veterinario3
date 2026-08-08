@@ -20,6 +20,14 @@
   .agenda-toggle-bar button { padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; font-family: inherit; }
   .agenda-toggle-bar button.aberta { background: #d4edda; color: #155724; }
   .agenda-toggle-bar button.fechada { background: #f8d7da; color: #721c24; }
+  .editar-horarios-btn { background: var(--bg-alt); color: var(--navy); margin-left: auto; }
+  .horarios-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .horarios-form h3 { margin-top: 0; }
+  .horario-dia-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .horario-dia-row label.dia-nome { width: 130px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .horario-dia-row input[type="time"] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+  .horario-dia-row input[type="checkbox"] { width: 18px; height: 18px; }
+  .horario-dia-row .ate { color: #888; font-size: 0.85rem; }
   .clientes-toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
   .clientes-toolbar input { flex: 1; min-width: 220px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-family: inherit; }
   .cliente-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
@@ -228,7 +236,9 @@
       <div class="agenda-toggle-bar" id="agendaToggleBar">
         <span>Agenda de marcações online:</span>
         <button type="button" id="agendaToggleBtn" onclick="toggleAgendaAtiva()">A carregar...</button>
+        <button type="button" class="editar-horarios-btn" onclick="toggleFormHorarios()">Editar dias e horas</button>
       </div>
+      <div id="horariosFormWrap" style="display:none;"></div>
       <div id="marcacoesList"></div>
     </div>
 
@@ -1062,6 +1072,82 @@ function toggleAgendaAtiva() {
   }).catch(err => {
     alert('Não foi possível atualizar. Tente novamente.');
     pintarAgendaToggle(estaAberta);
+    console.error(err);
+  });
+}
+
+// ---------- Editar dias e horas de consulta ----------
+const DIAS_SEMANA_LABELS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+// Reserva usada só se ainda não houver nada guardado no Firestore, para o formulário não abrir vazio.
+const HORARIOS_RESERVA = {
+  1: { inicio: '15:00', fim: '19:00' },
+  3: { inicio: '09:00', fim: '14:00' },
+  5: { inicio: '09:00', fim: '14:00' },
+};
+
+function toggleFormHorarios() {
+  const wrap = document.getElementById('horariosFormWrap');
+  if (wrap.style.display === 'block') { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div class="empty-state">A carregar...</div>';
+  db.collection('configuracoes').doc('agenda').get().then(doc => {
+    const horariosAtuais = (doc.exists && doc.data().horarios && Object.keys(doc.data().horarios).length)
+      ? doc.data().horarios : HORARIOS_RESERVA;
+    renderFormHorarios(horariosAtuais);
+  }).catch(err => {
+    wrap.innerHTML = '<div class="empty-state">Erro ao carregar horários.</div>';
+    console.error(err);
+  });
+}
+
+function renderFormHorarios(horarios) {
+  const wrap = document.getElementById('horariosFormWrap');
+  const linhas = DIAS_SEMANA_LABELS.map((nome, i) => {
+    const cfg = horarios[i] || horarios[String(i)];
+    const ativo = !!cfg;
+    return `
+      <div class="horario-dia-row">
+        <label class="dia-nome"><input type="checkbox" data-dia="${i}" data-f="ativo" ${ativo ? 'checked' : ''} onchange="toggleLinhaHorario(${i})"> ${nome}</label>
+        <input type="time" data-dia="${i}" data-f="inicio" value="${cfg ? cfg.inicio : '09:00'}" ${ativo ? '' : 'disabled'}>
+        <span class="ate">até</span>
+        <input type="time" data-dia="${i}" data-f="fim" value="${cfg ? cfg.fim : '18:00'}" ${ativo ? '' : 'disabled'}>
+      </div>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="horarios-form">
+      <h3>Dias e horas de consulta</h3>
+      <p style="color:#888;font-size:0.85rem;margin-top:-8px;">Marque os dias em que há consulta e as horas de início/fim. Os intervalos disponíveis para marcação são gerados de 20 em 20 minutos dentro desse período.</p>
+      <div id="horariosDiasList">${linhas}</div>
+      <div class="order-actions" style="margin-top:16px;">
+        <button class="primary" onclick="salvarHorarios()">Guardar</button>
+        <button onclick="toggleFormHorarios()">Cancelar</button>
+      </div>
+    </div>`;
+}
+
+function toggleLinhaHorario(dia) {
+  const checkbox = document.querySelector(`#horariosDiasList input[type="checkbox"][data-dia="${dia}"]`);
+  const inputs = document.querySelectorAll(`#horariosDiasList input[type="time"][data-dia="${dia}"]`);
+  inputs.forEach(inp => inp.disabled = !checkbox.checked);
+}
+
+function salvarHorarios() {
+  const horarios = {};
+  DIAS_SEMANA_LABELS.forEach((_, i) => {
+    const checkbox = document.querySelector(`#horariosDiasList input[type="checkbox"][data-dia="${i}"]`);
+    if (!checkbox.checked) return;
+    const inicio = document.querySelector(`#horariosDiasList input[data-dia="${i}"][data-f="inicio"]`).value;
+    const fim = document.querySelector(`#horariosDiasList input[data-dia="${i}"][data-f="fim"]`).value;
+    if (inicio && fim && inicio < fim) horarios[i] = { inicio, fim };
+  });
+  if (!Object.keys(horarios).length) {
+    alert('Ative pelo menos um dia com horário válido (início antes do fim).');
+    return;
+  }
+  db.collection('configuracoes').doc('agenda').set({ horarios }, { merge: true }).then(() => {
+    toggleFormHorarios();
+  }).catch(err => {
+    alert('Não foi possível guardar. Tente novamente.');
     console.error(err);
   });
 }
