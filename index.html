@@ -353,7 +353,7 @@
             <option value="Outro">Outro</option>
           </select>
         </div>
-        <p class="booking-hint">Consultas às segundas-feiras (tarde), quartas e sextas-feiras (manhã) — escolha um dos dias ativos no calendário.</p>
+        <p class="booking-hint" id="mcHint">Consultas às segundas-feiras (tarde), quartas e sextas-feiras (manhã) — escolha um dos dias ativos no calendário.</p>
         <div class="mc-calendar">
           <div class="mc-cal-header">
             <button type="button" onclick="mcCalNav(-1)" aria-label="Mês anterior">‹</button>
@@ -617,6 +617,19 @@ function submitAberturaNotify(e) {
 }
 
 // ---------- Marcação de consulta ----------
+// toISOString() converte para UTC e pode "voltar" um dia em fusos horários positivos (ex: Portugal no
+// horário de verão) — por isso usamos sempre esta função para obter a data no fuso local, nunca toISOString().
+function formatLocalDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Interruptor geral: enquanto for false, TODOS os dias do calendário ficam bloqueados
+// (ninguém consegue marcar). Muda para true quando quiseres abrir a agenda a sério.
+const AGENDA_ATIVA = false;
+
 // Configuração dos dias e horas de consulta. 0=domingo, 1=segunda, 2=terça, 3=quarta, 4=quinta, 5=sexta, 6=sábado.
 const HORARIO_CONSULTAS = {
   1: { inicio: '15:00', fim: '20:00' }, // segunda à tarde
@@ -640,9 +653,10 @@ function gerarSlotsDoDia(diaSemana) {
 }
 
 function proximoDiaValido(fromDateStr) {
+  if (!AGENDA_ATIVA) return null;
   const d = fromDateStr ? new Date(fromDateStr + 'T00:00:00') : new Date();
   for (let i = 0; i < 14; i++) {
-    if (HORARIO_CONSULTAS[d.getDay()]) return d.toISOString().split('T')[0];
+    if (HORARIO_CONSULTAS[d.getDay()]) return formatLocalDate(d);
     d.setDate(d.getDate() + 1);
   }
   return null;
@@ -657,7 +671,11 @@ const MC_MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
   const el = document.getElementById('mcData');
   if (!el) return;
   if (wrap) wrap.style.display = 'none';
-  const proximo = proximoDiaValido(new Date().toISOString().split('T')[0]);
+  if (!AGENDA_ATIVA) {
+    const hint = document.getElementById('mcHint');
+    if (hint) hint.textContent = 'As marcações online ainda não estão abertas. Contacte-nos por e-mail ou telefone para marcar.';
+  }
+  const proximo = proximoDiaValido(formatLocalDate(new Date()));
   mcCalCurrentMonth = proximo ? new Date(proximo + 'T00:00:00') : new Date();
   mcCalCurrentMonth.setDate(1);
   if (proximo) { el.value = proximo; }
@@ -692,12 +710,12 @@ function renderMcCalendar() {
 
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const d = new Date(mcCalCurrentMonth.getFullYear(), mcCalCurrentMonth.getMonth(), dia);
-    const dataStr = d.toISOString().split('T')[0];
+    const dataStr = formatLocalDate(d);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.textContent = dia;
 
-    const ehValido = !!HORARIO_CONSULTAS[d.getDay()] && d >= hoje;
+    const ehValido = AGENDA_ATIVA && !!HORARIO_CONSULTAS[d.getDay()] && d >= hoje;
     if (ehValido) {
       btn.className = 'mc-day-active' + (dataStr === dataSelecionada ? ' mc-day-selected' : '');
       btn.onclick = () => {
