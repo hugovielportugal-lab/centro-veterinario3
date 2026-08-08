@@ -37,6 +37,44 @@
   .opening-notify-form { flex-direction: column; }
   .opening-notify-form input, .opening-notify-form button { width: 100%; justify-content: center; }
 }
+.booking-section { padding: 60px 0; background: var(--bg-alt); }
+.booking-panel {
+  background: #fff; border: 1px solid var(--border); border-radius: 24px; padding: 40px;
+  max-width: 640px; margin: 0 auto;
+}
+.booking-text { text-align: center; margin-bottom: 26px; }
+.booking-text h2 { font-size: 1.5rem; margin: 8px 0; }
+.booking-text p { max-width: 48ch; margin: 0 auto; }
+.booking-form { display: flex; flex-direction: column; gap: 12px; }
+.booking-hint { font-size: 0.82rem; color: #888; margin: -6px 0 4px; }
+.slots-wrap { margin-top: 4px; }
+.slots-label { font-size: 0.85rem; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+.slots-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-btn {
+  padding: 8px 14px; border-radius: var(--radius-pill); border: 1px solid var(--border);
+  background: #fff; font-family: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.slot-btn:hover { border-color: var(--navy); }
+.slot-btn.selected { background: var(--navy); color: #fff; border-color: var(--navy); }
+.slot-btn.taken { background: #f0f0f0; color: #aaa; text-decoration: line-through; cursor: not-allowed; border-color: #eee; }
+.slots-empty { font-size: 0.85rem; color: #888; }
+.booking-form-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.booking-form-row input, .booking-form-row select {
+  flex: 1; min-width: 180px; padding: 12px 16px; border: 1px solid var(--border);
+  border-radius: var(--radius-pill); font-family: inherit; font-size: 0.9rem; background: #fff;
+}
+.booking-form textarea {
+  padding: 12px 16px; border: 1px solid var(--border); border-radius: 16px;
+  font-family: inherit; font-size: 0.9rem; resize: vertical; min-height: 70px;
+}
+.booking-form button { align-self: center; padding: 14px 36px; margin-top: 4px; }
+.booking-msg { text-align: center; font-size: 0.9rem; font-weight: 600; }
+.booking-msg.ok { color: var(--teal); }
+.booking-msg.warn { color: #c0392b; }
+@media (max-width: 620px) {
+  .booking-panel { padding: 30px 22px; }
+  .booking-form-row { flex-direction: column; }
+}
 .suggestion-section { padding: 10px 0 40px; }
 .suggestion-panel {
   background: var(--bg-alt); border: 1px solid var(--border); border-radius: 24px; padding: 34px 40px;
@@ -138,9 +176,9 @@
       <a href="blog.html" onclick="toggleNavMenu(true)">Blog</a>
       <a href="#sobre" onclick="toggleNavMenu(true)">Sobre nós</a>
       <a href="#contactos" onclick="toggleNavMenu(true)">Contactos</a>
-      <a class="btn btn-navy nav-links-cta" href="mailto:geral@centroveterinariolindaavelha.pt" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-navy nav-links-cta" href="#marcar-consulta" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
     </div>
-    <a class="btn btn-navy nav-cta-desktop" href="mailto:geral@centroveterinariolindaavelha.pt">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+    <a class="btn btn-navy nav-cta-desktop" href="#marcar-consulta">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
   </nav>
 </header>
 
@@ -155,9 +193,9 @@
       <div class="hero-cta-card">
         <div class="cta-label">Agende a sua consulta</div>
         <div class="cta-buttons">
-          <a class="btn btn-black" href="mailto:geral@centroveterinariolindaavelha.pt">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16v12H4V6z"/><path d="M4 6l8 6 8-6"/></svg>
-            E-mail
+          <a class="btn btn-black" href="#marcar-consulta">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+            Marcar Consulta
           </a>
         </div>
       </div>
@@ -259,6 +297,58 @@
         <h3>Consulta de Exóticos</h3>
         <p>Cuidados especializados para aves, coelhos, roedores e répteis.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="booking-section" id="marcar-consulta">
+  <div class="wrap">
+    <div class="booking-panel">
+      <div class="booking-text">
+        <span class="eyebrow">Marcar Consulta</span>
+        <h2>Agende a consulta do seu animal</h2>
+        <p>Preencha o formulário com os seus dados e a data/hora que prefere. A nossa equipa entra em contacto para confirmar a marcação.</p>
+      </div>
+      <form class="booking-form" onsubmit="submitMarcacao(event)">
+        <div class="booking-form-row">
+          <input type="text" id="mcNome" placeholder="O seu nome" required>
+          <input type="tel" id="mcTelefone" placeholder="Telefone" required>
+        </div>
+        <div class="booking-form-row">
+          <input type="email" id="mcEmail" placeholder="E-mail (opcional)">
+          <input type="text" id="mcAnimal" placeholder="Nome do animal">
+        </div>
+        <div class="booking-form-row">
+          <select id="mcEspecie" required>
+            <option value="" disabled selected>Espécie</option>
+            <option value="Cão">Cão</option>
+            <option value="Gato">Gato</option>
+            <option value="Exótico">Exótico</option>
+            <option value="Outro">Outro</option>
+          </select>
+          <select id="mcTipo" required>
+            <option value="" disabled selected>Tipo de consulta</option>
+            <option value="Consulta geral">Consulta geral</option>
+            <option value="Vacinação">Vacinação</option>
+            <option value="Desparasitação">Desparasitação</option>
+            <option value="Cirurgia">Cirurgia</option>
+            <option value="Análises">Análises</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="booking-form-row">
+          <input type="date" id="mcData" required onchange="onMcDataChange()">
+        </div>
+        <p class="booking-hint">Consultas às segundas-feiras (tarde), quartas e sextas-feiras (manhã).</p>
+        <div id="mcSlotsWrap" class="slots-wrap" style="display:none;">
+          <div class="slots-label">Horários disponíveis</div>
+          <div id="mcSlots" class="slots-grid"></div>
+          <input type="hidden" id="mcHora" required>
+        </div>
+        <textarea id="mcObservacoes" placeholder="Observações (opcional)"></textarea>
+        <button type="submit" class="btn btn-navy">Pedir Marcação</button>
+        <div id="mcMsg" class="booking-msg"></div>
+      </form>
     </div>
   </div>
 </section>
@@ -492,6 +582,156 @@ function submitAberturaNotify(e) {
   }).catch(err => {
     msgEl.textContent = 'Não foi possível enviar. Tente novamente.';
     msgEl.className = 'opening-notify-msg warn';
+    console.error(err);
+  });
+}
+
+// ---------- Marcação de consulta ----------
+// Configuração dos dias e horas de consulta. 0=domingo, 1=segunda, 2=terça, 3=quarta, 4=quinta, 5=sexta, 6=sábado.
+const HORARIO_CONSULTAS = {
+  1: { inicio: '15:00', fim: '20:00' }, // segunda à tarde
+  3: { inicio: '09:00', fim: '14:00' }, // quarta de manhã
+  5: { inicio: '09:00', fim: '14:00' }, // sexta de manhã
+};
+const DURACAO_SLOT_MIN = 20;
+
+function gerarSlotsDoDia(diaSemana) {
+  const cfg = HORARIO_CONSULTAS[diaSemana];
+  if (!cfg) return [];
+  const slots = [];
+  let [h, m] = cfg.inicio.split(':').map(Number);
+  const [hFim, mFim] = cfg.fim.split(':').map(Number);
+  while (h < hFim || (h === hFim && m < mFim)) {
+    slots.push(String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'));
+    m += DURACAO_SLOT_MIN;
+    if (m >= 60) { m -= 60; h += 1; }
+  }
+  return slots;
+}
+
+function proximoDiaValido(fromDateStr) {
+  const d = fromDateStr ? new Date(fromDateStr + 'T00:00:00') : new Date();
+  for (let i = 0; i < 14; i++) {
+    if (HORARIO_CONSULTAS[d.getDay()]) return d.toISOString().split('T')[0];
+    d.setDate(d.getDate() + 1);
+  }
+  return null;
+}
+
+(function initMarcacaoData() {
+  const el = document.getElementById('mcData');
+  if (!el) return;
+  const proximo = proximoDiaValido(new Date().toISOString().split('T')[0]);
+  el.min = new Date().toISOString().split('T')[0];
+  if (proximo) el.value = proximo;
+  onMcDataChange();
+})();
+
+function onMcDataChange() {
+  const el = document.getElementById('mcData');
+  const wrap = document.getElementById('mcSlotsWrap');
+  const slotsEl = document.getElementById('mcSlots');
+  const horaEl = document.getElementById('mcHora');
+  const data = el.value;
+  if (!data) { wrap.style.display = 'none'; return; }
+
+  const diaSemana = new Date(data + 'T00:00:00').getDay();
+  const slotsDoDia = gerarSlotsDoDia(diaSemana);
+  horaEl.value = '';
+
+  if (!slotsDoDia.length) {
+    // Dia sem consultas — avança automaticamente para o próximo dia válido
+    const proximo = proximoDiaValido(data);
+    if (proximo && proximo !== data) { el.value = proximo; onMcDataChange(); return; }
+    wrap.style.display = 'block';
+    slotsEl.innerHTML = '<div class="slots-empty">Não há consultas marcadas para este dia. Escolha outra data.</div>';
+    return;
+  }
+
+  wrap.style.display = 'block';
+  slotsEl.innerHTML = '<div class="slots-empty">A verificar horários disponíveis...</div>';
+
+  db.collection('marcacoes').where('data', '==', data).get().then(snap => {
+    const ocupados = new Set();
+    snap.forEach(doc => {
+      const m = doc.data();
+      if (m.estado !== 'cancelada') ocupados.add(m.hora);
+    });
+    slotsEl.innerHTML = '';
+    slotsDoDia.forEach(hora => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot-btn' + (ocupados.has(hora) ? ' taken' : '');
+      btn.textContent = hora;
+      if (ocupados.has(hora)) {
+        btn.disabled = true;
+      } else {
+        btn.onclick = () => {
+          slotsEl.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          horaEl.value = hora;
+        };
+      }
+      slotsEl.appendChild(btn);
+    });
+  }).catch(err => {
+    slotsEl.innerHTML = '<div class="slots-empty">Erro ao verificar horários. Tente novamente.</div>';
+    console.error(err);
+  });
+}
+
+function submitMarcacao(e) {
+  e.preventDefault();
+  const nome = document.getElementById('mcNome').value.trim();
+  const telefone = document.getElementById('mcTelefone').value.trim();
+  const email = document.getElementById('mcEmail').value.trim();
+  const animal = document.getElementById('mcAnimal').value.trim();
+  const especie = document.getElementById('mcEspecie').value;
+  const tipo = document.getElementById('mcTipo').value;
+  const data = document.getElementById('mcData').value;
+  const hora = document.getElementById('mcHora').value;
+  const observacoes = document.getElementById('mcObservacoes').value.trim();
+  const msgEl = document.getElementById('mcMsg');
+
+  if (!nome || !telefone || !especie || !tipo || !data || !hora) {
+    msgEl.textContent = 'Preencha os campos obrigatórios e escolha um horário disponível.';
+    msgEl.className = 'booking-msg warn';
+    return;
+  }
+
+  // Revalida disponibilidade no momento do envio, para evitar dois pedidos ao mesmo horário
+  db.collection('marcacoes').where('data', '==', data).where('hora', '==', hora).get().then(snap => {
+    const aindaLivre = snap.empty || snap.docs.every(doc => doc.data().estado === 'cancelada');
+    if (!aindaLivre) {
+      msgEl.textContent = 'Esse horário acabou de ser reservado por outra pessoa. Escolha outro.';
+      msgEl.className = 'booking-msg warn';
+      onMcDataChange();
+      return;
+    }
+    return db.collection('marcacoes').add({
+      nome, telefone,
+      email: email || null,
+      animal: animal || null,
+      especie, tipo,
+      data, hora,
+      observacoes: observacoes || null,
+      estado: 'pendente',
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      msgEl.textContent = 'Pedido enviado! Vamos entrar em contacto para confirmar a marcação.';
+      msgEl.className = 'booking-msg ok';
+      document.getElementById('mcNome').value = '';
+      document.getElementById('mcTelefone').value = '';
+      document.getElementById('mcEmail').value = '';
+      document.getElementById('mcAnimal').value = '';
+      document.getElementById('mcEspecie').value = '';
+      document.getElementById('mcTipo').value = '';
+      document.getElementById('mcObservacoes').value = '';
+      onMcDataChange();
+    });
+  }).catch(err => {
+    msgEl.textContent = 'Não foi possível enviar o pedido. Tente novamente.';
+    msgEl.className = 'booking-msg warn';
     console.error(err);
   });
 }

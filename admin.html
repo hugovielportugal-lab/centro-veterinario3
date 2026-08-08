@@ -149,6 +149,7 @@
     <div class="main-tabs">
       <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
       <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
+      <button id="mainTabMarcacoes" onclick="setMainTab('marcacoes')">Marcações</button>
       <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
       <button id="mainTabSugestoes" onclick="setMainTab('sugestoes')">Sugestões</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
@@ -197,6 +198,10 @@
 
     <div id="avaliacoesPanel" style="display:none;">
       <div id="avaliacoesList"></div>
+    </div>
+
+    <div id="marcacoesPanel" style="display:none;">
+      <div id="marcacoesList"></div>
     </div>
 
     <div id="sugestoesPanel" style="display:none;">
@@ -377,12 +382,14 @@ auth.onAuthStateChanged(user => {
 function setMainTab(tab) {
   document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
   document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('mainTabMarcacoes').classList.toggle('active', tab === 'marcacoes');
   document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
   document.getElementById('mainTabSugestoes').classList.toggle('active', tab === 'sugestoes');
   document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
   document.getElementById('mainTabCupoes').classList.toggle('active', tab === 'cupoes');
   document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
   document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
+  document.getElementById('marcacoesPanel').style.display = tab === 'marcacoes' ? 'block' : 'none';
   document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
   document.getElementById('sugestoesPanel').style.display = tab === 'sugestoes' ? 'block' : 'none';
   document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
@@ -393,6 +400,7 @@ function setMainTab(tab) {
   document.getElementById('mainTabAbertura').classList.toggle('active', tab === 'abertura');
   document.getElementById('aberturaPanel').style.display = tab === 'abertura' ? 'block' : 'none';
   if (tab === 'abertura') loadAberturaAvisos();
+  if (tab === 'marcacoes') loadMarcacoes();
   if (tab === 'avaliacoes') loadAvaliacoes();
   if (tab === 'sugestoes') loadSugestoes();
   if (tab === 'stock') loadWaitingList();
@@ -783,6 +791,70 @@ function toggleAvaliacaoOculta(id, oculta) {
 function deleteAvaliacao(id) {
   if (!confirm('Eliminar esta avaliação permanentemente?')) return;
   db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
+}
+
+// ---------- Marcações ----------
+function loadMarcacoes() {
+  const listEl = document.getElementById('marcacoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar marcações...</div>';
+  db.collection('marcacoes').orderBy('data', 'asc').orderBy('hora', 'asc').limit(150).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há pedidos de marcação.</div>';
+      return;
+    }
+    const estadoLabel = { pendente: 'PENDENTE', confirmada: 'CONFIRMADA', cancelada: 'CANCELADA' };
+    listEl.innerHTML = snap.docs.map(doc => {
+      const m = doc.data();
+      const wa = waLink(m.telefone);
+      const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${m.nome} — ${dataStr} às ${m.hora || ''}</div>
+              <div class="order-meta">${m.tipo} · ${m.especie}${m.animal ? ' · ' + m.animal : ''} · ${m.telefone}${m.email ? ' · ' + m.email : ''} · <strong>${estadoLabel[m.estado] || m.estado}</strong></div>
+            </div>
+          </div>
+          ${m.observacoes ? `<div class="order-items"><div class="order-item-row"><span>${m.observacoes}</span></div></div>` : ''}
+          <div class="order-actions">
+            ${wa ? `<a href="${wa}" target="_blank"><button type="button">WhatsApp</button></a>` : ''}
+            ${m.estado !== 'confirmada' ? `<button onclick="setMarcacaoEstado('${doc.id}', 'confirmada')">Confirmar</button>` : ''}
+            ${m.estado !== 'cancelada' ? `<button onclick="setMarcacaoEstado('${doc.id}', 'cancelada')">Cancelar</button>` : ''}
+            <button onclick="deleteMarcacao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar marcações.</div>';
+    console.error(err);
+  });
+}
+function setMarcacaoEstado(id, estado) {
+  db.collection('marcacoes').doc(id).update({ estado: estado }).then(() => {
+    loadMarcacoes();
+    if (estado === 'confirmada') enviarEmailConfirmacaoMarcacao(id);
+  });
+}
+
+// Abre o cliente de e-mail do próprio utilizador (mailto:), já pronto a avisar o cliente
+// que a marcação foi aceite — mesmo padrão do pedirAvaliacao, sem depender do EmailJS.
+function enviarEmailConfirmacaoMarcacao(id) {
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    if (!m || !m.email) return; // sem e-mail associado, não há para onde enviar
+    const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
+    const assunto = 'A sua marcação foi confirmada ✅';
+    const corpo = `Olá ${m.nome || ''},\n\n` +
+      `A sua marcação foi confirmada:\n\n` +
+      `📅 Data: ${dataStr}\n🕐 Hora: ${m.hora}\n🐾 Tipo: ${m.tipo}${m.animal ? ' — ' + m.animal : ''}\n\n` +
+      `Se precisar de alterar ou cancelar, contacte-nos.\n\n` +
+      `Até já,\nCentro Veterinário Linda-a-Velha`;
+    window.open(`mailto:${m.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`, '_blank');
+  });
+}
+function deleteMarcacao(id) {
+  if (!confirm('Eliminar este pedido de marcação permanentemente?')) return;
+  db.collection('marcacoes').doc(id).delete().then(loadMarcacoes);
 }
 
 // ---------- Sugestões ----------
