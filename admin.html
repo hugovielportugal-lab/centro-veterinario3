@@ -797,13 +797,18 @@ function deleteAvaliacao(id) {
 function loadMarcacoes() {
   const listEl = document.getElementById('marcacoesList');
   listEl.innerHTML = '<div class="empty-state">A carregar marcações...</div>';
-  db.collection('marcacoes').orderBy('data', 'asc').orderBy('hora', 'asc').limit(150).get().then(snap => {
+  db.collection('marcacoes').orderBy('data', 'asc').limit(150).get().then(snap => {
     if (snap.empty) {
       listEl.innerHTML = '<div class="empty-state">Ainda não há pedidos de marcação.</div>';
       return;
     }
+    const docs = snap.docs.slice().sort((a, b) => {
+      const da = a.data(), db_ = b.data();
+      if (da.data !== db_.data) return da.data < db_.data ? -1 : 1;
+      return (da.hora || '').localeCompare(db_.hora || '');
+    });
     const estadoLabel = { pendente: 'PENDENTE', confirmada: 'CONFIRMADA', cancelada: 'CANCELADA' };
-    listEl.innerHTML = snap.docs.map(doc => {
+    listEl.innerHTML = docs.map(doc => {
       const m = doc.data();
       const wa = waLink(m.telefone);
       const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
