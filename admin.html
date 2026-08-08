@@ -1069,9 +1069,16 @@ function loadMarcacoes() {
   });
 }
 function setMarcacaoEstado(id, estado) {
-  db.collection('marcacoes').doc(id).update({ estado: estado }).then(() => {
-    loadMarcacoes();
-    if (estado === 'confirmada') enviarEmailConfirmacaoMarcacao(id);
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    return db.collection('marcacoes').doc(id).update({ estado: estado }).then(() => {
+      // Ao cancelar, liberta o horário em agenda_slots para outra pessoa poder marcar.
+      if (estado === 'cancelada' && m && m.data && m.hora) {
+        db.collection('agenda_slots').doc(m.data + '_' + m.hora).delete().catch(err => console.error(err));
+      }
+      loadMarcacoes();
+      if (estado === 'confirmada') enviarEmailConfirmacaoMarcacao(id);
+    });
   });
 }
 
@@ -1093,7 +1100,15 @@ function enviarEmailConfirmacaoMarcacao(id) {
 }
 function deleteMarcacao(id) {
   if (!confirm('Eliminar este pedido de marcação permanentemente?')) return;
-  db.collection('marcacoes').doc(id).delete().then(loadMarcacoes);
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    return db.collection('marcacoes').doc(id).delete().then(() => {
+      if (m && m.data && m.hora) {
+        db.collection('agenda_slots').doc(m.data + '_' + m.hora).delete().catch(err => console.error(err));
+      }
+      loadMarcacoes();
+    });
+  });
 }
 
 // ---------- Sugestões ----------

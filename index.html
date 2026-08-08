@@ -767,12 +767,9 @@ function onMcDataChange() {
   wrap.style.display = 'block';
   slotsEl.innerHTML = '<div class="slots-empty">A verificar horários disponíveis...</div>';
 
-  db.collection('marcacoes').where('data', '==', data).get().then(snap => {
+  db.collection('agenda_slots').where('data', '==', data).get().then(snap => {
     const ocupados = new Set();
-    snap.forEach(doc => {
-      const m = doc.data();
-      if (m.estado !== 'cancelada') ocupados.add(m.hora);
-    });
+    snap.forEach(doc => ocupados.add(doc.data().hora));
     slotsEl.innerHTML = '';
     slotsDoDia.forEach(hora => {
       const btn = document.createElement('button');
@@ -853,16 +850,16 @@ function submitMarcacao(e) {
     return;
   }
 
-  // Revalida disponibilidade no momento do envio, para evitar dois pedidos ao mesmo horário
-  db.collection('marcacoes').where('data', '==', data).where('hora', '==', hora).get().then(snap => {
-    const aindaLivre = snap.empty || snap.docs.every(doc => doc.data().estado === 'cancelada');
-    if (!aindaLivre) {
-      msgEl.textContent = 'Esse horário acabou de ser reservado por outra pessoa. Escolha outro.';
-      msgEl.className = 'booking-msg warn';
-      onMcDataChange();
-      return;
-    }
-    return db.collection('marcacoes').add({
+  // Transação atómica: verifica e reserva o horário na mesma operação, para dois pedidos
+  // simultâneos nunca conseguirem ficar com o mesmo horário (mesmo em cliques muito próximos).
+  const slotId = data + '_' + hora;
+  const slotRef = db.collection('agenda_slots').doc(slotId);
+  const marcacaoRef = db.collection('marcacoes').doc();
+
+  db.runTransaction(tx => tx.get(slotRef).then(slotDoc => {
+    if (slotDoc.exists) throw new Error('SLOT_OCUPADO');
+    tx.set(slotRef, { data, hora, criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+    tx.set(marcacaoRef, {
       nome, telefone,
       email: email || null,
       animal, especie, animalNascimento, tipo,
@@ -870,22 +867,28 @@ function submitMarcacao(e) {
       observacoes: observacoes || null,
       estado: 'pendente',
       criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento });
-      msgEl.textContent = 'Pedido enviado! Vamos entrar em contacto para confirmar a marcação.';
-      msgEl.className = 'booking-msg ok';
-      document.getElementById('mcNome').value = '';
-      document.getElementById('mcTelefone').value = '';
-      document.getElementById('mcEmail').value = '';
-      document.getElementById('mcAnimal').value = '';
-      document.getElementById('mcEspecie').value = '';
-      document.getElementById('mcAnimalNascimento').value = '';
-      document.getElementById('mcConsentimento').checked = false;
-      document.getElementById('mcTipo').value = '';
-      document.getElementById('mcObservacoes').value = '';
-      onMcDataChange();
     });
+  })).then(() => {
+    sincronizarClienteRegisto({ nome, telefone, email, animal, especie, animalNascimento });
+    msgEl.textContent = 'Pedido enviado! Vamos entrar em contacto para confirmar a marcação.';
+    msgEl.className = 'booking-msg ok';
+    document.getElementById('mcNome').value = '';
+    document.getElementById('mcTelefone').value = '';
+    document.getElementById('mcEmail').value = '';
+    document.getElementById('mcAnimal').value = '';
+    document.getElementById('mcEspecie').value = '';
+    document.getElementById('mcAnimalNascimento').value = '';
+    document.getElementById('mcConsentimento').checked = false;
+    document.getElementById('mcTipo').value = '';
+    document.getElementById('mcObservacoes').value = '';
+    onMcDataChange();
   }).catch(err => {
+    if (err.message === 'SLOT_OCUPADO') {
+      msgEl.textContent = 'Esse horário acabou de ser reservado por outra pessoa. Escolha outro.';
+      msgEl.className = 'booking-msg warn';
+      onMcDataChange();
+      return;
+    }
     msgEl.textContent = 'Não foi possível enviar o pedido. Tente novamente.';
     msgEl.className = 'booking-msg warn';
     console.error(err);
