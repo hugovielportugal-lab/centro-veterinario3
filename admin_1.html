@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão | Centro Veterinário Linda-a-Velha</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
+<style>
+  .admin-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .admin-login { max-width: 380px; margin: 80px auto; text-align: center; }
+  .admin-login input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; font-family: var(--font); }
+  .admin-error { color: #c0392b; font-size: 0.88rem; margin-bottom: 10px; display: none; }
+  .admin-error.show { display: block; }
+
+  .order-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .agenda-toggle-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 22px; margin-bottom: 18px; font-weight: 600; }
+  .agenda-toggle-bar button { padding: 8px 20px; border-radius: 20px; border: none; cursor: pointer; font-weight: 700; font-family: inherit; }
+  .agenda-toggle-bar button.aberta { background: #d4edda; color: #155724; }
+  .agenda-toggle-bar button.fechada { background: #f8d7da; color: #721c24; }
+  .editar-horarios-btn { background: var(--bg-alt); color: var(--navy); margin-left: auto; }
+  .horarios-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .horarios-form h3 { margin-top: 0; }
+  .horario-dia-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .horario-dia-row label.dia-nome { width: 130px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .horario-dia-row input[type="time"] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+  .horario-dia-row input[type="checkbox"] { width: 18px; height: 18px; }
+  .horario-dia-row .ate { color: #888; font-size: 0.85rem; }
+  .clientes-toolbar { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .clientes-toolbar input { flex: 1; min-width: 220px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 20px; font-family: inherit; }
+  .cliente-form { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 22px 24px; margin-bottom: 18px; }
+  .cliente-form h3 { margin-top: 0; }
+  .cliente-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .cliente-form-row input { flex: 1; min-width: 180px; padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; }
+  .cliente-animais-list { margin: 10px 0; }
+  .cliente-animal-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: #f7f9fb; padding: 10px; border-radius: 10px; margin-bottom: 8px; }
+  .cliente-animal-row input, .cliente-animal-row select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+  .cliente-animal-row input[data-f="nome"] { flex: 1.1; min-width: 100px; }
+  .cliente-animal-row select[data-f="especie"] { flex: 0.7; min-width: 80px; }
+  .cliente-animal-row select[data-f="sexo"] { flex: 0.7; min-width: 90px; }
+  .cliente-animal-row input[data-f="raca"] { flex: 0.9; min-width: 100px; }
+  .cliente-animal-row input[data-f="nascimento"] { flex: 0.85; min-width: 125px; }
+  .cliente-animal-row input[data-f="chip"] { flex: 0.9; min-width: 110px; }
+  .cliente-animal-row input[data-f="notas"] { flex: 1.3; min-width: 130px; }
+  .cliente-animal-row button { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 1.1rem; }
+  .cliente-card .animais-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .animal-tag { background: #eaf4ff; color: var(--navy); padding: 4px 12px; border-radius: 14px; font-size: 0.82rem; }
+  .order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .order-client { font-weight: 700; color: var(--ink); }
+  .order-meta { font-size: 0.85rem; color: var(--gray); }
+  .order-meta a { color: var(--gray); text-decoration: underline; }
+  .order-meta a.contact-wa { color: #1e7a3d; font-weight: 600; text-decoration: none; }
+  .order-meta a.contact-wa:hover { text-decoration: underline; }
+  .status-badge { padding: 6px 14px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 700; }
+  .status-pendente { background: #fef3e0; color: #b8720a; }
+  .status-pronto { background: #e3f3e8; color: #1e7a3d; }
+  .status-entregue { background: var(--bg-alt); color: var(--gray); }
+  .status-cancelado { background: #fde3e3; color: #c0392b; }
+  .order-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .pay-badge { padding: 5px 12px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+  .pay-badge-pago { background: var(--blue-soft); color: var(--teal); }
+  .pay-badge-porpagar { background: #fde3e3; color: #c0392b; }
+
+  .order-items { margin: 12px 0; padding: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .order-item-row { display: flex; justify-content: space-between; font-size: 0.9rem; padding: 4px 0; color: var(--gray); }
+  .order-total { text-align: right; font-weight: 700; color: var(--navy); font-family: var(--font-display); margin-top: 8px; }
+
+  .order-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .order-actions button {
+    padding: 9px 16px; border-radius: var(--radius-pill); border: 1.5px solid var(--border);
+    background: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--gray);
+  }
+  .order-actions button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .filter-bar button { padding: 9px 18px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.88rem; cursor: pointer; color: var(--gray); }
+  .filter-bar button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  .main-tabs { display: flex; gap: 10px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+  .main-tabs button {
+    padding: 12px 4px; margin-right: 22px; border: none; background: none; cursor: pointer;
+    font-weight: 700; font-size: 1rem; color: var(--gray); border-bottom: 3px solid transparent; margin-bottom: -1px;
+  }
+  .main-tabs button.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+  .empty-state { text-align: center; color: var(--gray); padding: 60px 20px; }
+  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+  /* Histórico do cliente */
+  .history-toggle { background: none; border: none; color: var(--navy); font-size: 0.82rem; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 8px; }
+  .history-panel { display: none; margin-top: 10px; padding: 12px; background: var(--bg-alt); border-radius: 10px; }
+  .history-panel.open { display: block; }
+  .history-summary { font-size: 0.82rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .history-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--gray); padding: 4px 0; border-bottom: 1px dashed var(--border); }
+  .history-row:last-child { border-bottom: none; }
+
+  /* Stock */
+  .stock-search { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px; font-family: var(--font); font-size: 0.92rem; box-sizing: border-box; }
+  .stock-product { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 20px; margin-bottom: 12px; }
+  .stock-product-name { font-weight: 700; font-size: 0.92rem; color: var(--navy); margin-bottom: 10px; }
+  .stock-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .stock-row:last-child { margin-bottom: 0; }
+  .stock-label { width: 70px; font-size: 0.85rem; color: var(--gray); flex-shrink: 0; }
+  .stock-row input[type="number"] { width: 80px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); }
+  .stock-row button { padding: 7px 16px; border-radius: var(--radius-pill); border: none; background: var(--navy); color: #fff; font-weight: 600; font-size: 0.82rem; cursor: pointer; }
+  .stock-row .stock-saved { font-size: 0.78rem; color: #1e7a3d; font-weight: 600; opacity: 0; transition: opacity .2s ease; }
+  .stock-row .stock-saved.show { opacity: 1; }
+
+  .stock-import-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .stock-bulk-box { background: #fef3e0; border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .stock-import-title { font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .stock-import-help { font-size: 0.85rem; color: var(--gray); margin-bottom: 14px; }
+  .stock-import-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stock-import-result { margin-top: 14px; font-size: 0.85rem; }
+  .stock-import-result .ok { color: #1e7a3d; font-weight: 600; }
+  .stock-import-result .warn { color: #b8720a; font-weight: 600; margin-top: 6px; }
+  .stock-import-result ul { margin: 6px 0 0 18px; color: var(--gray); }
+
+  /* Galeria */
+  .galeria-upload-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .galeria-upload-box input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); margin-top: 10px; margin-bottom: 10px; }
+  .galeria-progress { font-size: 0.85rem; color: var(--gray); margin-top: 10px; }
+  .galeria-progress.ok { color: #1e7a3d; font-weight: 600; }
+  .galeria-progress.warn { color: #c0392b; font-weight: 600; }
+  .galeria-admin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .galeria-admin-item { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); overflow: hidden; }
+  .galeria-admin-item img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+  .galeria-admin-item-body { padding: 8px 10px; }
+  .galeria-admin-item-legenda { font-size: 0.8rem; color: var(--gray); margin-bottom: 6px; min-height: 1.1em; }
+  .galeria-admin-item button { width: 100%; padding: 6px 0; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.78rem; cursor: pointer; color: #c0392b; }
+
+  /* Cupões */
+  .cupom-form-box { background: var(--bg-alt); border-radius: var(--radius-card); padding: 18px 20px; margin-bottom: 22px; }
+  .cupom-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .cupom-form-row > div { flex: 1; min-width: 140px; }
+  .cupom-form-row label { display: block; font-size: 0.78rem; color: var(--gray); margin-bottom: 4px; font-weight: 600; }
+  .cupom-form-row input, .cupom-form-row select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--font); }
+  .cupom-card { background: #fff; border-radius: var(--radius-card); box-shadow: 0 2px 18px rgba(15,59,96,0.06); padding: 16px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .cupom-codigo { font-weight: 700; color: var(--navy); font-family: var(--font-display); font-size: 1.05rem; }
+  .cupom-detalhes { font-size: 0.85rem; color: var(--gray); margin-top: 2px; }
+  .cupom-inativo { opacity: 0.55; }
+  .cupom-actions { display: flex; gap: 8px; }
+  .cupom-actions button { padding: 7px 14px; border-radius: var(--radius-pill); border: 1.5px solid var(--border); background: #fff; font-weight: 600; font-size: 0.8rem; cursor: pointer; color: var(--gray); }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="produtos-data.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <nav class="nav">
+    <a href="index.html" class="brand">
+      <img src="logo.png" alt="Centro Veterinário Linda-a-Velha">
+    </a>
+  </nav>
+</header>
+
+<div class="admin-wrap">
+
+  <div class="admin-login" id="loginBox">
+    <h2>Gestão</h2>
+    <p>Acesso restrito à equipa do Centro Veterinário Linda-a-Velha.</p>
+    <div class="admin-error" id="loginError"></div>
+    <input type="email" id="adminEmail" placeholder="E-mail" value="cvlindaavelha@outlook.com">
+    <input type="password" id="adminPassword" placeholder="Palavra-passe">
+    <button class="btn btn-navy" style="width:100%; justify-content:center;" onclick="doLogin()">Entrar</button>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <div class="top-actions">
+      <h1 style="margin:0; font-size:1.6rem;">Gestão</h1>
+      <button class="btn btn-outline-navy" onclick="auth.signOut()">Sair</button>
+    </div>
+
+    <div class="main-tabs">
+      <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
+      <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
+      <button id="mainTabMarcacoes" onclick="setMainTab('marcacoes')">Marcações</button>
+      <button id="mainTabClientes" onclick="setMainTab('clientes')">Clientes</button>
+      <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
+      <button id="mainTabSugestoes" onclick="setMainTab('sugestoes')">Sugestões</button>
+      <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
+      <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
+      <button id="mainTabBlog" onclick="setMainTab('blog')">Blog</button>
+      <button id="mainTabAbertura" onclick="setMainTab('abertura')">Abertura</button>
+    </div>
+
+    <div id="pedidosPanel">
+      <div class="filter-bar">
+        <button class="active" data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
+        <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
+        <button data-f="entregue" onclick="setFilter('entregue', this)">Entregues</button>
+        <button data-f="cancelado" onclick="setFilter('cancelado', this)">Cancelados</button>
+        <button data-f="todos" onclick="setFilter('todos', this)">Todos</button>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+
+    <div id="stockPanel" style="display:none;">
+      <div class="stock-bulk-box" id="waitingListBox" style="display:none; background:#e3f3e8;">
+        <div class="stock-import-title">Clientes à espera de stock</div>
+        <div id="waitingListContent"></div>
+      </div>
+      <div class="stock-bulk-box">
+        <div class="stock-import-title">Loja ainda em construção?</div>
+        <p class="stock-import-help">Marca todos os produtos como sem stock de uma só vez, para que ninguém consiga comprar enquanto ainda estás a preparar o site. Podes repor tudo depois, produto a produto, ou usar a importação de entregas em baixo.</p>
+        <button class="btn btn-outline-navy" onclick="markAllOutOfStock()">Marcar tudo sem stock (0)</button>
+        <div id="bulkStockResult"></div>
+      </div>
+      <div class="stock-import-box">
+        <div class="stock-import-title">Atualizar stock de uma entrega</div>
+        <p class="stock-import-help">Descarrega o modelo, preenche a coluna "Quantidade Recebida" com o que chegou, e importa de volta. As quantidades somam ao stock atual — não substituem.</p>
+        <div class="stock-import-actions">
+          <button class="btn btn-outline-navy" onclick="downloadStockTemplate()">Descarregar modelo (Excel)</button>
+          <label class="btn btn-navy" style="cursor:pointer;">
+            Importar ficheiro
+            <input type="file" id="stockImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleStockImport(event)">
+          </label>
+        </div>
+        <div id="stockImportResult"></div>
+      </div>
+      <input type="text" class="stock-search" id="stockSearch" placeholder="Pesquisar produto..." oninput="renderStock()">
+      <div id="stockList"></div>
+    </div>
+
+    <div id="avaliacoesPanel" style="display:none;">
+      <div id="avaliacoesList"></div>
+    </div>
+
+    <div id="marcacoesPanel" style="display:none;">
+      <div class="agenda-toggle-bar" id="agendaToggleBar">
+        <span>Agenda de marcações online:</span>
+        <button type="button" id="agendaToggleBtn" onclick="toggleAgendaAtiva()">A carregar...</button>
+        <button type="button" class="editar-horarios-btn" onclick="toggleFormHorarios()">Editar dias e horas</button>
+      </div>
+      <div id="horariosFormWrap" style="display:none;"></div>
+      <div id="marcacoesList"></div>
+    </div>
+
+    <div id="clientesPanel" style="display:none;">
+      <div class="stock-import-box">
+        <div class="stock-import-title">Importar clientes</div>
+        <p class="stock-import-help">Carrega um ficheiro Excel ou CSV com colunas de nome e telefone (aceita "nome"/"telefone" ou "CLIENTE"/"TELEFONE1"). Clientes com o mesmo telefone que já existirem são apenas atualizados, nunca duplicados.</p>
+        <label class="btn btn-navy" style="cursor:pointer;">
+          Importar ficheiro
+          <input type="file" id="clientesImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleClientesImport(event)">
+        </label>
+        <div id="clientesImportResult"></div>
+      </div>
+      <div class="clientes-toolbar">
+        <input type="text" id="clientesSearch" placeholder="Pesquisar por nome, NIF ou telefone..." oninput="renderClientesList()">
+        <button type="button" class="primary" onclick="abrirFormCliente()">+ Novo cliente</button>
+      </div>
+      <div id="clienteFormWrap" style="display:none;"></div>
+      <div id="clientesList"></div>
+    </div>
+
+    <div id="sugestoesPanel" style="display:none;">
+      <div id="sugestoesList"></div>
+    </div>
+
+    <div id="galeriaPanel" style="display:none;">
+      <div class="galeria-upload-box">
+        <div class="stock-import-title">Adicionar foto à galeria</div>
+        <p class="stock-import-help">Estas fotos aparecem na loja, numa secção com os vossos clientes e patudos. Escolhe uma imagem e, se quiseres, uma legenda curta.</p>
+        <input type="file" id="galeriaFile" accept="image/*">
+        <input type="text" id="galeriaLegenda" placeholder="Legenda (opcional) — ex: O Bento a aprovar a ração nova">
+        <button class="btn btn-navy" onclick="uploadGaleriaFoto()">Adicionar à galeria</button>
+        <div class="galeria-progress" id="galeriaProgress"></div>
+      </div>
+      <div class="galeria-admin-grid" id="galeriaList"></div>
+    </div>
+
+    <div id="cupoesPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title">Criar novo cupão</div>
+        <p class="stock-import-help">O código é o que o cliente escreve no carrinho. Fica sempre em maiúsculas.</p>
+        <div class="cupom-form-row">
+          <div>
+            <label>Código</label>
+            <input type="text" id="cupomCodigo" placeholder="ex: BEMVINDO10" style="text-transform:uppercase;">
+          </div>
+          <div>
+            <label>Tipo</label>
+            <select id="cupomTipo">
+              <option value="percentagem">Percentagem (%)</option>
+              <option value="fixo">Valor fixo (€)</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor</label>
+            <input type="number" id="cupomValor" placeholder="ex: 10" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="cupom-form-row">
+          <div>
+            <label>Compra mínima (opcional)</label>
+            <input type="number" id="cupomMinimo" placeholder="0 = sem mínimo" min="0" step="0.01">
+          </div>
+          <div>
+            <label>Validade (opcional)</label>
+            <input type="date" id="cupomValidade">
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="cupomUmaVez" style="width:auto;">
+          <label for="cupomUmaVez" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Só pode ser usado uma vez por cliente (ex: cupão de primeira compra)</label>
+        </div>
+        <div class="stock-import-actions" style="margin-top:14px;">
+          <button class="btn btn-navy" onclick="criarCupom()">Criar cupão</button>
+        </div>
+        <div class="galeria-progress" id="cupomProgress"></div>
+      </div>
+      <div id="cupoesList"></div>
+    </div>
+    <div id="blogPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title" id="blogFormTitle">Novo artigo</div>
+        <p class="stock-import-help">Fica guardado como rascunho até marcares "Publicado" — só aí aparece na loja.</p>
+        <div class="cupom-form-row">
+          <div>
+            <label>Título</label>
+            <input type="text" id="blogTitulo" placeholder="ex: Leishmaniose Canina: sintomas e prevenção">
+          </div>
+          <div>
+            <label>Categoria</label>
+            <select id="blogCategoria">
+              <option value="Doenças">Doenças</option>
+              <option value="Prevenção">Prevenção</option>
+              <option value="Bem-estar">Bem-estar</option>
+              <option value="Nutrição">Nutrição</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <label>Ciclo de idade</label>
+          <select id="blogFaixaEtaria" style="width:100%;">
+            <option value="Todas as idades">Todas as idades</option>
+            <option value="Cachorro ou Gatinho">Cachorro ou Gatinho</option>
+            <option value="Adulto">Adulto</option>
+            <option value="Sénior">Sénior</option>
+          </select>
+        </div>
+        <div style="margin-top:12px;">
+          <label>Resumo (aparece na lista de artigos)</label>
+          <input type="text" id="blogResumo" placeholder="Uma frase curta a resumir o artigo" style="width:100%;">
+        </div>
+        <div style="margin-top:12px;">
+          <label>Conteúdo</label>
+          <textarea id="blogConteudo" rows="10" placeholder="Escreve o artigo aqui. Deixa uma linha em branco entre parágrafos." style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:0.92rem; resize:vertical;"></textarea>
+        </div>
+        <div style="margin-top:12px;">
+          <label>Imagem de capa (opcional)</label>
+          <input type="file" id="blogImagem" accept="image/*">
+        </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="blogPublicado" style="width:auto;" checked>
+          <label for="blogPublicado" style="font-size:0.85rem; color:var(--gray); cursor:pointer;">Publicado (visível na loja já)</label>
+        </div>
+        <div class="stock-import-actions" style="margin-top:14px; gap:10px;">
+          <button class="btn btn-navy" id="blogSaveBtn" onclick="publicarArtigo()">Guardar artigo</button>
+          <button id="blogCancelEditBtn" onclick="cancelarEdicaoArtigo()" style="display:none;">Cancelar edição</button>
+        </div>
+        <div class="galeria-progress" id="blogProgress"></div>
+      </div>
+      <div id="blogList"></div>
+    </div>
+    <div id="aberturaPanel" style="display:none;">
+      <div class="cupom-form-box">
+        <div class="stock-import-title">Inscrições "avise-me na abertura"</div>
+        <p class="stock-import-help">Pessoas que deixaram o contacto no site para serem avisadas assim que abrirem. Usa "Copiar e-mails" para colar no campo BCC de um e-mail em massa.</p>
+        <div class="stock-import-actions">
+          <button class="btn btn-navy" onclick="copiarEmailsAbertura()">Copiar e-mails</button>
+        </div>
+        <div class="galeria-progress" id="aberturaProgress"></div>
+      </div>
+      <div id="aberturaList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAiw1gMQBpE7kwLsrIFIxOmpsG0623z7gA",
+  authDomain: "centro-veterinario-lindaavelha.firebaseapp.com",
+  projectId: "centro-veterinario-lindaavelha",
+  storageBucket: "centro-veterinario-lindaavelha.firebasestorage.app",
+  messagingSenderId: "283697163487",
+  appId: "1:283697163487:web:03d5a7df648fca759a8d6a"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const ADMIN_EMAIL = "cvlindaavelha@outlook.com";
+let allOrders = [];
+let currentFilter = 'pendente';
+let openHistoryFor = null; // id do pedido cujo histórico está aberto
+
+function doLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.remove('show');
+
+  if (email.toLowerCase() !== ADMIN_EMAIL) {
+    errEl.textContent = 'Este e-mail não tem acesso à gestão de pedidos.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => {
+      errEl.textContent = 'E-mail ou palavra-passe incorretos.';
+      errEl.classList.add('show');
+    });
+}
+
+auth.onAuthStateChanged(user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    loadOrders();
+    loadStock();
+  } else {
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('panel').style.display = 'none';
+  }
+});
+
+// ---------- Navegação principal ----------
+function setMainTab(tab) {
+  document.getElementById('mainTabPedidos').classList.toggle('active', tab === 'pedidos');
+  document.getElementById('mainTabStock').classList.toggle('active', tab === 'stock');
+  document.getElementById('mainTabMarcacoes').classList.toggle('active', tab === 'marcacoes');
+  document.getElementById('mainTabClientes').classList.toggle('active', tab === 'clientes');
+  document.getElementById('mainTabAvaliacoes').classList.toggle('active', tab === 'avaliacoes');
+  document.getElementById('mainTabSugestoes').classList.toggle('active', tab === 'sugestoes');
+  document.getElementById('mainTabGaleria').classList.toggle('active', tab === 'galeria');
+  document.getElementById('mainTabCupoes').classList.toggle('active', tab === 'cupoes');
+  document.getElementById('pedidosPanel').style.display = tab === 'pedidos' ? 'block' : 'none';
+  document.getElementById('stockPanel').style.display = tab === 'stock' ? 'block' : 'none';
+  document.getElementById('marcacoesPanel').style.display = tab === 'marcacoes' ? 'block' : 'none';
+  document.getElementById('clientesPanel').style.display = tab === 'clientes' ? 'block' : 'none';
+  document.getElementById('avaliacoesPanel').style.display = tab === 'avaliacoes' ? 'block' : 'none';
+  document.getElementById('sugestoesPanel').style.display = tab === 'sugestoes' ? 'block' : 'none';
+  document.getElementById('galeriaPanel').style.display = tab === 'galeria' ? 'block' : 'none';
+  document.getElementById('cupoesPanel').style.display = tab === 'cupoes' ? 'block' : 'none';
+  document.getElementById('mainTabBlog').classList.toggle('active', tab === 'blog');
+  document.getElementById('blogPanel').style.display = tab === 'blog' ? 'block' : 'none';
+  if (tab === 'blog') loadBlog();
+  document.getElementById('mainTabAbertura').classList.toggle('active', tab === 'abertura');
+  document.getElementById('aberturaPanel').style.display = tab === 'abertura' ? 'block' : 'none';
+  if (tab === 'abertura') loadAberturaAvisos();
+  if (tab === 'marcacoes') loadMarcacoes();
+  if (tab === 'clientes') loadClientes();
+  if (tab === 'avaliacoes') loadAvaliacoes();
+  if (tab === 'sugestoes') loadSugestoes();
+  if (tab === 'stock') loadWaitingList();
+  if (tab === 'galeria') loadGaleria();
+  if (tab === 'cupoes') loadCupoes();
+}
+
+// ---------- Pedidos ----------
+function loadOrders() {
+  db.collection('pedidos').orderBy('criadoEm', 'desc').onSnapshot(snap => {
+    allOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOrders();
+  }, err => {
+    document.getElementById('ordersList').innerHTML =
+      '<div class="empty-state">Não foi possível carregar os pedidos. (' + err.message + ')</div>';
+  });
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+}
+
+function statusLabel(s) {
+  return { pendente: 'Pendente', pronto: 'Pronto para levantar', entregue: 'Entregue', cancelado: 'Cancelado' }[s] || s;
+}
+
+// Número de dias a partir dos quais um pedido ainda não levantado é assinalado como parado.
+// É só uma constante no código — muda-se facilmente se quiseres outro prazo.
+const DIAS_PARA_ALERTA = 5;
+
+// Formata um telefone português (ou já internacional) num link wa.me
+function waLink(phone) {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return null;
+  const withCountry = digits.length <= 9 ? '351' + digits : digits;
+  return 'https://wa.me/' + withCountry;
+}
+
+// Devolve os pedidos anteriores do mesmo cliente (por uid, com fallback para e-mail), mais antigos que o pedido atual
+function getCustomerHistory(order) {
+  return allOrders.filter(o =>
+    o.id !== order.id &&
+    ((order.uid && o.uid === order.uid) || (!order.uid && o.email === order.email))
+  );
+}
+
+function toggleHistory(orderId) {
+  openHistoryFor = openHistoryFor === orderId ? null : orderId;
+  renderOrders();
+}
+
+function renderOrders() {
+  const list = currentFilter === 'todos' ? allOrders : allOrders.filter(o => o.estado === currentFilter);
+  const container = document.getElementById('ordersList');
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sem pedidos nesta categoria.</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(o => {
+    const data = o.criadoEm ? o.criadoEm.toDate().toLocaleString('pt-PT') : '—';
+    const itemsHtml = (o.items || []).map(it => `
+      <div class="order-item-row"><span>${it.quantidade}x ${it.nome}</span><span>${(it.preco * it.quantidade).toFixed(2)}€</span></div>
+    `).join('');
+
+    let actions = '';
+    if (o.estado === 'pendente') {
+      actions = `<button class="primary" onclick="updateStatus('${o.id}','pronto')">Marcar como pronto</button>
+                 <button onclick="cancelOrder('${o.id}')">Cancelar pedido</button>`;
+    } else if (o.estado === 'pronto') {
+      actions = `<button class="primary" onclick="updateStatus('${o.id}','entregue')">Marcar como entregue</button>
+                 <button onclick="updateStatus('${o.id}','pendente')">Voltar a pendente</button>
+                 <button onclick="cancelOrder('${o.id}')">Cancelar pedido</button>`;
+    } else if (o.estado === 'cancelado') {
+      actions = `<button onclick="updateStatus('${o.id}','pendente')">Reabrir</button>`;
+    } else {
+      actions = `<button onclick="updateStatus('${o.id}','pronto')">Reabrir</button>
+                 <button onclick="pedirAvaliacao('${o.id}')">Pedir avaliação</button>`;
+    }
+
+    // Pedidos anteriores a esta funcionalidade não têm "metodoPagamento" gravado — assume-se pagamento na loja.
+    const metodo = o.metodoPagamento || 'loja';
+    const pago = !!o.pago;
+    const metodoLabel = metodo === 'online' ? 'Online' : 'Na loja';
+    const refHtml = metodo === 'online' ? ` · ref. ${shortOrderRef(o.id)}` : '';
+    const payBadgeHtml = `<span class="pay-badge ${pago ? 'pay-badge-pago' : 'pay-badge-porpagar'}">${pago ? '✓ Pago' : 'Por pagar'} · ${metodoLabel}${refHtml}</span>`;
+    const payAction = pago
+      ? `<button onclick="togglePago('${o.id}', false)">Desmarcar pago</button>`
+      : `<button class="primary" onclick="togglePago('${o.id}', true)">Marcar como pago</button>`;
+    actions = payAction + actions;
+
+    const diasParado = o.criadoEm ? Math.floor((Date.now() - o.criadoEm.toDate().getTime()) / 86400000) : null;
+    const parado = (o.estado === 'pendente' || o.estado === 'pronto') && diasParado !== null && diasParado >= DIAS_PARA_ALERTA;
+    const staleHtml = parado ? `<span class="pay-badge pay-badge-porpagar">⚠ Há ${diasParado} dias por levantar</span>` : '';
+
+    const wa = waLink(o.telefone);
+    const contactHtml = `
+      ${o.email ? `<a href="mailto:${o.email}">${o.email}</a>` : ''}
+      ${o.telefone ? ' · ' + (wa ? `<a class="contact-wa" href="${wa}" target="_blank" rel="noopener">💬 ${o.telefone}</a>` : o.telefone) : ' · sem telefone'}
+      · ${data}
+    `;
+
+    const history = getCustomerHistory(o);
+    const historyOpen = openHistoryFor === o.id;
+    const historyTotal = history.reduce((s, h) => s + (h.total || 0), 0);
+    const historyHtml = history.length === 0 ? '' : `
+      <button class="history-toggle" onclick="toggleHistory('${o.id}')">${historyOpen ? 'Esconder' : 'Ver'} histórico deste cliente (${history.length} pedido${history.length > 1 ? 's' : ''} anterior${history.length > 1 ? 'es' : ''})</button>
+      <div class="history-panel ${historyOpen ? 'open' : ''}">
+        <div class="history-summary">${history.length} pedido${history.length > 1 ? 's' : ''} anterior${history.length > 1 ? 'es' : ''} · ${historyTotal.toFixed(2)}€ no total</div>
+        ${history.map(h => {
+          const hData = h.criadoEm ? h.criadoEm.toDate().toLocaleDateString('pt-PT') : '—';
+          const hItems = (h.items || []).map(it => `${it.quantidade}x ${it.nome}`).join(', ');
+          return `<div class="history-row"><span>${hData} — ${hItems}</span><span>${(h.total || 0).toFixed(2)}€</span></div>`;
+        }).join('')}
+      </div>
+    `;
+
+    return `
+      <div class="order-card">
+        <div class="order-top">
+          <div>
+            <div class="order-client">${o.nome || o.email}</div>
+            <div class="order-meta">${contactHtml}</div>
+          </div>
+          <div class="order-top-right">
+            <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>
+            ${payBadgeHtml}
+            ${staleHtml}
+          </div>
+        </div>
+        <div class="order-items">${itemsHtml}</div>
+        <div class="order-total">Total: ${(o.total || 0).toFixed(2)}€</div>
+        ${historyHtml}
+        <div class="order-actions">${actions}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStatus(id, novoEstado) {
+  db.collection('pedidos').doc(id).update({ estado: novoEstado });
+}
+
+// Abre o cliente de e-mail do próprio utilizador (mailto:), já pronto para pedir uma avaliação
+// dos produtos do pedido — sem depender do EmailJS (limite de 200 envios/mês no plano grátis).
+// Fica como botão manual em vez de disparo automático, para o admin decidir quando enviar.
+function pedirAvaliacao(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order || !order.email) { alert('Este pedido não tem e-mail associado.'); return; }
+  const itemsText = (order.items || []).map(it => it.nome).join(', ');
+  const assunto = 'O que achou da sua compra? 🐾';
+  const corpo = `Olá ${order.nome || ''},\n\n` +
+    `Esperamos que ${itemsText} esteja a fazer sucesso!\n\n` +
+    `Se tiver um minuto, adorávamos saber a sua opinião — a avaliação fica visível na loja e ajuda outros tutores a escolher melhor.\n\n` +
+    `Pode avaliar aqui: https://centroveterinariolindaavelha.pt/loja.html\n\n` +
+    `Obrigado,\nCentro Veterinário Linda-a-Velha`;
+  window.open(`mailto:${order.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`, '_blank');
+}
+
+function togglePago(id, pago) {
+  db.collection('pedidos').doc(id).update({ pago: pago });
+}
+
+function cancelOrder(id) {
+  const order = allOrders.find(o => o.id === id);
+  if (!order) return;
+
+  const jaPago = !!order.pago && order.metodoPagamento === 'online';
+  const aviso = jaPago
+    ? 'Este pedido já foi pago online. Cancelar aqui NÃO devolve o dinheiro automaticamente — se avançares, o reembolso tem de ser feito à parte no Stripe. Cancelar mesmo assim?'
+    : 'Cancelar este pedido e repor o stock reservado? Não é possível desfazer esta ação.';
+  if (!confirm(aviso)) return;
+
+  const items = order.items || [];
+  const temChaves = items.length > 0 && items.every(it => it.chave);
+
+  const restaurarStock = !temChaves ? Promise.resolve() : db.runTransaction(tx => {
+    const refs = items.map(it => db.collection('estoque').doc(it.chave));
+    return Promise.all(refs.map(r => tx.get(r))).then(snaps => {
+      snaps.forEach((snap, i) => {
+        const it = items[i];
+        const atual = snap.exists ? (snap.data().qty || 0) : 0;
+        tx.set(refs[i], { qty: atual + it.quantidade }, { merge: true });
+      });
+    });
+  }).then(() => {
+    items.forEach(it => { liveStock[it.chave] = (liveStock[it.chave] || 0) + it.quantidade; });
+  });
+
+  restaurarStock
+    .then(() => db.collection('pedidos').doc(id).update({ estado: 'cancelado' }))
+    .then(() => {
+      if (!temChaves) {
+        alert('Pedido cancelado. Como é um pedido anterior a esta funcionalidade, o stock não foi reposto automaticamente — ajusta manualmente no separador Stock, se for preciso.');
+      }
+    })
+    .catch(err => alert('Não foi possível cancelar o pedido: ' + err.message));
+}
+
+// Referência curta do pedido (últimos 6 caracteres do ID), a mesma que aparece
+// ao cliente no site e no client_reference_id enviado ao Stripe — para cruzar
+// facilmente um pagamento visto no dashboard Stripe com o pedido certo aqui.
+function shortOrderRef(id) {
+  return id.slice(-6).toUpperCase();
+}
+
+// ---------- Stock ----------
+// Mesma lógica/chaves da loja.html: "{id}_{sizeIndex}" para produtos com tamanhos, "{id}" para os restantes.
+let liveStock = {};
+
+function stockKey(id, sizeIdx) { return sizeIdx === null || sizeIdx === undefined ? String(id) : `${id}_${sizeIdx}`; }
+
+function getStock(p, sizeIdx) {
+  const key = stockKey(p.id, sizeIdx);
+  if (Object.prototype.hasOwnProperty.call(liveStock, key)) return liveStock[key];
+  const fallback = Array.isArray(p.sizes) ? p.sizes[sizeIdx].stock : p.stock;
+  return typeof fallback === 'number' ? fallback : 0;
+}
+
+function loadStock() {
+  db.collection('estoque').get().then(snap => {
+    snap.forEach(doc => { liveStock[doc.id] = doc.data().qty; });
+    renderStock();
+  }).catch(err => console.error('Não foi possível carregar o stock.', err));
+}
+
+function renderStock() {
+  const listEl = document.getElementById('stockList');
+  if (!listEl) return;
+  const q = (document.getElementById('stockSearch').value || '').trim().toLowerCase();
+  const list = products.filter(p => !q || p.name.toLowerCase().includes(q));
+  if (list.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">Sem produtos para esta pesquisa.</div>';
+    return;
+  }
+  listEl.innerHTML = list.map(p => {
+    const hasSizes = Array.isArray(p.sizes);
+    const rows = hasSizes ? p.sizes.map((s, i) => {
+      const key = stockKey(p.id, i);
+      return `
+        <div class="stock-row">
+          <span class="stock-label">${s.label}</span>
+          <input type="number" min="0" step="1" id="stockinput-${key}" value="${getStock(p, i)}">
+          <button onclick="saveStock(${p.id}, ${i})">Guardar</button>
+          <span class="stock-saved" id="saved-${key}">Guardado ✓</span>
+        </div>`;
+    }).join('') : `
+        <div class="stock-row">
+          <span class="stock-label">Único</span>
+          <input type="number" min="0" step="1" id="stockinput-${stockKey(p.id)}" value="${getStock(p, null)}">
+          <button onclick="saveStock(${p.id}, null)">Guardar</button>
+          <span class="stock-saved" id="saved-${stockKey(p.id)}">Guardado ✓</span>
+        </div>`;
+    return `
+      <div class="stock-product">
+        <div class="stock-product-name">${p.name}</div>
+        ${rows}
+      </div>`;
+  }).join('');
+}
+
+function markAllOutOfStock() {
+  if (!confirm('Isto vai marcar TODOS os produtos e tamanhos como sem stock (0). Tens a certeza?')) return;
+  const resultEl = document.getElementById('bulkStockResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A atualizar...</div>';
+  const keys = [];
+  products.forEach(p => {
+    if (Array.isArray(p.sizes)) {
+      p.sizes.forEach((s, i) => keys.push(stockKey(p.id, i)));
+    } else {
+      keys.push(stockKey(p.id, null));
+    }
+  });
+  // Firestore batches têm um limite de 500 operações; dividimos em grupos de 400 por segurança.
+  const chunks = [];
+  for (let i = 0; i < keys.length; i += 400) chunks.push(keys.slice(i, i + 400));
+  const writeChunk = chunk => {
+    const batch = db.batch();
+    chunk.forEach(key => batch.set(db.collection('estoque').doc(key), { qty: 0 }, { merge: true }));
+    return batch.commit();
+  };
+  chunks.reduce((p, chunk) => p.then(() => writeChunk(chunk)), Promise.resolve())
+    .then(() => {
+      keys.forEach(key => { liveStock[key] = 0; });
+      renderStock();
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="ok">${keys.length} tamanhos marcados como sem stock.</span></div>`;
+    })
+    .catch(err => {
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro: ${err.message}</span></div>`;
+    });
+}
+
+function saveStock(productId, sizeIdx) {
+  const key = stockKey(productId, sizeIdx);
+  const input = document.getElementById(`stockinput-${key}`);
+  const qty = Math.max(0, parseInt(input.value, 10) || 0);
+  db.collection('estoque').doc(key).set({ qty: qty }, { merge: true }).then(() => {
+    liveStock[key] = qty;
+    const savedEl = document.getElementById(`saved-${key}`);
+    savedEl.classList.add('show');
+    setTimeout(() => savedEl.classList.remove('show'), 1800);
+    if (qty > 0) checkAndNotifyWaitingList(key);
+  }).catch(err => alert('Não foi possível guardar o stock: ' + err.message));
+}
+
+// Verifica se há clientes à espera deste produto/tamanho e oferece notificá-los por e-mail
+function loadWaitingList() {
+  const box = document.getElementById('waitingListBox');
+  const content = document.getElementById('waitingListContent');
+  db.collection('avisos_stock').get().then(snap => {
+    if (snap.empty) { box.style.display = 'none'; return; }
+    const byKey = {};
+    snap.docs.forEach(d => {
+      const w = d.data();
+      byKey[w.key] = byKey[w.key] || { produtoNome: w.produtoNome, count: 0 };
+      byKey[w.key].count++;
+    });
+    box.style.display = 'block';
+    content.innerHTML = Object.entries(byKey).map(([key, info]) => `
+      <div class="stock-row" style="justify-content:space-between;">
+        <span class="stock-label" style="width:auto; flex:1;">${info.produtoNome} — ${info.count} pessoa${info.count > 1 ? 's' : ''}</span>
+        <button onclick="checkAndNotifyWaitingList('${key}')">Avisar agora</button>
+      </div>
+    `).join('');
+  }).catch(err => console.error('Não foi possível carregar a lista de espera:', err));
+}
+function checkAndNotifyWaitingList(key) {
+  db.collection('avisos_stock').where('key', '==', key).get().then(snap => {
+    if (snap.empty) return;
+    const waiting = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const produtoNome = waiting[0].produtoNome;
+    const emails = waiting.map(w => w.email);
+    if (!confirm(`${waiting.length} pessoa(s) pediram para ser avisadas quando "${produtoNome}" voltasse a ter stock.\n\nVamos abrir o teu e-mail com todos os destinatários prontos — só falta clicares em enviar. Continuar?`)) return;
+    const subject = encodeURIComponent(`${produtoNome} já está disponível!`);
+    const body = encodeURIComponent(`Olá!\n\nO produto "${produtoNome}" que pediu para ser avisado(a) já está disponível no Centro Veterinário Linda-a-Velha.\n\nVenha levantar quando quiser!\n\nAté já.`);
+    const mailtoLink = `mailto:?bcc=${emails.join(',')}&subject=${subject}&body=${body}`;
+    window.location.href = mailtoLink;
+    // Assume que o e-mail foi (ou vai ser) enviado e limpa a lista de espera deste produto
+    const deletePromises = waiting.map(w => db.collection('avisos_stock').doc(w.id).delete());
+    Promise.all(deletePromises).then(loadWaitingList).catch(err => console.error('Não foi possível limpar a lista de espera:', err));
+  }).catch(err => console.error('Não foi possível verificar a lista de espera:', err));
+}
+
+// ---------- Avaliações ----------
+function renderStarsDisplay(n) {
+  const rounded = Math.round(n);
+  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded);
+}
+function loadAvaliacoes() {
+  const listEl = document.getElementById('avaliacoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar avaliações...</div>';
+  db.collection('avaliacoes').orderBy('criadoEm', 'desc').limit(100).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há avaliações.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const r = doc.data();
+      const p = products.find(pr => pr.id === r.produtoId);
+      const dataStr = r.criadoEm && r.criadoEm.toDate ? r.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${p ? p.name : 'Produto #' + r.produtoId}</div>
+              <div class="order-meta">${r.nome || 'Cliente'} · ${renderStarsDisplay(r.estrelas)} · ${dataStr}${r.oculta ? ' · <strong>OCULTA</strong>' : ''}</div>
+            </div>
+          </div>
+          ${r.comentario ? `<div class="order-items"><div class="order-item-row"><span>${r.comentario}</span></div></div>` : ''}
+          <div class="order-actions">
+            <button onclick="toggleAvaliacaoOculta('${doc.id}', ${!r.oculta})">${r.oculta ? 'Mostrar' : 'Ocultar'}</button>
+            <button onclick="deleteAvaliacao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar avaliações.</div>';
+    console.error(err);
+  });
+}
+function toggleAvaliacaoOculta(id, oculta) {
+  db.collection('avaliacoes').doc(id).update({ oculta: oculta }).then(loadAvaliacoes);
+}
+function deleteAvaliacao(id) {
+  if (!confirm('Eliminar esta avaliação permanentemente?')) return;
+  db.collection('avaliacoes').doc(id).delete().then(loadAvaliacoes);
+}
+
+// ---------- Clientes ----------
+let allClientes = [];
+let clienteEmEdicaoId = null;
+
+// Mesma lógica usada no index.html para gerar o ID do animal (nome -> slug), para os animais
+// criados manualmente aqui coincidirem com os que chegam via marcação online, sem duplicar.
+function animalSlug(nome) {
+  return (nome || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'animal';
+}
+
+function loadClientes() {
+  const listEl = document.getElementById('clientesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar clientes...</div>';
+  Promise.all([
+    db.collection('clientes_registo').orderBy('nome', 'asc').limit(500).get(),
+    db.collectionGroup('animais').get()
+  ]).then(([clientesSnap, animaisSnap]) => {
+    const animaisPorCliente = {};
+    animaisSnap.forEach(doc => {
+      const clienteId = doc.ref.parent.parent.id;
+      (animaisPorCliente[clienteId] = animaisPorCliente[clienteId] || []).push({ id: doc.id, ...doc.data() });
+    });
+    allClientes = clientesSnap.docs.map(doc => ({
+      id: doc.id, ...doc.data(),
+      animais: animaisPorCliente[doc.id] || []
+    }));
+    renderClientesList();
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar clientes.</div>';
+    console.error(err);
+  });
+}
+
+function renderClientesList() {
+  const listEl = document.getElementById('clientesList');
+  const termo = (document.getElementById('clientesSearch').value || '').toLowerCase().trim();
+  const filtrados = !termo ? allClientes : allClientes.filter(c =>
+    (c.nome || '').toLowerCase().includes(termo) ||
+    (c.nif || '').includes(termo) ||
+    (c.telefone || '').includes(termo)
+  );
+  if (!filtrados.length) {
+    listEl.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+    return;
+  }
+  listEl.innerHTML = filtrados.map(c => {
+    const wa = waLink(c.telefone);
+    const animaisTags = (c.animais || []).map(a =>
+      `<span class="animal-tag">${a.nome}${a.especie ? ' · ' + a.especie : ''}${a.sexo ? ' · ' + a.sexo : ''}${a.raca ? ' · ' + a.raca : ''}${a.chip ? ' · chip ' + a.chip : ''}</span>`
+    ).join('');
+    return `
+      <div class="order-card cliente-card">
+        <div class="order-top">
+          <div>
+            <div class="order-client">${c.nome}${c.nif ? ' · NIF ' + c.nif : ''}${c.origem === 'marcacao_online' ? ' <span class="animal-tag" style="background:#fff3cd;color:#8a6d00;">via marcação online</span>' : ''}</div>
+            <div class="order-meta">${c.telefone || ''}${c.email ? ' · ' + c.email : ''}${c.morada ? ' · ' + c.morada : ''}</div>
+          </div>
+        </div>
+        ${animaisTags ? `<div class="animais-tags">${animaisTags}</div>` : ''}
+        <div class="order-actions">
+          ${wa ? `<a href="${wa}" target="_blank"><button type="button">WhatsApp</button></a>` : ''}
+          <button onclick="abrirFormCliente('${c.id}')">Editar</button>
+          <button onclick="deleteCliente('${c.id}')">Eliminar</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function abrirFormCliente(id) {
+  clienteEmEdicaoId = id || null;
+  const c = id ? allClientes.find(x => x.id === id) : null;
+  const wrap = document.getElementById('clienteFormWrap');
+  wrap.style.display = 'block';
+  wrap.innerHTML = `
+    <div class="cliente-form">
+      <h3>${c ? 'Editar cliente' : 'Novo cliente'}</h3>
+      <div class="cliente-form-row">
+        <input type="text" id="cfNome" placeholder="Nome completo *" value="${c?.nome || ''}">
+        <input type="text" id="cfNif" placeholder="NIF" value="${c?.nif || ''}">
+      </div>
+      <div class="cliente-form-row">
+        <input type="tel" id="cfTelefone" placeholder="Telefone" value="${c?.telefone || ''}">
+        <input type="email" id="cfEmail" placeholder="E-mail" value="${c?.email || ''}">
+      </div>
+      <div class="cliente-form-row">
+        <input type="text" id="cfMorada" placeholder="Morada" value="${c?.morada || ''}">
+      </div>
+      <h4>Animais</h4>
+      <div class="cliente-animais-list" id="cfAnimaisList"></div>
+      <button type="button" onclick="addAnimalRow()">+ Adicionar animal</button>
+      <div class="order-actions" style="margin-top:16px;">
+        <button class="primary" onclick="salvarCliente()">Guardar</button>
+        <button onclick="fecharFormCliente()">Cancelar</button>
+      </div>
+    </div>`;
+  const animais = (c?.animais && c.animais.length) ? c.animais : [{}];
+  animais.forEach(a => addAnimalRow(a));
+}
+
+function fecharFormCliente() {
+  document.getElementById('clienteFormWrap').style.display = 'none';
+  document.getElementById('clienteFormWrap').innerHTML = '';
+  clienteEmEdicaoId = null;
+}
+
+function addAnimalRow(a) {
+  a = a || {};
+  const list = document.getElementById('cfAnimaisList');
+  const row = document.createElement('div');
+  row.className = 'cliente-animal-row';
+  row.dataset.origId = a.id || ''; // id original na subcoleção, para saber o que foi removido ao guardar
+  row.innerHTML = `
+    <input type="text" data-f="nome" placeholder="Nome do animal" value="${a.nome || ''}">
+    <select data-f="especie">
+      <option value="Cão" ${a.especie === 'Cão' ? 'selected' : ''}>Cão</option>
+      <option value="Gato" ${a.especie === 'Gato' ? 'selected' : ''}>Gato</option>
+      <option value="Outro" ${a.especie === 'Outro' ? 'selected' : ''}>Outro</option>
+    </select>
+    <select data-f="sexo">
+      <option value="" ${!a.sexo ? 'selected' : ''}>Sexo</option>
+      <option value="Macho" ${a.sexo === 'Macho' ? 'selected' : ''}>Macho</option>
+      <option value="Fêmea" ${a.sexo === 'Fêmea' ? 'selected' : ''}>Fêmea</option>
+    </select>
+    <input type="text" data-f="raca" placeholder="Raça" value="${a.raca || ''}">
+    <input type="date" data-f="nascimento" value="${a.nascimento || ''}">
+    <input type="text" data-f="chip" placeholder="Nº de chip" value="${a.chip || ''}">
+    <input type="text" data-f="notas" placeholder="Notas (alergias, etc.)" value="${a.notas || ''}">
+    <button type="button" onclick="this.parentElement.remove()" title="Remover animal">✕</button>`;
+  list.appendChild(row);
+}
+
+function salvarCliente() {
+  const nome = document.getElementById('cfNome').value.trim();
+  if (!nome) { alert('O nome do cliente é obrigatório.'); return; }
+  const nif = document.getElementById('cfNif').value.trim();
+  const telefone = document.getElementById('cfTelefone').value.trim();
+  const email = document.getElementById('cfEmail').value.trim();
+  const morada = document.getElementById('cfMorada').value.trim();
+
+  const linhasAnimais = Array.from(document.querySelectorAll('#cfAnimaisList .cliente-animal-row'));
+  const animaisNovos = linhasAnimais.map(row => ({
+    origId: row.dataset.origId || '',
+    nome: row.querySelector('[data-f="nome"]').value.trim(),
+    especie: row.querySelector('[data-f="especie"]').value,
+    sexo: row.querySelector('[data-f="sexo"]').value,
+    raca: row.querySelector('[data-f="raca"]').value.trim(),
+    nascimento: row.querySelector('[data-f="nascimento"]').value,
+    chip: row.querySelector('[data-f="chip"]').value.trim(),
+    notas: row.querySelector('[data-f="notas"]').value.trim(),
+  })).filter(a => a.nome);
+
+  // ID do cliente: mantém o mesmo se já existir; se for novo e tiver telefone, usa o telefone
+  // (mesmo critério do formulário público), para os dois lados baterem certo no mesmo cliente.
+  const telefoneDigits = telefone.replace(/\D/g, '');
+  const clienteId = clienteEmEdicaoId || (telefoneDigits || db.collection('clientes_registo').doc().id);
+  const ref = db.collection('clientes_registo').doc(clienteId);
+
+  const dados = {
+    nome, nif: nif || null, telefone: telefone || null, email: email || null, morada: morada || null,
+    origem: clienteEmEdicaoId ? undefined : 'admin',
+    atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (!clienteEmEdicaoId) dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+  Object.keys(dados).forEach(k => dados[k] === undefined && delete dados[k]);
+
+  const animaisOriginaisIds = new Set((clienteEmEdicaoId ? (allClientes.find(c => c.id === clienteEmEdicaoId)?.animais || []) : []).map(a => a.id));
+  const idsMantidos = new Set();
+
+  const escritas = [ref.set(dados, { merge: true })];
+  animaisNovos.forEach(a => {
+    const animalId = a.origId || animalSlug(a.nome);
+    idsMantidos.add(animalId);
+    escritas.push(ref.collection('animais').doc(animalId).set({
+      nome: a.nome, especie: a.especie, sexo: a.sexo, raca: a.raca,
+      nascimento: a.nascimento, chip: a.chip, notas: a.notas,
+      atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }));
+  });
+  // Remove da subcoleção os animais que existiam antes e foram apagados no formulário
+  animaisOriginaisIds.forEach(id => {
+    if (!idsMantidos.has(id)) escritas.push(ref.collection('animais').doc(id).delete());
+  });
+
+  Promise.all(escritas).then(() => {
+    fecharFormCliente();
+    loadClientes();
+  }).catch(err => {
+    alert('Não foi possível guardar o cliente.');
+    console.error(err);
+  });
+}
+
+function deleteCliente(id) {
+  if (!confirm('Eliminar este cliente e os dados dos animais dele permanentemente?')) return;
+  const ref = db.collection('clientes_registo').doc(id);
+  ref.collection('animais').get().then(snap => {
+    return Promise.all(snap.docs.map(d => d.ref.delete()));
+  }).then(() => ref.delete()).then(loadClientes);
+}
+
+// Importa clientes (nome + telefone) de um ficheiro Excel/CSV. O ID do cliente é sempre
+// o telefone (só dígitos) — igual ao critério usado em salvarCliente() — para que um cliente
+// já existente seja atualizado (merge) em vez de duplicado, e nunca apaga campos que já
+// tenha (nif, email, morada, animais) porque só escrevemos nome/telefone/importadoEm.
+function handleClientesImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const resultEl = document.getElementById('clientesImportResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A ler ficheiro...</div>';
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    } catch (err) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não foi possível ler o ficheiro.</span></div>';
+      return;
+    }
+    if (!rows.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Ficheiro vazio.</span></div>';
+      return;
+    }
+    // Aceita tanto o CSV limpo (nome/telefone) como a exportação original (CLIENTE/TELEFONE1)
+    const cols = Object.keys(rows[0]);
+    const findCol = candidates => cols.find(c => candidates.includes(c.trim().toLowerCase()));
+    const colNome = findCol(['nome', 'cliente']);
+    const colTelefone = findCol(['telefone', 'telefone1', 'telemóvel', 'telemovel', 'contacto']);
+    if (!colNome || !colTelefone) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não encontrei colunas de nome e telefone no ficheiro.</span></div>';
+      return;
+    }
+    const vistos = new Set();
+    const clientes = [];
+    let ignorados = 0;
+    rows.forEach(r => {
+      const nome = String(r[colNome] || '').trim();
+      const telDigits = String(r[colTelefone] || '').replace(/\D/g, '');
+      if (!nome || !telDigits || vistos.has(telDigits)) { ignorados++; return; }
+      vistos.add(telDigits);
+      clientes.push({ nome, telefone: telDigits });
+    });
+    if (!clientes.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Nenhum cliente válido (nome + telefone) encontrado.</span></div>';
+      return;
+    }
+    if (!confirm(`Importar ${clientes.length} clientes para a base de dados? (${ignorados} linhas ignoradas por falta de nome/telefone ou duplicadas no ficheiro)`)) {
+      resultEl.innerHTML = '';
+      event.target.value = '';
+      return;
+    }
+    resultEl.innerHTML = '<div class="stock-import-result">A importar...</div>';
+    // Firestore batches têm um limite de 500 operações; dividimos em grupos de 400 por segurança.
+    const chunks = [];
+    for (let i = 0; i < clientes.length; i += 400) chunks.push(clientes.slice(i, i + 400));
+    const writeChunk = chunk => {
+      const batch = db.batch();
+      chunk.forEach(c => {
+        const ref = db.collection('clientes_registo').doc(c.telefone);
+        batch.set(ref, {
+          nome: c.nome,
+          telefone: c.telefone,
+          importadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+      return batch.commit();
+    };
+    chunks.reduce((p, chunk) => p.then(() => writeChunk(chunk)), Promise.resolve())
+      .then(() => {
+        resultEl.innerHTML = `<div class="stock-import-result"><span class="ok">${clientes.length} clientes importados/atualizados.</span></div>`;
+        loadClientes();
+      })
+      .catch(err => {
+        resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro ao importar: ${err.message}</span></div>`;
+      });
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---------- Marcações ----------
+// ---------- Interruptor da agenda de marcações online ----------
+function loadAgendaToggle() {
+  const btn = document.getElementById('agendaToggleBtn');
+  db.collection('configuracoes').doc('agenda').get().then(doc => {
+    const ativa = !!(doc.exists && doc.data().ativa);
+    pintarAgendaToggle(ativa);
+  }).catch(err => {
+    btn.textContent = 'Erro ao carregar';
+    console.error(err);
+  });
+}
+function pintarAgendaToggle(ativa) {
+  const btn = document.getElementById('agendaToggleBtn');
+  btn.textContent = ativa ? 'ABERTA — clicar para fechar' : 'FECHADA — clicar para abrir';
+  btn.className = ativa ? 'aberta' : 'fechada';
+}
+function toggleAgendaAtiva() {
+  const btn = document.getElementById('agendaToggleBtn');
+  const estaAberta = btn.className === 'aberta';
+  const novoValor = !estaAberta;
+  btn.textContent = 'A atualizar...';
+  db.collection('configuracoes').doc('agenda').set({ ativa: novoValor }, { merge: true }).then(() => {
+    pintarAgendaToggle(novoValor);
+  }).catch(err => {
+    alert('Não foi possível atualizar. Tente novamente.');
+    pintarAgendaToggle(estaAberta);
+    console.error(err);
+  });
+}
+
+// ---------- Editar dias e horas de consulta ----------
+const DIAS_SEMANA_LABELS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+// Reserva usada só se ainda não houver nada guardado no Firestore, para o formulário não abrir vazio.
+const HORARIOS_RESERVA = {
+  1: { inicio: '15:00', fim: '19:00' },
+  3: { inicio: '09:00', fim: '14:00' },
+  5: { inicio: '09:00', fim: '14:00' },
+};
+
+function toggleFormHorarios() {
+  const wrap = document.getElementById('horariosFormWrap');
+  if (wrap.style.display === 'block') { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = '<div class="empty-state">A carregar...</div>';
+  db.collection('configuracoes').doc('agenda').get().then(doc => {
+    const horariosAtuais = (doc.exists && doc.data().horarios && Object.keys(doc.data().horarios).length)
+      ? doc.data().horarios : HORARIOS_RESERVA;
+    renderFormHorarios(horariosAtuais);
+  }).catch(err => {
+    wrap.innerHTML = '<div class="empty-state">Erro ao carregar horários.</div>';
+    console.error(err);
+  });
+}
+
+function renderFormHorarios(horarios) {
+  const wrap = document.getElementById('horariosFormWrap');
+  const linhas = DIAS_SEMANA_LABELS.map((nome, i) => {
+    const cfg = horarios[i] || horarios[String(i)];
+    const ativo = !!cfg;
+    return `
+      <div class="horario-dia-row">
+        <label class="dia-nome"><input type="checkbox" data-dia="${i}" data-f="ativo" ${ativo ? 'checked' : ''} onchange="toggleLinhaHorario(${i})"> ${nome}</label>
+        <input type="time" data-dia="${i}" data-f="inicio" value="${cfg ? cfg.inicio : '09:00'}" ${ativo ? '' : 'disabled'}>
+        <span class="ate">até</span>
+        <input type="time" data-dia="${i}" data-f="fim" value="${cfg ? cfg.fim : '18:00'}" ${ativo ? '' : 'disabled'}>
+      </div>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="horarios-form">
+      <h3>Dias e horas de consulta</h3>
+      <p style="color:#888;font-size:0.85rem;margin-top:-8px;">Marque os dias em que há consulta e as horas de início/fim. Os intervalos disponíveis para marcação são gerados de 20 em 20 minutos dentro desse período.</p>
+      <div id="horariosDiasList">${linhas}</div>
+      <div class="order-actions" style="margin-top:16px;">
+        <button class="primary" onclick="salvarHorarios()">Guardar</button>
+        <button onclick="toggleFormHorarios()">Cancelar</button>
+      </div>
+    </div>`;
+}
+
+function toggleLinhaHorario(dia) {
+  const checkbox = document.querySelector(`#horariosDiasList input[type="checkbox"][data-dia="${dia}"]`);
+  const inputs = document.querySelectorAll(`#horariosDiasList input[type="time"][data-dia="${dia}"]`);
+  inputs.forEach(inp => inp.disabled = !checkbox.checked);
+}
+
+function salvarHorarios() {
+  const horarios = {};
+  DIAS_SEMANA_LABELS.forEach((_, i) => {
+    const checkbox = document.querySelector(`#horariosDiasList input[type="checkbox"][data-dia="${i}"]`);
+    if (!checkbox.checked) return;
+    const inicio = document.querySelector(`#horariosDiasList input[data-dia="${i}"][data-f="inicio"]`).value;
+    const fim = document.querySelector(`#horariosDiasList input[data-dia="${i}"][data-f="fim"]`).value;
+    if (inicio && fim && inicio < fim) horarios[i] = { inicio, fim };
+  });
+  if (!Object.keys(horarios).length) {
+    alert('Ative pelo menos um dia com horário válido (início antes do fim).');
+    return;
+  }
+  db.collection('configuracoes').doc('agenda').set({ horarios }, { merge: true }).then(() => {
+    toggleFormHorarios();
+  }).catch(err => {
+    alert('Não foi possível guardar. Tente novamente.');
+    console.error(err);
+  });
+}
+
+function loadMarcacoes() {
+  loadAgendaToggle();
+  const listEl = document.getElementById('marcacoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar marcações...</div>';
+  db.collection('marcacoes').orderBy('data', 'asc').limit(150).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há pedidos de marcação.</div>';
+      return;
+    }
+    const docs = snap.docs.slice().sort((a, b) => {
+      const da = a.data(), db_ = b.data();
+      if (da.data !== db_.data) return da.data < db_.data ? -1 : 1;
+      return (da.hora || '').localeCompare(db_.hora || '');
+    });
+    const estadoLabel = { pendente: 'PENDENTE', confirmada: 'CONFIRMADA', cancelada: 'CANCELADA' };
+    listEl.innerHTML = docs.map(doc => {
+      const m = doc.data();
+      const wa = waLink(m.telefone);
+      const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${m.nome} — ${dataStr} às ${m.hora || ''}</div>
+              <div class="order-meta">${m.tipo} · ${m.especie}${m.animal ? ' · ' + m.animal : ''}${m.animalNascimento ? ' (nasc. ' + m.animalNascimento.split('-').reverse().join('/') + ')' : ''} · ${m.telefone}${m.email ? ' · ' + m.email : ''} · <strong>${estadoLabel[m.estado] || m.estado}</strong></div>
+            </div>
+          </div>
+          ${m.observacoes ? `<div class="order-items"><div class="order-item-row"><span>${m.observacoes}</span></div></div>` : ''}
+          <div class="order-actions">
+            ${wa ? `<a href="${wa}" target="_blank"><button type="button">WhatsApp</button></a>` : ''}
+            ${m.estado !== 'confirmada' ? `<button onclick="setMarcacaoEstado('${doc.id}', 'confirmada')">Confirmar</button>` : ''}
+            ${m.estado !== 'cancelada' ? `<button onclick="setMarcacaoEstado('${doc.id}', 'cancelada')">Cancelar</button>` : ''}
+            <button onclick="deleteMarcacao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar marcações.</div>';
+    console.error(err);
+  });
+}
+function setMarcacaoEstado(id, estado) {
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    return db.collection('marcacoes').doc(id).update({ estado: estado }).then(() => {
+      // Ao cancelar, liberta o horário em agenda_slots para outra pessoa poder marcar.
+      if (estado === 'cancelada' && m && m.data && m.hora) {
+        db.collection('agenda_slots').doc(m.data + '_' + m.hora).delete().catch(err => console.error(err));
+      }
+      loadMarcacoes();
+      if (estado === 'confirmada') enviarEmailConfirmacaoMarcacao(id);
+    });
+  });
+}
+
+// Abre o cliente de e-mail do próprio utilizador (mailto:), já pronto a avisar o cliente
+// que a marcação foi aceite — mesmo padrão do pedirAvaliacao, sem depender do EmailJS.
+function enviarEmailConfirmacaoMarcacao(id) {
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    if (!m || !m.email) return; // sem e-mail associado, não há para onde enviar
+    const dataStr = m.data ? m.data.split('-').reverse().join('/') : '';
+    const assunto = 'A sua marcação foi confirmada ✅';
+    const corpo = `Olá ${m.nome || ''},\n\n` +
+      `A sua marcação foi confirmada:\n\n` +
+      `📅 Data: ${dataStr}\n🕐 Hora: ${m.hora}\n🐾 Tipo: ${m.tipo}${m.animal ? ' — ' + m.animal : ''}\n\n` +
+      `Se precisar de alterar ou cancelar, contacte-nos.\n\n` +
+      `Até já,\nCentro Veterinário Linda-a-Velha`;
+    window.open(`mailto:${m.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`, '_blank');
+  });
+}
+function deleteMarcacao(id) {
+  if (!confirm('Eliminar este pedido de marcação permanentemente?')) return;
+  db.collection('marcacoes').doc(id).get().then(doc => {
+    const m = doc.data();
+    return db.collection('marcacoes').doc(id).delete().then(() => {
+      if (m && m.data && m.hora) {
+        db.collection('agenda_slots').doc(m.data + '_' + m.hora).delete().catch(err => console.error(err));
+      }
+      loadMarcacoes();
+    });
+  });
+}
+
+// ---------- Sugestões ----------
+function loadSugestoes() {
+  const listEl = document.getElementById('sugestoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar sugestões...</div>';
+  db.collection('sugestoes').orderBy('criadoEm', 'desc').limit(100).get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há sugestões.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const s = doc.data();
+      const dataStr = s.criadoEm && s.criadoEm.toDate ? s.criadoEm.toDate().toLocaleDateString('pt-PT') : '';
+      return `
+        <div class="order-card">
+          <div class="order-top">
+            <div>
+              <div class="order-client">${s.email ? s.email : 'Anónimo'}</div>
+              <div class="order-meta">${dataStr}${s.lida ? ' · <strong>LIDA</strong>' : ''}</div>
+            </div>
+          </div>
+          <div class="order-items"><div class="order-item-row"><span>${s.texto}</span></div></div>
+          <div class="order-actions">
+            <button onclick="toggleSugestaoLida('${doc.id}', ${!s.lida})">${s.lida ? 'Marcar por ler' : 'Marcar como lida'}</button>
+            <button onclick="deleteSugestao('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar sugestões.</div>';
+    console.error(err);
+  });
+}
+function toggleSugestaoLida(id, lida) {
+  db.collection('sugestoes').doc(id).update({ lida: lida }).then(loadSugestoes);
+}
+function deleteSugestao(id) {
+  if (!confirm('Eliminar esta sugestão permanentemente?')) return;
+  db.collection('sugestoes').doc(id).delete().then(loadSugestoes);
+}
+
+// ---------- Galeria ----------
+// Redimensiona e comprime a imagem no browser, devolvendo uma dataURL (base64) pronta a guardar no Firestore
+function resizeImageToDataURL(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Não foi possível ler o ficheiro.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function uploadGaleriaFoto() {
+  const fileInput = document.getElementById('galeriaFile');
+  const legenda = document.getElementById('galeriaLegenda').value.trim();
+  const progressEl = document.getElementById('galeriaProgress');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    progressEl.textContent = 'Escolhe primeiro uma imagem.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  progressEl.textContent = 'A preparar imagem...';
+  progressEl.className = 'galeria-progress';
+
+  resizeImageToDataURL(file, 900, 0.7)
+    .then(dataUrl => dataUrl.length > 700000 ? resizeImageToDataURL(file, 600, 0.55) : dataUrl)
+    .then(dataUrl => {
+      if (dataUrl.length > 700000) {
+        throw new Error('Esta imagem continua grande demais mesmo comprimida. Tenta outra foto mais simples.');
+      }
+      return db.collection('galeria').add({
+        url: dataUrl,
+        legenda: legenda,
+        criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(() => {
+      progressEl.textContent = 'Foto adicionada com sucesso!';
+      progressEl.className = 'galeria-progress ok';
+      fileInput.value = '';
+      document.getElementById('galeriaLegenda').value = '';
+      loadGaleria();
+    })
+    .catch(err => {
+      progressEl.textContent = 'Erro: ' + err.message;
+      progressEl.className = 'galeria-progress warn';
+      console.error(err);
+    });
+}
+
+function loadGaleria() {
+  const listEl = document.getElementById('galeriaList');
+  listEl.innerHTML = '<div class="empty-state">A carregar galeria...</div>';
+  db.collection('galeria').orderBy('criadoEm', 'desc').get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há fotos na galeria.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const g = doc.data();
+      return `
+        <div class="galeria-admin-item">
+          <img src="${g.url}" alt="${g.legenda || 'Foto da galeria'}" loading="lazy">
+          <div class="galeria-admin-item-body">
+            <div class="galeria-admin-item-legenda">${g.legenda || ''}</div>
+            <button onclick="deleteGaleriaFoto('${doc.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar galeria.</div>';
+    console.error(err);
+  });
+}
+
+function deleteGaleriaFoto(id) {
+  if (!confirm('Eliminar esta foto da galeria?')) return;
+  db.collection('galeria').doc(id).delete().then(loadGaleria);
+}
+
+// ---------- Cupões ----------
+function criarCupom() {
+  const codigo = document.getElementById('cupomCodigo').value.trim().toUpperCase();
+  const tipo = document.getElementById('cupomTipo').value;
+  const valor = parseFloat(document.getElementById('cupomValor').value);
+  const valorMinimo = parseFloat(document.getElementById('cupomMinimo').value) || 0;
+  const validadeStr = document.getElementById('cupomValidade').value;
+  const umaVezPorCliente = document.getElementById('cupomUmaVez').checked;
+  const progressEl = document.getElementById('cupomProgress');
+
+  if (!codigo) {
+    progressEl.textContent = 'Escreve um código.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  if (!valor || valor <= 0) {
+    progressEl.textContent = 'Escreve um valor válido.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  if (tipo === 'percentagem' && valor > 100) {
+    progressEl.textContent = 'Uma percentagem não pode ser superior a 100.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  const dados = {
+    tipo: tipo,
+    valor: valor,
+    valorMinimo: valorMinimo,
+    ativo: true,
+    umaVezPorCliente: umaVezPorCliente,
+    validade: validadeStr ? firebase.firestore.Timestamp.fromDate(new Date(validadeStr + 'T23:59:59')) : null,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  const ref = db.collection('cupoes').doc(codigo);
+  ref.get().then(doc => {
+    if (doc.exists && !confirm(`Já existe um cupão "${codigo}". Queres substituí-lo?`)) return;
+    return ref.set(dados).then(() => {
+      progressEl.textContent = 'Cupão criado com sucesso!';
+      progressEl.className = 'galeria-progress ok';
+      document.getElementById('cupomCodigo').value = '';
+      document.getElementById('cupomValor').value = '';
+      document.getElementById('cupomMinimo').value = '';
+      document.getElementById('cupomValidade').value = '';
+      document.getElementById('cupomUmaVez').checked = false;
+      loadCupoes();
+    });
+  }).catch(err => {
+    progressEl.textContent = 'Erro: ' + err.message;
+    progressEl.className = 'galeria-progress warn';
+    console.error(err);
+  });
+}
+
+function loadCupoes() {
+  const listEl = document.getElementById('cupoesList');
+  listEl.innerHTML = '<div class="empty-state">A carregar cupões...</div>';
+  db.collection('cupoes').orderBy('criadoEm', 'desc').get().then(snap => {
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há cupões criados.</div>';
+      return;
+    }
+    listEl.innerHTML = snap.docs.map(doc => {
+      const c = doc.data();
+      const codigo = doc.id;
+      const valorTxt = c.tipo === 'percentagem' ? `${c.valor}%` : `${c.valor.toFixed(2)}€`;
+      const minimoTxt = c.valorMinimo > 0 ? ` · mínimo ${c.valorMinimo.toFixed(2)}€` : '';
+      const validadeTxt = c.validade && c.validade.toDate ? ` · válido até ${c.validade.toDate().toLocaleDateString('pt-PT')}` : '';
+      const umaVezTxt = c.umaVezPorCliente ? ' · só 1x por cliente' : '';
+      return `
+        <div class="cupom-card ${c.ativo === false ? 'cupom-inativo' : ''}">
+          <div>
+            <div class="cupom-codigo">${codigo}</div>
+            <div class="cupom-detalhes">${valorTxt} de desconto${minimoTxt}${validadeTxt}${umaVezTxt}${c.ativo === false ? ' · INATIVO' : ''}</div>
+          </div>
+          <div class="cupom-actions">
+            <button onclick="toggleCupomAtivo('${codigo}', ${c.ativo === false})">${c.ativo === false ? 'Ativar' : 'Desativar'}</button>
+            <button onclick="deleteCupom('${codigo}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar cupões.</div>';
+    console.error(err);
+  });
+}
+
+function toggleCupomAtivo(codigo, ativo) {
+  db.collection('cupoes').doc(codigo).update({ ativo: ativo }).then(loadCupoes);
+}
+
+function deleteCupom(codigo) {
+  if (!confirm(`Eliminar o cupão "${codigo}" permanentemente?`)) return;
+  db.collection('cupoes').doc(codigo).delete().then(loadCupoes);
+}
+
+// ---------- Blog ----------
+let editingArtigoId = null;
+let allArtigos = [];
+
+function publicarArtigo() {
+  const titulo = document.getElementById('blogTitulo').value.trim();
+  const categoria = document.getElementById('blogCategoria').value;
+  const faixaEtaria = document.getElementById('blogFaixaEtaria').value;
+  const resumo = document.getElementById('blogResumo').value.trim();
+  const conteudo = document.getElementById('blogConteudo').value.trim();
+  const publicado = document.getElementById('blogPublicado').checked;
+  const fileInput = document.getElementById('blogImagem');
+  const file = fileInput.files[0];
+  const progressEl = document.getElementById('blogProgress');
+
+  if (!titulo || !resumo || !conteudo) {
+    progressEl.textContent = 'Preenche o título, o resumo e o conteúdo.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+
+  progressEl.textContent = 'A guardar...';
+  progressEl.className = 'galeria-progress';
+
+  const imagemPromise = !file ? Promise.resolve(null) :
+    resizeImageToDataURL(file, 900, 0.7)
+      .then(dataUrl => dataUrl.length > 700000 ? resizeImageToDataURL(file, 600, 0.55) : dataUrl)
+      .then(dataUrl => {
+        if (dataUrl.length > 700000) throw new Error('Esta imagem continua grande demais mesmo comprimida. Tenta outra foto mais simples.');
+        return dataUrl;
+      });
+
+  imagemPromise.then(imagemCapa => {
+    const dados = { titulo, categoria, faixaEtaria, resumo, conteudo, publicado };
+    if (imagemCapa) dados.imagemCapa = imagemCapa;
+    if (editingArtigoId) {
+      return db.collection('artigos').doc(editingArtigoId).update(dados);
+    } else {
+      dados.criadoEm = firebase.firestore.FieldValue.serverTimestamp();
+      return db.collection('artigos').add(dados);
+    }
+  }).then(() => {
+    progressEl.textContent = editingArtigoId ? 'Artigo atualizado com sucesso!' : 'Artigo guardado com sucesso!';
+    progressEl.className = 'galeria-progress ok';
+    cancelarEdicaoArtigo();
+    loadBlog();
+  }).catch(err => {
+    progressEl.textContent = 'Erro: ' + err.message;
+    progressEl.className = 'galeria-progress warn';
+    console.error(err);
+  });
+}
+
+function editarArtigo(id) {
+  const a = allArtigos.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('blogTitulo').value = a.titulo || '';
+  document.getElementById('blogCategoria').value = a.categoria || 'Doenças';
+  document.getElementById('blogFaixaEtaria').value = a.faixaEtaria || 'Todas as idades';
+  document.getElementById('blogResumo').value = a.resumo || '';
+  document.getElementById('blogConteudo').value = a.conteudo || '';
+  document.getElementById('blogPublicado').checked = a.publicado !== false;
+  document.getElementById('blogImagem').value = '';
+  editingArtigoId = id;
+  document.getElementById('blogFormTitle').textContent = 'A editar: ' + a.titulo;
+  document.getElementById('blogSaveBtn').textContent = 'Guardar alterações';
+  document.getElementById('blogCancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('blogProgress').textContent = a.imagemCapa ? 'Já tem imagem de capa — escolhe outra só se quiseres substituir.' : '';
+  document.getElementById('blogProgress').className = 'galeria-progress';
+  document.querySelector('.cupom-form-box').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelarEdicaoArtigo() {
+  editingArtigoId = null;
+  document.getElementById('blogTitulo').value = '';
+  document.getElementById('blogCategoria').value = 'Doenças';
+  document.getElementById('blogFaixaEtaria').value = 'Todas as idades';
+  document.getElementById('blogResumo').value = '';
+  document.getElementById('blogConteudo').value = '';
+  document.getElementById('blogPublicado').checked = true;
+  document.getElementById('blogImagem').value = '';
+  document.getElementById('blogFormTitle').textContent = 'Novo artigo';
+  document.getElementById('blogSaveBtn').textContent = 'Guardar artigo';
+  document.getElementById('blogCancelEditBtn').style.display = 'none';
+}
+
+function loadBlog() {
+  const listEl = document.getElementById('blogList');
+  listEl.innerHTML = '<div class="empty-state">A carregar artigos...</div>';
+  db.collection('artigos').orderBy('criadoEm', 'desc').get().then(snap => {
+    allArtigos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (allArtigos.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">Ainda não há artigos criados.</div>';
+      return;
+    }
+    listEl.innerHTML = allArtigos.map(a => {
+      const thumbHtml = a.imagemCapa ? `<img src="${a.imagemCapa}" style="width:52px; height:52px; object-fit:cover; border-radius:8px; flex-shrink:0;">` : '';
+      const faixaAtual = a.faixaEtaria || 'Todas as idades';
+      const faixaSelect = `
+        <select onchange="atualizarFaixaEtaria('${a.id}', this.value)" style="margin-top:6px; font-size:0.8rem; padding:4px 8px; width:auto;">
+          ${['Todas as idades', 'Cachorro ou Gatinho', 'Adulto', 'Sénior'].map(f => `<option value="${f}" ${f === faixaAtual ? 'selected' : ''}>${f}</option>`).join('')}
+        </select>`;
+      return `
+        <div class="cupom-card ${a.publicado === false ? 'cupom-inativo' : ''}" style="align-items:center; gap:14px;">
+          ${thumbHtml}
+          <div style="flex:1;">
+            <div class="cupom-codigo">${a.titulo}</div>
+            <div class="cupom-detalhes">${a.categoria || ''} · ${a.resumo}${a.publicado === false ? ' · RASCUNHO' : ''}</div>
+            ${faixaSelect}
+          </div>
+          <div class="cupom-actions">
+            <button onclick="editarArtigo('${a.id}')">Editar</button>
+            <button onclick="togglePublicadoArtigo('${a.id}', ${a.publicado === false})">${a.publicado === false ? 'Publicar' : 'Passar a rascunho'}</button>
+            <button onclick="deleteArtigo('${a.id}')">Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar artigos.</div>';
+    console.error(err);
+  });
+}
+
+function togglePublicadoArtigo(id, publicado) {
+  db.collection('artigos').doc(id).update({ publicado: publicado }).then(loadBlog);
+}
+
+// Atualiza só o ciclo de idade, direto a partir do menu na lista — sem abrir o formulário de edição.
+function atualizarFaixaEtaria(id, faixaEtaria) {
+  db.collection('artigos').doc(id).update({ faixaEtaria: faixaEtaria });
+  const artigo = allArtigos.find(a => a.id === id);
+  if (artigo) artigo.faixaEtaria = faixaEtaria;
+}
+
+function deleteArtigo(id) {
+  if (!confirm('Eliminar este artigo permanentemente?')) return;
+  db.collection('artigos').doc(id).delete().then(loadBlog);
+}
+
+// ---------- Abertura ----------
+let allAberturaAvisos = [];
+
+function loadAberturaAvisos() {
+  const listEl = document.getElementById('aberturaList');
+  listEl.innerHTML = '<div class="empty-state">A carregar...</div>';
+  db.collection('avisos_abertura').orderBy('criadoEm', 'desc').get().then(snap => {
+    allAberturaAvisos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (allAberturaAvisos.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">Ainda ninguém se inscreveu.</div>';
+      return;
+    }
+    listEl.innerHTML = allAberturaAvisos.map(a => `
+      <div class="cupom-card">
+        <div>
+          <div class="cupom-codigo">${a.nome}</div>
+          <div class="cupom-detalhes">${a.email}${a.telefone ? ' · ' + a.telefone : ''}</div>
+        </div>
+        <div class="cupom-actions">
+          <button onclick="deleteAberturaAviso('${a.id}')">Eliminar</button>
+        </div>
+      </div>`).join('');
+  }).catch(err => {
+    listEl.innerHTML = '<div class="empty-state">Erro ao carregar.</div>';
+    console.error(err);
+  });
+}
+
+function deleteAberturaAviso(id) {
+  if (!confirm('Eliminar esta inscrição?')) return;
+  db.collection('avisos_abertura').doc(id).delete().then(loadAberturaAvisos);
+}
+
+function copiarEmailsAbertura() {
+  const progressEl = document.getElementById('aberturaProgress');
+  if (allAberturaAvisos.length === 0) {
+    progressEl.textContent = 'Ainda não há e-mails para copiar.';
+    progressEl.className = 'galeria-progress warn';
+    return;
+  }
+  const emails = allAberturaAvisos.map(a => a.email).join(', ');
+  navigator.clipboard.writeText(emails).then(() => {
+    progressEl.textContent = `${allAberturaAvisos.length} e-mail(s) copiado(s) para a área de transferência.`;
+    progressEl.className = 'galeria-progress ok';
+  }).catch(() => {
+    progressEl.textContent = 'Não foi possível copiar automaticamente. Lista: ' + emails;
+    progressEl.className = 'galeria-progress warn';
+  });
+}
+
+// ---------- Importar/exportar stock em Excel ----------
+function downloadStockTemplate() {
+  const rows = [['ID', 'Tamanho_Idx', 'Produto', 'Tamanho', 'Stock Atual', 'Quantidade Recebida']];
+  products.forEach(p => {
+    if (Array.isArray(p.sizes)) {
+      p.sizes.forEach((s, i) => {
+        rows.push([p.id, i, p.name, s.label, getStock(p, i), 0]);
+      });
+    } else {
+      rows.push([p.id, '', p.name, 'Único', getStock(p, null), 0]);
+    }
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 6 }, { wch: 10 }, { wch: 42 }, { wch: 12 }, { wch: 12 }, { wch: 18 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Stock');
+  XLSX.writeFile(wb, 'stock-modelo.xlsx');
+}
+
+function handleStockImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const resultEl = document.getElementById('stockImportResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A processar...</div>';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+    } catch (err) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não foi possível ler o ficheiro. Confirma que é o modelo descarregado (Excel ou CSV).</span></div>';
+      return;
+    }
+    // A primeira linha é o cabeçalho; ignora-a.
+    const dataRows = rows.slice(1).filter(r => r.length && r[0] !== '');
+    const updates = [];
+    const notFound = [];
+    dataRows.forEach(r => {
+      const id = parseInt(r[0], 10);
+      const sizeIdxRaw = r[1];
+      const sizeIdx = (sizeIdxRaw === '' || sizeIdxRaw === null || sizeIdxRaw === undefined) ? null : parseInt(sizeIdxRaw, 10);
+      const recebida = parseInt(r[5], 10) || 0;
+      const p = products.find(pr => pr.id === id);
+      if (!p || recebida === 0) return;
+      const key = stockKey(id, sizeIdx);
+      const current = getStock(p, sizeIdx);
+      updates.push({ key, newQty: current + recebida, nome: p.name + (sizeIdx !== null && p.sizes ? ' (' + p.sizes[sizeIdx].label + ')' : ''), recebida });
+    });
+
+    if (updates.length === 0) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Nenhuma linha com "Quantidade Recebida" preenchida foi encontrada.</span></div>';
+      return;
+    }
+
+    const batch = db.batch();
+    updates.forEach(u => {
+      batch.set(db.collection('estoque').doc(u.key), { qty: u.newQty }, { merge: true });
+    });
+    batch.commit().then(() => {
+      updates.forEach(u => { liveStock[u.key] = u.newQty; });
+      updates.forEach(u => { if (u.newQty > 0) checkAndNotifyWaitingList(u.key); });
+      renderStock();
+      resultEl.innerHTML = `
+        <div class="stock-import-result">
+          <span class="ok">${updates.length} tamanho${updates.length > 1 ? 's' : ''} atualizado${updates.length > 1 ? 's' : ''} com sucesso.</span>
+          <ul>${updates.map(u => `<li>${u.nome}: +${u.recebida} → ${u.newQty}</li>`).join('')}</ul>
+        </div>`;
+    }).catch(err => {
+      resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro ao guardar: ${err.message}</span></div>`;
+    });
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+</script>
+
+</body>
+</html>
