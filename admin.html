@@ -243,6 +243,15 @@
     </div>
 
     <div id="clientesPanel" style="display:none;">
+      <div class="stock-import-box">
+        <div class="stock-import-title">Importar clientes</div>
+        <p class="stock-import-help">Carrega um ficheiro Excel ou CSV com colunas de nome e telefone (aceita "nome"/"telefone" ou "CLIENTE"/"TELEFONE1"). Clientes com o mesmo telefone que já existirem são apenas atualizados, nunca duplicados.</p>
+        <label class="btn btn-navy" style="cursor:pointer;">
+          Importar ficheiro
+          <input type="file" id="clientesImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleClientesImport(event)">
+        </label>
+        <div id="clientesImportResult"></div>
+      </div>
       <div class="clientes-toolbar">
         <input type="text" id="clientesSearch" placeholder="Pesquisar por nome, NIF ou telefone..." oninput="renderClientesList()">
         <button type="button" class="primary" onclick="abrirFormCliente()">+ Novo cliente</button>
@@ -1043,6 +1052,87 @@ function deleteCliente(id) {
   ref.collection('animais').get().then(snap => {
     return Promise.all(snap.docs.map(d => d.ref.delete()));
   }).then(() => ref.delete()).then(loadClientes);
+}
+
+// Importa clientes (nome + telefone) de um ficheiro Excel/CSV. O ID do cliente é sempre
+// o telefone (só dígitos) — igual ao critério usado em salvarCliente() — para que um cliente
+// já existente seja atualizado (merge) em vez de duplicado, e nunca apaga campos que já
+// tenha (nif, email, morada, animais) porque só escrevemos nome/telefone/importadoEm.
+function handleClientesImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const resultEl = document.getElementById('clientesImportResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A ler ficheiro...</div>';
+  const reader = new FileReader();
+  reader.onload = e => {
+    let rows;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    } catch (err) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não foi possível ler o ficheiro.</span></div>';
+      return;
+    }
+    if (!rows.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Ficheiro vazio.</span></div>';
+      return;
+    }
+    // Aceita tanto o CSV limpo (nome/telefone) como a exportação original (CLIENTE/TELEFONE1)
+    const cols = Object.keys(rows[0]);
+    const findCol = candidates => cols.find(c => candidates.includes(c.trim().toLowerCase()));
+    const colNome = findCol(['nome', 'cliente']);
+    const colTelefone = findCol(['telefone', 'telefone1', 'telemóvel', 'telemovel', 'contacto']);
+    if (!colNome || !colTelefone) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não encontrei colunas de nome e telefone no ficheiro.</span></div>';
+      return;
+    }
+    const vistos = new Set();
+    const clientes = [];
+    let ignorados = 0;
+    rows.forEach(r => {
+      const nome = String(r[colNome] || '').trim();
+      const telDigits = String(r[colTelefone] || '').replace(/\D/g, '');
+      if (!nome || !telDigits || vistos.has(telDigits)) { ignorados++; return; }
+      vistos.add(telDigits);
+      clientes.push({ nome, telefone: telDigits });
+    });
+    if (!clientes.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Nenhum cliente válido (nome + telefone) encontrado.</span></div>';
+      return;
+    }
+    if (!confirm(`Importar ${clientes.length} clientes para a base de dados? (${ignorados} linhas ignoradas por falta de nome/telefone ou duplicadas no ficheiro)`)) {
+      resultEl.innerHTML = '';
+      event.target.value = '';
+      return;
+    }
+    resultEl.innerHTML = '<div class="stock-import-result">A importar...</div>';
+    // Firestore batches têm um limite de 500 operações; dividimos em grupos de 400 por segurança.
+    const chunks = [];
+    for (let i = 0; i < clientes.length; i += 400) chunks.push(clientes.slice(i, i + 400));
+    const writeChunk = chunk => {
+      const batch = db.batch();
+      chunk.forEach(c => {
+        const ref = db.collection('clientes_registo').doc(c.telefone);
+        batch.set(ref, {
+          nome: c.nome,
+          telefone: c.telefone,
+          importadoEm: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+      return batch.commit();
+    };
+    chunks.reduce((p, chunk) => p.then(() => writeChunk(chunk)), Promise.resolve())
+      .then(() => {
+        resultEl.innerHTML = `<div class="stock-import-result"><span class="ok">${clientes.length} clientes importados/atualizados.</span></div>`;
+        loadClientes();
+      })
+      .catch(err => {
+        resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro ao importar: ${err.message}</span></div>`;
+      });
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 // ---------- Marcações ----------
