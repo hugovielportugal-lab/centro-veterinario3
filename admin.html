@@ -1057,7 +1057,8 @@ function deleteCliente(id) {
 // Importa clientes (nome + telefone) de um ficheiro Excel/CSV. O ID do cliente é sempre
 // o telefone (só dígitos) — igual ao critério usado em salvarCliente() — para que um cliente
 // já existente seja atualizado (merge) em vez de duplicado, e nunca apaga campos que já
-// tenha (nif, email, morada, animais) porque só escrevemos nome/telefone/importadoEm.
+// tenha (nif, email, morada, animais) porque só escrevemos nome/telefone/atualizadoEm
+// (nomes de campo têm de coincidir com os permitidos nas regras do Firestore para clientes_registo).
 function handleClientesImport(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1117,7 +1118,7 @@ function handleClientesImport(event) {
         batch.set(ref, {
           nome: c.nome,
           telefone: c.telefone,
-          importadoEm: firebase.firestore.FieldValue.serverTimestamp()
+          atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       });
       return batch.commit();
