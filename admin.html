@@ -252,6 +252,15 @@
         </label>
         <div id="clientesImportResult"></div>
       </div>
+      <div class="stock-import-box">
+        <div class="stock-import-title">Importar animais (nome + telefone)</div>
+        <p class="stock-import-help">Carrega um ficheiro Excel ou CSV com colunas de telefone e animais (nomes separados por vírgula, ex: "Bobby, Luna"). Só adiciona animais a clientes já existentes (por telefone) — nunca duplica um animal que já esteja lá nem apaga os que já existem.</p>
+        <label class="btn btn-navy" style="cursor:pointer;">
+          Importar ficheiro
+          <input type="file" id="animaisImportFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleAnimaisImport(event)">
+        </label>
+        <div id="animaisImportResult"></div>
+      </div>
       <div class="clientes-toolbar">
         <input type="text" id="clientesSearch" placeholder="Pesquisar por nome, NIF ou telefone..." oninput="renderClientesList()">
         <button type="button" class="primary" onclick="abrirFormCliente()">+ Novo cliente</button>
@@ -1131,6 +1140,98 @@ function handleClientesImport(event) {
       .catch(err => {
         resultEl.innerHTML = `<div class="stock-import-result"><span class="warn">Erro ao importar: ${err.message}</span></div>`;
       });
+    event.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Importa animais (nome + telefone do dono) de um ficheiro Excel/CSV, para clientes que já
+// existem em clientes_registo (procurados pelo telefone, que é o ID do documento — ver
+// handleClientesImport). Usa o mesmo animalSlug() do resto do admin para o ID do animal,
+// por isso um animal com o mesmo nome nunca é duplicado — só cria o que ainda não existe,
+// e nunca apaga nem sobrescreve os animais que o cliente já tinha.
+async function handleAnimaisImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const resultEl = document.getElementById('animaisImportResult');
+  resultEl.innerHTML = '<div class="stock-import-result">A ler ficheiro...</div>';
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    let rows;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    } catch (err) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não foi possível ler o ficheiro.</span></div>';
+      return;
+    }
+    if (!rows.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Ficheiro vazio.</span></div>';
+      return;
+    }
+    const cols = Object.keys(rows[0]);
+    const findCol = candidates => cols.find(c => candidates.includes(c.trim().toLowerCase()));
+    const colTelefone = findCol(['telefone', 'telefone1', 'telemóvel', 'telemovel', 'contacto']);
+    const colAnimais = findCol(['animais', 'animal', 'animais a adicionar', 'nomes de animais', 'cães', 'caes']);
+    if (!colTelefone || !colAnimais) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Não encontrei colunas de telefone e animais no ficheiro.</span></div>';
+      return;
+    }
+    const linhas = rows.map(r => {
+      const telDigits = String(r[colTelefone] || '').replace(/\D/g, '');
+      const animais = String(r[colAnimais] || '').split(',').map(s => s.trim()).filter(Boolean);
+      return { telDigits, animais };
+    }).filter(l => l.telDigits && l.animais.length);
+    if (!linhas.length) {
+      resultEl.innerHTML = '<div class="stock-import-result"><span class="warn">Nenhuma linha válida (telefone + animais) encontrada.</span></div>';
+      return;
+    }
+    if (!confirm(`Adicionar animais a até ${linhas.length} clientes (identificados por telefone)? Animais que já existam (mesmo nome) não são duplicados.`)) {
+      resultEl.innerHTML = '';
+      event.target.value = '';
+      return;
+    }
+    resultEl.innerHTML = '<div class="stock-import-result">A importar...</div>';
+    let clientesAtualizados = 0, animaisAdicionados = 0, animaisJaExistentes = 0, telefonesNaoEncontrados = 0;
+    for (const linha of linhas) {
+      const ref = db.collection('clientes_registo').doc(linha.telDigits);
+      let doc;
+      try {
+        doc = await ref.get();
+      } catch (err) {
+        console.error(err);
+        continue;
+      }
+      if (!doc.exists) { telefonesNaoEncontrados++; continue; }
+      let existentesSnap;
+      try {
+        existentesSnap = await ref.collection('animais').get();
+      } catch (err) {
+        console.error(err);
+        continue;
+      }
+      const idsExistentes = new Set(existentesSnap.docs.map(d => d.id));
+      let algumAdicionado = false;
+      for (const nomeAnimal of linha.animais) {
+        const animalId = animalSlug(nomeAnimal);
+        if (idsExistentes.has(animalId)) { animaisJaExistentes++; continue; }
+        try {
+          await ref.collection('animais').doc(animalId).set({
+            nome: nomeAnimal,
+            atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          idsExistentes.add(animalId);
+          animaisAdicionados++;
+          algumAdicionado = true;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      if (algumAdicionado) clientesAtualizados++;
+    }
+    resultEl.innerHTML = `<div class="stock-import-result"><span class="ok">${animaisAdicionados} animais adicionados a ${clientesAtualizados} clientes.</span><br>${animaisJaExistentes} já existiam (ignorados). ${telefonesNaoEncontrados} telefones não encontrados na base de dados.</div>`;
+    loadClientes();
     event.target.value = '';
   };
   reader.readAsArrayBuffer(file);
