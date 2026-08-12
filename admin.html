@@ -864,6 +864,7 @@ function deleteAvaliacao(id) {
 // ---------- Clientes ----------
 let allClientes = [];
 let clienteEmEdicaoId = null;
+let clienteFormContainerId = null; // onde o formulário de edição está aberto (para editar junto do cliente, sem saltar para o topo)
 
 // Mesma lógica usada no index.html para gerar o ID do animal (nome -> slug), para os animais
 // criados manualmente aqui coincidirem com os que chegam via marcação online, sem duplicar.
@@ -927,14 +928,21 @@ function renderClientesList() {
           <button onclick="abrirFormCliente('${c.id}')">Editar</button>
           <button onclick="deleteCliente('${c.id}')">Eliminar</button>
         </div>
-      </div>`;
+      </div>
+      <div id="clienteEdit-${c.id}" style="display:none;"></div>`;
   }).join('');
 }
 
 function abrirFormCliente(id) {
+  // fecha um formulário que já estivesse aberto (evita dois formulários abertos ao mesmo tempo)
+  fecharFormCliente();
   clienteEmEdicaoId = id || null;
   const c = id ? allClientes.find(x => x.id === id) : null;
-  const wrap = document.getElementById('clienteFormWrap');
+  // ao editar um cliente já existente, o formulário abre logo a seguir ao cartão dele
+  // (em vez de saltar sempre para o topo da lista); "Novo cliente" continua a usar o topo.
+  clienteFormContainerId = id ? ('clienteEdit-' + id) : 'clienteFormWrap';
+  const wrap = document.getElementById(clienteFormContainerId);
+  if (!wrap) return;
   wrap.style.display = 'block';
   wrap.innerHTML = `
     <div class="cliente-form">
@@ -960,12 +968,16 @@ function abrirFormCliente(id) {
     </div>`;
   const animais = (c?.animais && c.animais.length) ? c.animais : [{}];
   animais.forEach(a => addAnimalRow(a));
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function fecharFormCliente() {
-  document.getElementById('clienteFormWrap').style.display = 'none';
-  document.getElementById('clienteFormWrap').innerHTML = '';
+  if (clienteFormContainerId) {
+    const el = document.getElementById(clienteFormContainerId);
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  }
   clienteEmEdicaoId = null;
+  clienteFormContainerId = null;
 }
 
 function addAnimalRow(a) {
