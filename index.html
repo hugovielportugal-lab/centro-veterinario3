@@ -163,6 +163,11 @@
   background: #fff; color: var(--navy); border-radius: var(--radius-pill); padding: 6px 16px;
   font-weight: 700; text-decoration: none; white-space: nowrap;
 }
+.hero-brands { margin-top: 28px; }
+.hero-brands-label { display:block; font-size:0.78rem; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color: var(--gray); margin-bottom: 12px; }
+.hero-brands-logos { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.hero-brand-logo { height: 30px; width: auto; max-width: 90px; object-fit: contain; filter: grayscale(100%) opacity(0.55); transition: filter 0.2s ease; }
+.hero-brand-logo:hover { filter: grayscale(0%) opacity(1); }
 </style>
 </head>
 <body>
@@ -206,6 +211,14 @@
       <span class="opening-soon-badge">Abertura em breve</span>
       <h1>O seu centro completo de saúde, nutrição e acessórios.</h1>
       <p class="lead">Saúde, nutrição e bem-estar para o seu pet, num só lugar.</p>
+      <div class="hero-brands">
+        <span class="hero-brands-label">Trabalhamos com</span>
+        <div class="hero-brands-logos">
+          <img src="zoetis-logo.svg" alt="Zoetis" class="hero-brand-logo">
+          <img src="ownat-logo.svg" alt="Ownat" class="hero-brand-logo">
+          <img src="royalcanin-logo.webp" alt="Royal Canin" class="hero-brand-logo">
+        </div>
+      </div>
     </div>
     <div class="hero-media">
       <img src="https://silviocardosodev.github.io/centro-veterinario-lindaavelha/_next/static/media/herobg-dog-clinicaveterinaria-lindaavelha.3ou3k0u8j-t5f.webp" alt="Cão atendido no Centro Veterinário Linda-a-Velha">
