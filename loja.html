@@ -263,6 +263,8 @@
 .cart-empty { color: var(--gray); text-align: center; padding: 40px 0; }
 .cart-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; margin: 20px 0; color: var(--navy); font-family: var(--font-display); }
 .cart-close { align-self: flex-end; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); margin-bottom: 6px; }
+.cart-clear { float: right; font-size: 0.75rem; font-weight: 500; background: none; border: 1px solid var(--gray); border-radius: 20px; padding: 4px 12px; cursor: pointer; color: var(--gray); }
+.cart-clear:hover { background: #f3f3f3; }
 .checkout-form { display: none; flex-direction: column; gap: 10px; margin-top: 6px; }
 .checkout-form.open { display: flex; }
 .checkout-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--font); font-size: 0.92rem; }
@@ -628,7 +630,7 @@
 <div class="cart-backdrop" id="cartBackdrop" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cartDrawer">
   <button class="cart-close" onclick="closeCart()">✕</button>
-  <h2>O seu carrinho</h2>
+  <h2>O seu carrinho <button class="cart-clear" id="clearCartBtn" style="display:none;" onclick="limparCarrinho()">Limpar carrinho</button></h2>
   <div id="cartItems"></div>
   <div id="cartCouponArea"></div>
   <div class="cart-total" id="cartTotal" style="display:none;"></div>
@@ -1350,6 +1352,15 @@ function updateModalPrice(id) {
     ? `<button class="notify-btn" id="notifybtn-modal-${id}" onclick="showNotifyForm(${id}, 'modal')">Avisa-me quando chegar</button>`
     : `<button class="add-btn" id="productModalAddBtn" onclick="addToCartFromModal(${id})">Adicionar</button>`;
 }
+function limparCarrinho() {
+  if (Object.keys(cart).length === 0) return;
+  if (!confirm('Tem a certeza que quer remover todos os produtos do carrinho?')) return;
+  cart = {};
+  saveCart();
+  appliedCoupon = null;
+  renderCart();
+}
+
 function addToCartFromModal(id) {
   const p = products.find(pr => pr.id === id);
   let key = String(id);
@@ -1417,14 +1428,17 @@ function renderCart() {
   const totalEl = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('goCheckoutBtn');
   const couponAreaEl = document.getElementById('cartCouponArea');
+  const clearBtn = document.getElementById('clearCartBtn');
   if (keys.length === 0) {
     itemsEl.innerHTML = '<div class="cart-empty">O carrinho está vazio.</div>';
     totalEl.style.display = 'none';
     checkoutBtn.style.display = 'none';
     couponAreaEl.innerHTML = '';
     appliedCoupon = null;
+    if (clearBtn) clearBtn.style.display = 'none';
     return;
   }
+  if (clearBtn) clearBtn.style.display = 'inline-flex';
   let subtotal = 0;
   itemsEl.innerHTML = keys.map(key => {
     const item = cart[key];
