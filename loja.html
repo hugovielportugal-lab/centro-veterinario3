@@ -1104,10 +1104,34 @@ function loadStock() {
 
 const categoryLabels = { 'racoes': 'Rações', 'racoes-vet': 'Ração Veterinária', 'farmacia': 'Farmácia' };
 
+// Intercala os produtos por marca (RC, Ownat, RC, Ownat...) em vez de mostrar
+// sempre uma marca inteira antes da outra, mantendo a ordem original dentro de cada marca.
+function interleaveByBrand(items) {
+  const groups = {};
+  const order = [];
+  items.forEach(p => {
+    const b = p.brand || '';
+    if (!groups[b]) { groups[b] = []; order.push(b); }
+    groups[b].push(p);
+  });
+  const result = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const b of order) {
+      if (groups[b].length) {
+        result.push(groups[b].shift());
+        added = true;
+      }
+    }
+  }
+  return result;
+}
+
 function renderProducts() {
   const grid = document.getElementById('productGrid');
   const q = currentSearch.trim().toLowerCase();
-  const list = products.filter(p => {
+  const list = interleaveByBrand(products.filter(p => {
     const matchesType = currentFilter === 'todos' || p.type === currentFilter;
     const matchesSpecies = currentSpecies === 'todas' || p.species === currentSpecies || p.species === 'ambos';
     const matchesBrand = !currentBrand || p.brand === currentBrand;
@@ -1116,7 +1140,7 @@ function renderProducts() {
     const matchesCategoria = !currentCategoria || p.categoria === currentCategoria;
     const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q) || p.desc.toLowerCase().includes(q);
     return matchesType && matchesSpecies && matchesBrand && matchesGama && matchesCondicao && matchesCategoria && matchesSearch;
-  });
+  }));
   if (list.length === 0) {
     grid.innerHTML = '<div class="no-results">Sem resultados para esta pesquisa.</div>';
     return;
