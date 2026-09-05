@@ -60,10 +60,10 @@
   }
   .label-name-block span{display:inline-block;}
   .label-body{ padding:5% 7% 4%; flex:1; display:flex; flex-direction:column; }
-  .label-price-row{display:flex; align-items:baseline; gap:8px;}
+  .label-price-row{display:flex; align-items:baseline; gap:8px; justify-content:center; width:100%;}
   .label-price{font-size:15.5cqw; font-weight:700; color:var(--navy); line-height:1;}
   .label-ppk{font-size:5cqw; font-weight:500; color:#5a6e78;}
-  .label-iva{font-size:3.4cqw; color:var(--gray); margin-top:2px;}
+  .label-iva{font-size:3.4cqw; color:var(--gray); margin-top:2px; text-align:center;}
   .label-foot{display:flex; align-items:flex-end; gap:4%; margin-top:auto;}
   .label-bc-wrap{flex:1; min-width:0;}
   .label-bc-wrap svg.bcsvg{width:100%; height:16cqw; display:block;}
@@ -214,7 +214,7 @@ function renderQueue(){
       <div class="label-name-block" id="nameBlock${i}"><span id="nameText${i}">${item.desc}</span></div>
       <div class="label-body">
         <div class="label-price-row">
-          <span class="label-price">${item.pvp.toFixed(2).replace('.',',')} €</span>
+          <span class="label-price" id="priceText${i}">${item.pvp.toFixed(2).replace('.',',')} €</span>
           ${item.ppk ? `<span class="label-ppk">${item.ppk.toFixed(2).replace('.',',')} €/kg</span>` : ''}
         </div>
         <div class="label-iva">IVA incluído</div>
@@ -238,6 +238,25 @@ function renderQueue(){
   });
 
   fitNameFonts();
+  fitPriceRows();
+}
+
+function fitPriceRows(){
+  queue.forEach((item, i) => {
+    const row = document.getElementById('priceText'+i)?.closest('.label-price-row');
+    const priceEl = document.getElementById('priceText'+i);
+    if(!row || !priceEl) return;
+    const cardWidth = row.closest('.label-card').clientWidth;
+    let size = cardWidth * 0.155;
+    priceEl.style.fontSize = size+'px';
+    const maxWidth = cardWidth * 0.86;
+    let guard = 0;
+    while(size > cardWidth*0.09 && row.scrollWidth > maxWidth && guard < 40){
+      size -= cardWidth*0.005;
+      priceEl.style.fontSize = size+'px';
+      guard++;
+    }
+  });
 }
 
 function fitNameFonts(){
@@ -257,7 +276,7 @@ function fitNameFonts(){
   });
 }
 
-window.addEventListener('resize', () => { if(queue.length) fitNameFonts(); });
+window.addEventListener('resize', () => { if(queue.length){ fitNameFonts(); fitPriceRows(); } });
 
 function saveQueue(){
   localStorage.setItem('cvla_etiquetas_fila', JSON.stringify(queue));
