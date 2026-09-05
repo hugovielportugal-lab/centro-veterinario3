@@ -50,12 +50,17 @@
   .clear-btn:hover{border-color:#b23b3b;}
   .empty-state{text-align:center; padding:80px 20px; color:var(--gray); font-size:14px;}
 
-  /* ---- Label card: matches final PDF design, 5.5cm x 3.5cm ratio ---- */
-  #labelGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;}
+  /* ---- Label card: tamanho físico real (55mm x 35mm) sempre — igual no ecrã e na
+     impressão, para nunca poder haver diferença entre os dois. O cartão é ampliado
+     apenas visualmente (transform) para facilitar a edição no ecrã; a impressão
+     desliga essa ampliação e usa o tamanho real diretamente. ---- */
+  #labelGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:24px;}
+  .label-card-wrap{ position:relative; width:99mm; height:63mm; }
   .label-card{
-    background:#fff; border:1.5px solid #b9c2c8; border-radius:4px; overflow:hidden; position:relative;
-    aspect-ratio: 5.5 / 3.5; display:flex; flex-direction:column;
-    container-type: size;
+    position:absolute; top:0; left:0; width:55mm; height:35mm;
+    transform:scale(1.8); transform-origin:top left;
+    background:#fff; border:1.5px solid #b9c2c8; border-radius:4px; overflow:hidden;
+    display:flex; flex-direction:column;
   }
   .label-name-block{
     background:var(--navy); color:#fff; padding:8% 7%; font-weight:700; line-height:1.15;
@@ -64,14 +69,14 @@
   .label-name-block span{display:inline-block;}
   .label-body{ padding:5% 7% 4%; flex:1; display:flex; flex-direction:column; }
   .label-price-row{display:flex; align-items:baseline; gap:8px; justify-content:center; width:100%;}
-  .label-price{font-size:15.5cqw; font-weight:700; color:var(--navy); line-height:1;}
-  .label-ppk{font-size:5cqw; font-weight:500; color:#5a6e78;}
-  .label-iva{font-size:3.4cqw; color:var(--gray); margin-top:2px; text-align:center;}
+  .label-price{font-size:8.525mm; font-weight:700; color:var(--navy); line-height:1;}
+  .label-ppk{font-size:2.75mm; font-weight:500; color:#5a6e78;}
+  .label-iva{font-size:1.87mm; color:var(--gray); margin-top:2px; text-align:center;}
   .label-foot{display:flex; align-items:flex-end; gap:4%; margin-top:auto;}
   .label-bc-wrap{flex:1; min-width:0;}
-  .label-bc-wrap svg.bcsvg{width:100%; height:16cqw; display:block;}
-  .label-ean{font-size:3.2cqw; color:var(--gray); text-align:center; margin-top:1px;}
-  .label-foot img.paw{width:15cqw; height:auto; aspect-ratio:0.682; object-fit:contain; flex-shrink:0; margin-bottom:2px;}
+  .label-bc-wrap svg.bcsvg{width:100%; height:8.8mm; display:block;}
+  .label-ean{font-size:1.76mm; color:var(--gray); text-align:center; margin-top:1px;}
+  .label-foot img.paw{width:8.25mm; height:auto; aspect-ratio:0.682; object-fit:contain; flex-shrink:0; margin-bottom:2px;}
   .remove-x{
     position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%;
     background:rgba(255,255,255,.9); color:var(--navy); font-size:12px; line-height:20px; text-align:center;
@@ -83,8 +88,9 @@
     body{background:#fff;}
     .layout{display:block;}
     .main{padding:0; overflow:visible;}
-    #labelGrid{display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5cm; grid-auto-rows: 3.5cm;}
-    .label-card{break-inside:avoid; border:1px solid #ccc; aspect-ratio:unset; width:5.5cm; height:3.5cm;}
+    #labelGrid{display:grid; grid-template-columns:repeat(3, 55mm); gap:5mm; justify-content:start;}
+    .label-card-wrap{width:55mm; height:35mm; break-inside:avoid;}
+    .label-card{position:static; transform:none; border:1px solid #ccc;}
     .remove-x{display:none;}
     @page{ size:A4; margin:10mm; }
   }
@@ -226,7 +232,7 @@ function renderQueue(){
 
   let html = '';
   queue.forEach((item, i) => {
-    html += `<div class="label-card">
+    html += `<div class="label-card-wrap"><div class="label-card">
       <div class="remove-x" onclick="removeItem(${i})">✕</div>
       <div class="label-name-block" id="nameBlock${i}"><span id="nameText${i}">${item.desc}</span></div>
       <div class="label-body">
@@ -242,7 +248,7 @@ function renderQueue(){
           <img class="paw" src="data:image/png;base64,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" alt="">
         </div>
       </div>
-    </div>`;
+    </div></div>`;
   });
   grid.innerHTML = html;
 
@@ -273,9 +279,6 @@ function fitPriceRows(){
       priceEl.style.fontSize = size+'px';
       guard++;
     }
-    // guarda o tamanho como fração do cartão (cqw), não em píxeis fixos,
-    // para se manter correto tanto no ecrã como ao imprimir (tamanho físico diferente)
-    priceEl.style.fontSize = (size / cardWidth * 100) + 'cqw';
   });
 }
 
@@ -294,8 +297,6 @@ function fitNameFonts(){
       textEl.style.fontSize = size+'px';
       guard++;
     }
-    // idem: converter para cqw (relativo ao cartão) em vez de píxeis fixos
-    textEl.style.fontSize = (size / blockWidth * 100) + 'cqw';
   });
 }
 
