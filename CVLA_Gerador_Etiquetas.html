@@ -273,6 +273,9 @@ function fitPriceRows(){
       priceEl.style.fontSize = size+'px';
       guard++;
     }
+    // guarda o tamanho como fração do cartão (cqw), não em píxeis fixos,
+    // para se manter correto tanto no ecrã como ao imprimir (tamanho físico diferente)
+    priceEl.style.fontSize = (size / cardWidth * 100) + 'cqw';
   });
 }
 
@@ -281,15 +284,18 @@ function fitNameFonts(){
     const block = document.getElementById('nameBlock'+i);
     const textEl = document.getElementById('nameText'+i);
     if(!block || !textEl) return;
-    let size = block.clientWidth * 0.088;
+    const blockWidth = block.clientWidth;
+    let size = blockWidth * 0.088;
     textEl.style.fontSize = size+'px';
-    const maxWidth = block.clientWidth - (block.clientWidth*0.14);
+    const maxWidth = blockWidth - (blockWidth*0.14);
     let guard = 0;
-    while(size > 9 && textEl.scrollWidth > maxWidth && guard < 60){
-      size -= 0.6;
+    while(size > blockWidth*0.025 && textEl.scrollWidth > maxWidth && guard < 60){
+      size -= blockWidth*0.0035;
       textEl.style.fontSize = size+'px';
       guard++;
     }
+    // idem: converter para cqw (relativo ao cartão) em vez de píxeis fixos
+    textEl.style.fontSize = (size / blockWidth * 100) + 'cqw';
   });
 }
 
