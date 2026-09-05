@@ -92,6 +92,10 @@
     .label-card-wrap{width:55mm; height:35mm; break-inside:avoid;}
     .label-card{position:static; transform:none; border:1px solid #ccc;}
     .remove-x{display:none;}
+    /* Por definição, os browsers não imprimem cores de fundo (o azul-marinho do
+       cabeçalho, etc.) a menos que se force explicitamente com esta propriedade —
+       sem isto a etiqueta sai toda em branco/sem cor */
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     @page{ size:A4; margin:10mm; }
   }
 </style>
