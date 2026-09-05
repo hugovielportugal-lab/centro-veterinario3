@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Etiquetas de Preço — Centro Veterinário Linda-a-Velha</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+<style>
+  :root{
+    --navy:#002845; --turq:#00949C; --white:#fff;
+    --gray:#6e7880; --line:#e2e6e8; --bg:#f4f7f8;
+  }
+  *{box-sizing:border-box;}
+  body{ font-family:'Poppins',Arial,sans-serif; margin:0; background:var(--bg); color:var(--navy); }
+  header{
+    background:var(--navy); color:#fff; padding:22px 28px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  header h1{font-size:19px; margin:0; font-weight:600;}
+  header p{margin:2px 0 0; font-size:13px; color:#9fb3c2;}
+  .layout{display:grid; grid-template-columns: 360px 1fr; gap:0; min-height:calc(100vh - 74px);}
+  .panel{background:#fff; padding:24px; border-right:1px solid var(--line); overflow-y:auto; max-height:calc(100vh - 74px);}
+  .panel h2{font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--gray); margin:0 0 14px;}
+  label{display:block; font-size:13px; font-weight:500; margin:14px 0 6px;}
+  input, select{
+    width:100%; padding:10px 12px; border:1.5px solid var(--line); border-radius:8px;
+    font-size:14px; font-family:inherit; color:var(--navy);
+  }
+  input:focus, select:focus{outline:none; border-color:var(--turq);}
+  button{ cursor:pointer; border:none; border-radius:8px; font-family:inherit; font-weight:600; }
+  .btn-primary{ background:var(--turq); color:#fff; padding:12px; width:100%; font-size:14px; margin-top:18px; }
+  .btn-primary:hover{background:#007b82;}
+  .btn-secondary{ background:#fff; color:var(--navy); border:1.5px solid var(--line); padding:10px; width:100%; font-size:13px; margin-top:8px; }
+  .btn-secondary:hover{border-color:var(--navy);}
+  .divider{border:none; border-top:1px solid var(--line); margin:22px 0;}
+  .catalog-item{ padding:9px 10px; border-radius:7px; cursor:pointer; font-size:13px; display:flex; justify-content:space-between; gap:8px; }
+  .catalog-item:hover{background:var(--bg);}
+  .catalog-item span.price{color:var(--turq); font-weight:600; white-space:nowrap;}
+  .catalog-list{max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:8px; margin-top:8px;}
+  .main{padding:28px; overflow-y:auto;}
+  .main-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;}
+  .main-top h2{font-size:15px; color:var(--gray); margin:0; text-transform:uppercase; letter-spacing:.04em;}
+  .queue-actions{display:flex; gap:10px;}
+  .queue-actions button{padding:10px 18px; font-size:13px;}
+  .print-btn{background:var(--navy); color:#fff;}
+  .print-btn:hover{background:#003a5c;}
+  .clear-btn{background:#fff; color:#b23b3b; border:1.5px solid #f0d5d5;}
+  .clear-btn:hover{border-color:#b23b3b;}
+  .empty-state{text-align:center; padding:80px 20px; color:var(--gray); font-size:14px;}
+
+  /* ---- Label card: matches final PDF design, 5.5cm x 3.5cm ratio ---- */
+  #labelGrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;}
+  .label-card{
+    background:#fff; border:1.5px solid #b9c2c8; border-radius:4px; overflow:hidden; position:relative;
+    aspect-ratio: 5.5 / 3.5; display:flex; flex-direction:column;
+    container-type: size;
+  }
+  .label-name-block{
+    background:var(--navy); color:#fff; padding:8% 7%; font-weight:700; line-height:1.15;
+    white-space:nowrap; overflow:hidden; flex-shrink:0;
+  }
+  .label-name-block span{display:inline-block;}
+  .label-body{ padding:5% 7% 4%; flex:1; display:flex; flex-direction:column; }
+  .label-price-row{display:flex; align-items:baseline; gap:8px;}
+  .label-price{font-size:15.5cqw; font-weight:700; color:var(--navy); line-height:1;}
+  .label-ppk{font-size:5cqw; font-weight:500; color:#5a6e78;}
+  .label-iva{font-size:3.4cqw; color:var(--gray); margin-top:2px;}
+  .label-foot{display:flex; align-items:flex-end; gap:4%; margin-top:auto;}
+  .label-bc-wrap{flex:1; min-width:0;}
+  .label-bc-wrap svg.bcsvg{width:100%; height:9cqh; display:block;}
+  .label-ean{font-size:3.2cqw; color:var(--gray); text-align:center; margin-top:1px;}
+  .label-foot svg.paw{width:15cqw; height:15cqw; flex-shrink:0; fill:var(--navy); margin-bottom:2px;}
+  .remove-x{
+    position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%;
+    background:rgba(255,255,255,.9); color:var(--navy); font-size:12px; line-height:20px; text-align:center;
+    cursor:pointer; font-weight:700; z-index:2; box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+
+  @media print{
+    header, .panel, .main-top{display:none !important;}
+    body{background:#fff;}
+    .layout{display:block;}
+    .main{padding:0; overflow:visible;}
+    #labelGrid{display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5cm; grid-auto-rows: 3.5cm;}
+    .label-card{break-inside:avoid; border:1px solid #ccc; aspect-ratio:unset; width:5.5cm; height:3.5cm;}
+    .remove-x{display:none;}
+    @page{ size:A4; margin:10mm; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Gerador de Etiquetas de Preço</h1>
+    <p>Centro Veterinário Linda-a-Velha</p>
+  </div>
+  <div style="font-size:12px;color:#9fb3c2;">Adicione produtos à fila e imprima quando quiser</div>
+</header>
+
+<div class="layout">
+  <div class="panel">
+    <h2>Adicionar do catálogo</h2>
+    <input type="text" id="searchBox" placeholder="Pesquisar produto…">
+    <div class="catalog-list" id="catalogList"></div>
+
+    <hr class="divider">
+
+    <h2>Ou criar etiqueta manual</h2>
+    <label>Nome do produto</label>
+    <input type="text" id="manName" placeholder="Ex: Ração X 2kg">
+    <label>Preço (€, com IVA)</label>
+    <input type="text" id="manPrice" placeholder="Ex: 12,50">
+    <label>Peso (kg) — opcional, calcula €/kg</label>
+    <input type="text" id="manWeight" placeholder="Ex: 2 ou 0,085 (sachete de 85g)">
+    <label>Código de barras (EAN)</label>
+    <input type="text" id="manBarcode" placeholder="13 dígitos">
+    <button class="btn-primary" onclick="addManual()">+ Adicionar etiqueta</button>
+
+    <hr class="divider">
+    <button class="btn-secondary" onclick="saveQueue()">Guardar fila (para não perder)</button>
+    <button class="btn-secondary" onclick="loadQueue()">Carregar última fila guardada</button>
+  </div>
+
+  <div class="main">
+    <div class="main-top">
+      <h2 id="queueCount">0 etiquetas na fila</h2>
+      <div class="queue-actions">
+        <button class="clear-btn" onclick="clearQueue()">Limpar tudo</button>
+        <button class="print-btn" onclick="window.print()">🖨 Imprimir</button>
+      </div>
+    </div>
+    <div id="labelGrid"></div>
+    <div class="empty-state" id="emptyState">
+      Pesquise um produto à esquerda, ou crie uma etiqueta manual, para começar a montar a folha de impressão.
+    </div>
+  </div>
+</div>
+
+<script>
+const CATALOG = [{"id":"853","desc":"AREIA TOFU TOFURELLA CLOREXI/CARVÃO 10L","barcode":"8014302319861","pvp":17.95,"brand":"QUINTA NOVA","ppk":null},{"id":"852","desc":"AREIA TOFU TOFURELLA TALCO 10L","barcode":"8014302319816","pvp":17.95,"brand":"QUINTA NOVA","ppk":null},{"id":"851","desc":"RESGUARDO ABSORVENTES PREMIUM 60X90 30UN","barcode":"8014302175771","pvp":20.95,"brand":"QUINTA NOVA","ppk":null},{"id":"847","desc":"SNACKS SWEETIES ATUM GATO 14G","barcode":"3336029821607","pvp":0.9,"brand":"QUINTA NOVA","ppk":64.29},{"id":"849","desc":"SNACKS SWEETIES ATUM/CAMARÃO GATO 14G","barcode":"3336029821621","pvp":0.9,"brand":"QUINTA NOVA","ppk":64.29},{"id":"850","desc":"SNACKS SWEETIES ATUM/SALMÃO GATO 14G","barcode":"3336029821638","pvp":0.9,"brand":"QUINTA NOVA","ppk":64.29},{"id":"848","desc":"SNACKS SWEETIES FRANGO GATO 14G","barcode":"3336029821614","pvp":0.9,"brand":"QUINTA NOVA","ppk":64.29},{"id":"778","desc":"AGEING +15 IN GRAVY 85G","barcode":"9003579050170","pvp":1.86,"brand":"ROYAL CANIN","ppk":21.88},{"id":"780","desc":"AGEING+11 IN GRAVY 85G","barcode":"9003579050088","pvp":1.86,"brand":"ROYAL CANIN","ppk":21.88},{"id":"783","desc":"AGEING+11 IN GRAVY 85G","barcode":"9003579050057","pvp":1.86,"brand":"ROYAL CANIN","ppk":21.88},{"id":"202","desc":"BABYCAT MILK 0,3KG","barcode":"3182550710862","pvp":26.97,"brand":"ROYAL CANIN","ppk":89.9},{"id":"770","desc":"BHN CHIHUAHUA ADULT 1,5K","barcode":"3182550728102","pvp":20.12,"brand":"ROYAL CANIN","ppk":null},{"id":"15","desc":"BHN French Bulldog 3kg","barcode":"3182550811637","pvp":27.13,"brand":"ROYAL CANIN","ppk":9.04},{"id":"759","desc":"BHN PUG ADULT 3KG","barcode":"3182550799775","pvp":27.78,"brand":"ROYAL CANIN","ppk":9.26},{"id":"763","desc":"BHN YORKSHIRE ADULT 1,5KG","barcode":"3182550716857","pvp":20.12,"brand":"ROYAL CANIN","ppk":13.41},{"id":"764","desc":"BHN YORKSHIRE ADULT 3KG","barcode":"3182550799768","pvp":32.2,"brand":"ROYAL CANIN","ppk":10.73},{"id":"203","desc":"British Shorthair 85G","barcode":"9003579001240","pvp":1.88,"brand":"ROYAL CANIN","ppk":22.12},{"id":"48","desc":"CCN DIGESTIVE CARE 85G","barcode":"9003579008775","pvp":2.02,"brand":"ROYAL CANIN","ppk":23.76},{"id":"762","desc":"CCN MINI ADULT STERILISED 3KG","barcode":"3182550894128","pvp":31.54,"brand":"ROYAL CANIN","ppk":10.51},{"id":"77","desc":"CHN MEDIUM PUPPY 140G","barcode":"9003579008324","pvp":2.06,"brand":"ROYAL CANIN","ppk":14.71},{"id":"78","desc":"CHN MINI ADULT 85G","barcode":"9003579008249","pvp":14.24,"brand":"ROYAL CANIN","ppk":167.53},{"id":"80","desc":"CHN MINI PUPPY 85G","barcode":"9003579008201","pvp":1.45,"brand":"ROYAL CANIN","ppk":17.06},{"id":"798","desc":"FBN PERSIAN 2KG","barcode":"3182550702614","pvp":37.69,"brand":"ROYAL CANIN","ppk":18.84},{"id":"791","desc":"FCN DIGESTIVE CARE 2KG","barcode":"3182550751995","pvp":38.62,"brand":"ROYAL CANIN","ppk":19.31},{"id":"217","desc":"FCN Digestive Care 0,4Kg","barcode":"3182550751988","pvp":8.83,"brand":"ROYAL CANIN","ppk":22.07},{"id":"800","desc":"FCN HAIR&SKIN CARE 2KG","barcode":"3182550721738","pvp":38.62,"brand":"ROYAL CANIN","ppk":19.31},{"id":"789","desc":"FCN HAIRBALL CARE 2KG","barcode":"3182550721400","pvp":38.62,"brand":"ROYAL CANIN","ppk":19.31},{"id":"218","desc":"FCN Hair & Skin Care 0,4kg","barcode":"3182550721721","pvp":8.83,"brand":"ROYAL CANIN","ppk":22.07},{"id":"219","desc":"FCN Hairball Care 0,4kg","barcode":"3182550711135","pvp":8.83,"brand":"ROYAL CANIN","ppk":22.07},{"id":"220","desc":"FCN LIGHT WEIGHTCARE 0,4KG","barcode":"3182550706810","pvp":13.85,"brand":"ROYAL CANIN","ppk":34.62},{"id":"796","desc":"FCN LIGHT WEIGHTCARE 1,5KG","barcode":"3182550902991","pvp":28.98,"brand":"ROYAL CANIN","ppk":19.32},{"id":"797","desc":"FCN URINARY CARE 2KG","barcode":"3182551065893","pvp":38.62,"brand":"ROYAL CANIN","ppk":19.31},{"id":"222","desc":"FHN AGEING +11 STERILISED 2KG","barcode":"3182551066036","pvp":36.28,"brand":"ROYAL CANIN","ppk":18.14},{"id":"223","desc":"FHN AGEING +15 0,4KG","barcode":"3182551065978","pvp":8.43,"brand":"ROYAL CANIN","ppk":21.07},{"id":"774","desc":"FHN AGEING +15 2KG","barcode":"3182551066067","pvp":36.92,"brand":"ROYAL CANIN","ppk":18.46},{"id":"787","desc":"FHN AGEING+11 2KG","barcode":"3182551066005","pvp":36.28,"brand":"ROYAL CANIN","ppk":18.14},{"id":"224","desc":"FHN Ageing+11 0,4kg","barcode":"3182551065916","pvp":8.28,"brand":"ROYAL CANIN","ppk":20.7},{"id":"799","desc":"FHN FIT 2KG","barcode":"3182550702201","pvp":31.41,"brand":"ROYAL CANIN","ppk":15.71},{"id":"225","desc":"FHN FUSSY CAT 0,4KG","barcode":"3182551065871","pvp":7.35,"brand":"ROYAL CANIN","ppk":18.37},{"id":"790","desc":"FHN FUSSY CAT 2KG","barcode":"3182551065701","pvp":32.2,"brand":"ROYAL CANIN","ppk":16.1},{"id":"793","desc":"FHN FUSSY CAT 4KG","barcode":"3182551065732","pvp":54.81,"brand":"ROYAL CANIN","ppk":13.7},{"id":"226","desc":"FHN Fit 32 0,4kg","barcode":"3182550702157","pvp":7.18,"brand":"ROYAL CANIN","ppk":17.95},{"id":"228","desc":"FHN Indoor 7+ 1,5kg","barcode":"3182550784399","pvp":23.54,"brand":"ROYAL CANIN","ppk":15.69},{"id":"781","desc":"FHN KITTEN STERILISED 2KG","barcode":"3182550805186","pvp":31.85,"brand":"ROYAL CANIN","ppk":15.93},{"id":"231","desc":"FHN SENSORY FEEL GRAVY 85G","barcode":"9003579018934","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"233","desc":"FHN SENSORY TASTE GRAVY 85G","barcode":"9003579018859","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"788","desc":"FHN STERILISED 2KG","barcode":"3182550737593","pvp":31.56,"brand":"ROYAL CANIN","ppk":15.78},{"id":"795","desc":"FHN STERILISED+7 1,5KG","barcode":"3182550768474","pvp":26.05,"brand":"ROYAL CANIN","ppk":17.37},{"id":"792","desc":"FHN STERILISED+7 3,5KG","barcode":"3182550784580","pvp":45.83,"brand":"ROYAL CANIN","ppk":13.09},{"id":"235","desc":"FHN Sterilised 37 0,4kg","barcode":"3182550737555","pvp":7.03,"brand":"ROYAL CANIN","ppk":17.57},{"id":"236","desc":"FHN Sterilised 7+ 0,4kg","barcode":"3182550784511","pvp":7.93,"brand":"ROYAL CANIN","ppk":19.82},{"id":"782","desc":"INSTINCTIVE 85G","barcode":"9003579308738","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"777","desc":"INTENSE BEAUTY 85G","barcode":"9003579308721","pvp":2.02,"brand":"ROYAL CANIN","ppk":23.76},{"id":"249","desc":"KITTEN 85G","barcode":"9003579308745","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"250","desc":"KITTEN IN JELLY 85G","barcode":"9003579311783","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"251","desc":"KITTEN IN LOAF 85G","barcode":"9003579020210","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"253","desc":"KITTEN STERILIZED IN JELLY 85G","barcode":"9003579007167","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"807","desc":"MF CAT URINARY+BLAD CIG 85G","barcode":"9003579030530","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"806","desc":"MF CAT URINARY+HYPO 2KG","barcode":"3182550847599","pvp":41.6,"brand":"ROYAL CANIN","ppk":20.8},{"id":"257","desc":"MOTHER&BABYCAT 195G","barcode":"9003579311660","pvp":4.19,"brand":"ROYAL CANIN","ppk":21.49},{"id":"97","desc":"SHN MAXI ADULT 15KG","barcode":"3182551055955","pvp":102.31,"brand":"ROYAL CANIN","ppk":6.82},{"id":"765","desc":"SHN MEDIUM ADULT 15KG","barcode":"3182551055849","pvp":102.31,"brand":"ROYAL CANIN","ppk":6.82},{"id":"104","desc":"SHN MEDIUM ADULT 4KG","barcode":"3182551055788","pvp":32.48,"brand":"ROYAL CANIN","ppk":8.12},{"id":"715","desc":"SHN MEDIUM PUPPY 4KG","barcode":"3182550708180","pvp":34.95,"brand":"ROYAL CANIN","ppk":8.74},{"id":"766","desc":"SHN MINI ADULT 2KG","barcode":"3182551055672","pvp":20.63,"brand":"ROYAL CANIN","ppk":10.31},{"id":"767","desc":"SHN MINI ADULT 4KG","barcode":"3182551055719","pvp":34.65,"brand":"ROYAL CANIN","ppk":8.66},{"id":"768","desc":"SHN MINI ADULT 8KG","barcode":"3182551055740","pvp":66,"brand":"ROYAL CANIN","ppk":8.25},{"id":"113","desc":"SHN MINI ADULT+8 2KG","barcode":"3182550831383","pvp":21.65,"brand":"ROYAL CANIN","ppk":10.82},{"id":"115","desc":"SHN MINI AGEING+12 1,5KG","barcode":"3182550793896","pvp":17.02,"brand":"ROYAL CANIN","ppk":11.35},{"id":"116","desc":"SHN MINI PUPPY 0,8KG","barcode":"3182550792929","pvp":8.7,"brand":"ROYAL CANIN","ppk":10.87},{"id":"769","desc":"SHN MINI PUPPY 2KG","barcode":"3182550793001","pvp":21.87,"brand":"ROYAL CANIN","ppk":10.94},{"id":"117","desc":"SHN MINI STARTER M&B 1KG","barcode":"3182550778657","pvp":12.41,"brand":"ROYAL CANIN","ppk":12.41},{"id":"118","desc":"SHN XSMALL ADULT 1,5KG","barcode":"3182550793728","pvp":16.68,"brand":"ROYAL CANIN","ppk":11.12},{"id":"121","desc":"SHN XSMALL AGEING+12 1,5KG","barcode":"3182550793797","pvp":18.38,"brand":"ROYAL CANIN","ppk":12.25},{"id":"261","desc":"STERILIZED 85G","barcode":"9003579311295","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"262","desc":"Sterilized Jelly (85G)","barcode":"9003579311844","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"263","desc":"Sterilized Loaf 85G","barcode":"9003579003916","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"126","desc":"TRAINING TREATS 110G","barcode":"3182551063721","pvp":3.66,"brand":"ROYAL CANIN","ppk":33.27},{"id":"270","desc":"VHN CAT DIABETIC 1,5KG","barcode":"3182550711166","pvp":34.9,"brand":"ROYAL CANIN","ppk":23.27},{"id":"271","desc":"VHN CAT DIABETIC 85G","barcode":"9003579011980","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"272","desc":"VHN CAT EARLY RENAL 1,5KG","barcode":"3182550914642","pvp":24.9,"brand":"ROYAL CANIN","ppk":16.6},{"id":"273","desc":"VHN CAT EARLY RENAL 85G","barcode":"9003579015689","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"276","desc":"VHN CAT GASTRO INTESTINAL 0,4KG","barcode":"3182550913584","pvp":8.75,"brand":"ROYAL CANIN","ppk":21.88},{"id":"773","desc":"VHN CAT GASTRO INTESTINAL 2KG","barcode":"3182550771252","pvp":34.55,"brand":"ROYAL CANIN","ppk":17.27},{"id":"277","desc":"VHN CAT GASTRO INTESTINAL 85G","barcode":"9003579013557","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"804","desc":"VHN CAT GLYCOADVANCED 1,5KG","barcode":"3182551101867","pvp":36.65,"brand":"ROYAL CANIN","ppk":24.43},{"id":"803","desc":"VHN CAT GLYCOADVANCED 85G","barcode":"9003579051191","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"293","desc":"VHN CAT RENAL 0,4KG","barcode":"3182550914833","pvp":9.65,"brand":"ROYAL CANIN","ppk":24.12},{"id":"784","desc":"VHN CAT RENAL 2KG","barcode":"3182550711142","pvp":36.8,"brand":"ROYAL CANIN","ppk":18.4},{"id":"294","desc":"VHN CAT RENAL 85G LOAF","barcode":"9003579294773","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"295","desc":"VHN CAT RENAL BEEF 85G","barcode":"9003579000489","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"296","desc":"VHN CAT RENAL CHICKEN 85G","barcode":"9003579000458","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"802","desc":"VHN CAT RENAL+MOBIL CIG 85G","barcode":"9003579034330","pvp":1.88,"brand":"ROYAL CANIN","ppk":22.12},{"id":"300","desc":"VHN CAT SATIETY 1,5KG","barcode":"3182550768474","pvp":30.7,"brand":"ROYAL CANIN","ppk":20.47},{"id":"301","desc":"VHN CAT SATIETY 85G","barcode":"9003579006146","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"306","desc":"VHN CAT URINARY 85G LOAF","barcode":"9003579010471","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"307","desc":"VHN CAT URINARY CHICKEN 85G GRAVY MIG","barcode":"9003579010044","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"309","desc":"VHN CAT URINARY MOD CAL 85G","barcode":"9003579010228","pvp":1.85,"brand":"ROYAL CANIN","ppk":21.76},{"id":"310","desc":"VHN CAT URINARY SO 0,4KG","barcode":"3182550711043","pvp":7.89,"brand":"ROYAL CANIN","ppk":19.72},{"id":"785","desc":"VHN CAT URINARY SO 1,5KG","barcode":"3182550711159","pvp":25.4,"brand":"ROYAL CANIN","ppk":16.93},{"id":"712","desc":"VHN DOG GASTRO INT 400G","barcode":"3065890153998","pvp":5.65,"brand":"ROYAL CANIN","ppk":14.12},{"id":"142","desc":"VHN DOG GASTRO INTESTINAL 2KG","barcode":"3182550771054","pvp":21.35,"brand":"ROYAL CANIN","ppk":10.68},{"id":"808","desc":"VHN DOG GASTRO INTESTINAL 7,5K","barcode":"3182550771061","pvp":68.88,"brand":"ROYAL CANIN","ppk":null},{"id":"146","desc":"VHN DOG GASTRO INTESTINAL PUPPY 1KG","barcode":"3182550815512","pvp":13.9,"brand":"ROYAL CANIN","ppk":13.9},{"id":"713","desc":"VHN DOG GI LOW FAT 1,5KG","barcode":"3182550771153","pvp":15.97,"brand":"ROYAL CANIN","ppk":10.65},{"id":"758","desc":"VHN DOG GI LOW FAT 420G","barcode":"9003579024515","pvp":5.65,"brand":"ROYAL CANIN","ppk":13.45},{"id":"714","desc":"VHN DOG GI LOW FAT 6KG","barcode":"3182550771160","pvp":55.99,"brand":"ROYAL CANIN","ppk":9.33},{"id":"771","desc":"VHN DOG GI LOW FAT SMALL 1,5KG","barcode":"3182550919579","pvp":21.75,"brand":"ROYAL CANIN","ppk":14.5},{"id":"772","desc":"VHN DOG GI LOW FAT SMALL 3,5KG","barcode":"3182550948784","pvp":42.35,"brand":"ROYAL CANIN","ppk":12.1},{"id":"157","desc":"VHN DOG HYPOALLERGENIC 2KG","barcode":"3182550940849","pvp":24.65,"brand":"ROYAL CANIN","ppk":12.32},{"id":"717","desc":"VHN DOG HYPOALLERGENIC 400G","barcode":"9003579021965","pvp":5.83,"brand":"ROYAL CANIN","ppk":14.57},{"id":"159","desc":"VHN DOG HYPOALLERGENIC SMALL 1KG","barcode":"3182550940153","pvp":18.65,"brand":"ROYAL CANIN","ppk":18.65},{"id":"172","desc":"VHN DOG RENAL SMALL 1,5KG","barcode":"3182550774307","pvp":20.6,"brand":"ROYAL CANIN","ppk":13.73},{"id":"176","desc":"VHN DOG SATIETY 6KG","barcode":"3182550831086","pvp":53.65,"brand":"ROYAL CANIN","ppk":8.94},{"id":"805","desc":"VHN DOG SATIETY HYPO 1,5KG","barcode":"3182550831307","pvp":20.61,"brand":"ROYAL CANIN","ppk":13.74},{"id":"801","desc":"VHN DOG SATIETY HYPO SMALL 3KG","barcode":"3182551064681","pvp":40.72,"brand":"ROYAL CANIN","ppk":13.57},{"id":"177","desc":"VHN DOG SATIETY SMALL 1,5KG","barcode":"3182550831109","pvp":20.8,"brand":"ROYAL CANIN","ppk":13.87},{"id":"716","desc":"VHN DOG SATIETY SMALL 3KG","barcode":"3182550878517","pvp":34.79,"brand":"ROYAL CANIN","ppk":11.6},{"id":"192","desc":"VHN DOG URINARY S/O 2KG","barcode":"3182550711036","pvp":25.25,"brand":"ROYAL CANIN","ppk":12.62},{"id":"193","desc":"VHN DOG URINARY SMALL 1,5KG","barcode":"3182550780940","pvp":22.7,"brand":"ROYAL CANIN","ppk":15.13},{"id":"810","desc":"SCHESIR ATUM CALDO GATO 70GR","barcode":"8005852615206","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"811","desc":"SCHESIR ATUM CAO 150G","barcode":"8005852712530","pvp":2.95,"brand":"SCHESIR","ppk":19.67},{"id":"812","desc":"SCHESIR ATUM/ ABOBORA SOPA GATO 40GR","barcode":"8005852125422","pvp":1.48,"brand":"SCHESIR","ppk":37.0},{"id":"809","desc":"SCHESIR ATUM/ABOBORA CALDO GATO 70GR","barcode":"8005852615305","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"813","desc":"SCHESIR ATUM/ALGAS GELATINA GATO 70GR","barcode":"8005852121936","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"854","desc":"SCHESIR ATUM/ANCHOVA CALDO GATO 85GR","barcode":"8005852615220","pvp":1.85,"brand":"SCHESIR","ppk":21.76},{"id":"814","desc":"SCHESIR ATUM/CHARUTEIRO GEL GATO 70G","barcode":"8005852122834","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"815","desc":"SCHESIR ATUM/DOURADA CALDO GATO 70G","barcode":"8005852615213","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"816","desc":"SCHESIR ATUM/GAMBAS GELATINA GATO 85GR","barcode":"8005852750044","pvp":1.96,"brand":"SCHESIR","ppk":23.06},{"id":"817","desc":"SCHESIR ATUM/LULA SOPA GATO 70GR","barcode":"8005852125439","pvp":1.48,"brand":"SCHESIR","ppk":21.14},{"id":"818","desc":"SCHESIR ATUM/LULAS GELATINA GATO 70GR","barcode":"8005852122735","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"819","desc":"SCHESIR ATUM/PEIXE AZU CALDO GATO 70G","barcode":"8005852615237","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"820","desc":"SCHESIR ATUM/PESCADA GELATINA GATO 70GR","barcode":"8005852122438","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"821","desc":"SCHESIR BORREGO/COUSCOUS CAO 150GR","barcode":"8005852122513","pvp":3.09,"brand":"SCHESIR","ppk":20.6},{"id":"832","desc":"SCHESIR FRANGO CALDO GATO 70GR","barcode":"8005852615435","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"833","desc":"SCHESIR FRANGO CAO 150GR","barcode":"8005852712523","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"834","desc":"SCHESIR FRANGO DARK FILETES GATO 80GR","barcode":"8005852212016","pvp":1.96,"brand":"SCHESIR","ppk":24.5},{"id":"835","desc":"SCHESIR FRANGO/ALOE CAO 150GR","barcode":"8005852712561","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"830","desc":"SCHESIR FRANGO/ANANAS CAO 150GR","barcode":"8005852613714","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"822","desc":"SCHESIR FRANGO/ASIATICO CAO 150GR","barcode":"8005852122537","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"826","desc":"SCHESIR FRANGO/CARBON CAO 150GR","barcode":"8005852122506","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"836","desc":"SCHESIR FRANGO/CARNE CAO 150GR","barcode":"8005852712547","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"827","desc":"SCHESIR FRANGO/CARNE DARK FILETE GATO 80GR","barcode":"8005852112217","pvp":1.96,"brand":"SCHESIR","ppk":24.5},{"id":"828","desc":"SCHESIR FRANGO/CENO/ABOBO SOPA GATO 40GR","barcode":"8005852125408","pvp":1.48,"brand":"SCHESIR","ppk":37.0},{"id":"824","desc":"SCHESIR FRANGO/COCO TAIL CAO 150GR","barcode":"8005852122551","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"829","desc":"SCHESIR FRANGO/FIGADO BABY GATO 70GR","barcode":"8005852111050","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"823","desc":"SCHESIR FRANGO/MASALA CAO 150GR","barcode":"8005852122544","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"837","desc":"SCHESIR FRANGO/MAÇA CAO 150GR","barcode":"8005852613721","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"838","desc":"SCHESIR FRANGO/OVO DARK FILETE GATO 80GR","barcode":"8005852121011","pvp":1.96,"brand":"SCHESIR","ppk":24.5},{"id":"839","desc":"SCHESIR FRANGO/OVO DARK PATE GATO 80GR","barcode":"8005852142115","pvp":1.96,"brand":"SCHESIR","ppk":24.5},{"id":"831","desc":"SCHESIR FRANGO/PAELLA CAO 150GR","barcode":"8005852122520","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"840","desc":"SCHESIR FRANGO/PAPAIA CAO 150GR","barcode":"8005852613707","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"841","desc":"SCHESIR FRANGO/PRESUNTO CAO 150GR","barcode":"8005852712554","pvp":2.85,"brand":"SCHESIR","ppk":19.0},{"id":"842","desc":"SCHESIR SALMAO/CENOURA SOPA 40GR","barcode":"8005852125415","pvp":1.48,"brand":"SCHESIR","ppk":37.0},{"id":"843","desc":"SCHESIR SARDI/CAVALA/LAGOSTA FILETE GATO 70GR","barcode":"8005852111302","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"844","desc":"SCHESIR SARDI/LAGOSTA FILETE GATO 70GR","barcode":"8005852111203","pvp":1.96,"brand":"SCHESIR","ppk":28.0},{"id":"845","desc":"SCHESIR VET WEIGHT TILAPIA GATO 80GR","barcode":"8005852161604","pvp":2.18,"brand":"SCHESIR","ppk":27.25}]
+;
+
+let queue = [];
+
+function renderCatalog(filter){
+  const list = document.getElementById('catalogList');
+  const f = (filter||'').toLowerCase();
+  const items = CATALOG.filter(p => p.desc.toLowerCase().includes(f)).slice(0,60);
+  list.innerHTML = items.map((p) => {
+    const idx = CATALOG.indexOf(p);
+    return `<div class="catalog-item" onclick="addFromCatalog(${idx})">
+      <span>${p.desc}</span>
+      <span class="price">${p.pvp.toFixed(2).replace('.',',')}€</span>
+    </div>`;
+  }).join('') || '<div style="padding:10px;color:#6e7880;font-size:13px;">Sem resultados</div>';
+}
+
+document.getElementById('searchBox').addEventListener('input', e => renderCatalog(e.target.value));
+renderCatalog('');
+
+function addFromCatalog(idx){
+  const p = CATALOG[idx];
+  queue.push({desc:p.desc, pvp:p.pvp, barcode:p.barcode, ppk:p.ppk});
+  renderQueue();
+}
+
+function addManual(){
+  const name = document.getElementById('manName').value.trim();
+  const priceRaw = document.getElementById('manPrice').value.trim().replace(',', '.');
+  const weightRaw = document.getElementById('manWeight').value.trim().replace(',', '.');
+  const barcode = document.getElementById('manBarcode').value.trim();
+  const price = parseFloat(priceRaw);
+  const weight = parseFloat(weightRaw);
+  if(!name || isNaN(price) || price <= 0){
+    alert('Preencha pelo menos o nome e um preço válido.');
+    return;
+  }
+  const ppk = (!isNaN(weight) && weight > 0) ? price/weight : null;
+  queue.push({desc:name.toUpperCase(), pvp:price, barcode:barcode, ppk:ppk});
+  document.getElementById('manName').value = '';
+  document.getElementById('manPrice').value = '';
+  document.getElementById('manWeight').value = '';
+  document.getElementById('manBarcode').value = '';
+  renderQueue();
+}
+
+function removeItem(i){
+  queue.splice(i,1);
+  renderQueue();
+}
+
+function clearQueue(){
+  if(queue.length && !confirm('Limpar todas as etiquetas da fila?')) return;
+  queue = [];
+  renderQueue();
+}
+
+function renderQueue(){
+  const grid = document.getElementById('labelGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('queueCount').textContent = queue.length + (queue.length===1 ? ' etiqueta na fila' : ' etiquetas na fila');
+
+  if(queue.length === 0){
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  let html = '';
+  queue.forEach((item, i) => {
+    html += `<div class="label-card">
+      <div class="remove-x" onclick="removeItem(${i})">✕</div>
+      <div class="label-name-block" id="nameBlock${i}"><span id="nameText${i}">${item.desc}</span></div>
+      <div class="label-body">
+        <div class="label-price-row">
+          <span class="label-price">${item.pvp.toFixed(2).replace('.',',')} €</span>
+          ${item.ppk ? `<span class="label-ppk">${item.ppk.toFixed(2).replace('.',',')} €/kg</span>` : ''}
+        </div>
+        <div class="label-iva">IVA incluído</div>
+        <div class="label-foot">
+          <div class="label-bc-wrap">
+            ${item.barcode ? `<svg class="bcsvg" data-code="${item.barcode}"></svg><div class="label-ean">${item.barcode}</div>` : '<span style="font-size:11px;color:#6e7880;">sem código</span>'}
+          </div>
+          <svg class="paw" viewBox="0 0 100 100"><ellipse cx="50" cy="62" rx="26" ry="20"/><ellipse cx="20" cy="30" rx="12" ry="14"/><ellipse cx="45" cy="18" rx="11" ry="13"/><ellipse cx="70" cy="20" rx="11" ry="13"/><ellipse cx="88" cy="40" rx="10" ry="12"/></svg>
+        </div>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+
+  document.querySelectorAll('.bcsvg').forEach(svg => {
+    try{
+      JsBarcode(svg, svg.dataset.code, {format:"EAN13", displayValue:false, margin:0});
+    }catch(e){
+      svg.outerHTML = '<span style="font-size:9px;color:#b23b3b;">código inválido</span>';
+    }
+  });
+
+  fitNameFonts();
+}
+
+function fitNameFonts(){
+  queue.forEach((item, i) => {
+    const block = document.getElementById('nameBlock'+i);
+    const textEl = document.getElementById('nameText'+i);
+    if(!block || !textEl) return;
+    let size = block.clientWidth * 0.088;
+    textEl.style.fontSize = size+'px';
+    const maxWidth = block.clientWidth - (block.clientWidth*0.14);
+    let guard = 0;
+    while(size > 9 && textEl.scrollWidth > maxWidth && guard < 60){
+      size -= 0.6;
+      textEl.style.fontSize = size+'px';
+      guard++;
+    }
+  });
+}
+
+window.addEventListener('resize', () => { if(queue.length) fitNameFonts(); });
+
+function saveQueue(){
+  localStorage.setItem('cvla_etiquetas_fila', JSON.stringify(queue));
+  alert('Fila guardada neste computador/navegador.');
+}
+function loadQueue(){
+  const saved = localStorage.getItem('cvla_etiquetas_fila');
+  if(!saved){ alert('Não há nenhuma fila guardada.'); return; }
+  queue = JSON.parse(saved);
+  renderQueue();
+}
+
+renderQueue();
+</script>
+
+</body>
+</html>
