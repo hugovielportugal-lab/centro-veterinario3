@@ -200,13 +200,13 @@
       <a href="blog.html" onclick="toggleNavMenu(true)">Blog</a>
       <a href="#sobre" onclick="toggleNavMenu(true)">Sobre nós</a>
       <a href="#contactos" onclick="toggleNavMenu(true)">Contactos</a>
-      <a class="btn btn-navy nav-links-cta" href="#marcar-consulta" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-navy nav-links-cta" href="#contactos" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
     </div>
     <a class="nav-phone" href="tel:+351910730466" style="display:none; align-items:center; gap:8px; font-weight:600; color:var(--navy); margin-right:18px; white-space:nowrap;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       910 730 466
     </a>
-    <a class="btn btn-navy nav-cta-desktop" href="#marcar-consulta">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+    <a class="btn btn-navy nav-cta-desktop" href="#contactos">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
   </nav>
 </header>
 <style>@media (min-width: 900px){ .nav-phone{ display:inline-flex !important; } }</style>
@@ -313,7 +313,7 @@
   </div>
 </section>
 
-<section class="booking-section" id="marcar-consulta">
+<section class="booking-section" id="marcar-consulta" style="display:none;">
   <div class="wrap">
     <div class="booking-panel">
       <div class="booking-text">
@@ -417,14 +417,15 @@
         <div class="avatar">🐾</div>
         <div>
           <div class="name">Dr. Miguel Oliveira Pinto</div>
-          <div class="role">Médico Veterinário · Responsável Clínico</div>
+          <div class="role">Médico Veterinário</div>
         </div>
       </div>
       <div class="team-card">
         <div class="avatar">🐾</div>
         <div>
           <div class="name">Hugo Oliveira</div>
-          <div class="role">Assistente Clínico e Atendimento ao Cliente</div>
+          <div class="role">Atendimento ao Cliente</div>
+          <div class="role" style="color:var(--gray); margin-top:2px;"><a href="tel:+351211317189" style="color:inherit; text-decoration:none;">211 317 189</a></div>
         </div>
       </div>
     </div>
@@ -465,7 +466,7 @@
       <h2>O seu animal precisa de acompanhamento?</h2>
       <p>Entre em contacto connosco para esclarecer dúvidas ou marcar uma consulta.</p>
       <div class="cta-actions">
-        <a class="btn btn-navy" href="#marcar-consulta">
+        <a class="btn btn-navy" href="#contactos">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
           Marcar Consulta
         </a>
