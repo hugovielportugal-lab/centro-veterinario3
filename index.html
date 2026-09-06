@@ -233,13 +233,13 @@
       <a href="blog.html" onclick="toggleNavMenu(true)">Blog</a>
       <a href="#sobre" onclick="toggleNavMenu(true)">Sobre nós</a>
       <a href="#contactos" onclick="toggleNavMenu(true)">Contactos</a>
-      <a class="btn btn-navy nav-links-cta" href="#contactos" onclick="toggleNavMenu(true)">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-navy nav-links-cta" href="#" onclick="toggleNavMenu(true); abrirModalConsulta(); return false;">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
     </div>
     <a class="nav-phone" href="tel:+351910730466" style="display:none; align-items:center; gap:8px; font-weight:600; color:var(--navy); margin-right:18px; white-space:nowrap;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
       910 730 466
     </a>
-    <a class="btn btn-navy nav-cta-desktop" href="#contactos">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
+    <a class="btn btn-navy nav-cta-desktop" href="#" onclick="abrirModalConsulta(); return false;">Marcar consulta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 6l6 6-6 6"/></svg></a>
   </nav>
 </header>
 <style>@media (min-width: 900px){ .nav-phone{ display:inline-flex !important; } }</style>
@@ -298,6 +298,9 @@
       <span class="eyebrow">Serviços</span>
       <h2>Cuidados veterinários para cada necessidade</h2>
       <p>Acompanhamos o seu animal com uma abordagem clínica próxima, preventiva e ajustada ao seu dia a dia — de cães e gatos a animais exóticos.</p>
+      <div style="display:inline-flex; align-items:center; gap:10px; background:#FFF4E5; border:1px solid #F0C36D; border-radius:999px; padding:10px 22px; margin-top:18px; font-weight:600; color:#6b4e00; font-size:0.95rem;">
+        🕐 Consultório brevemente disponível — a loja já está aberta
+      </div>
     </div>
     <div class="grid-services">
       <div class="card">
@@ -1098,5 +1101,57 @@ loadBlogPreview();
    style="position:fixed; bottom:156px; right:24px; z-index:999; width:56px; height:56px; border-radius:50%; background:#1877F2; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,0.25);">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M13.5 21v-7.5h2.5l.5-3h-3V8.5c0-.9.3-1.5 1.6-1.5H16V4.3C15.7 4.2 14.8 4 13.8 4c-2.2 0-3.8 1.3-3.8 3.9V10.5H7.5v3H10V21h3.5z"/></svg>
 </a>
+
+<!-- Modal: consultório brevemente disponível -->
+<div id="modalConsultaOverlay" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,20,35,0.55); align-items:center; justify-content:center; padding:20px;" onclick="if(event.target===this) fecharModalConsulta();">
+  <div style="background:#fff; border-radius:20px; max-width:440px; width:100%; padding:34px 30px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <button onclick="fecharModalConsulta()" aria-label="Fechar" style="position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; color:#6e7880; font-size:22px; line-height:1; padding:4px;">✕</button>
+    <div style="font-size:2rem; margin-bottom:6px;">🕐</div>
+    <h3 style="margin:0 0 8px; color:var(--navy); font-size:1.3rem;">Consultório brevemente disponível</h3>
+    <p style="margin:0 0 22px; color:#5a6a72; font-size:0.95rem; line-height:1.5;">Ainda estamos a preparar a abertura do consultório. Deixe o seu contacto e, assim que tivermos disponibilidade para consultas, ligamos-lhe.</p>
+    <form onsubmit="submitInteresseConsulta(event)" style="display:flex; flex-direction:column; gap:12px;">
+      <input id="mcNome" type="text" placeholder="O seu nome" required style="padding:13px 16px; border:1.5px solid #dde3e6; border-radius:10px; font-size:0.95rem; font-family:inherit;">
+      <input id="mcTelefone" type="tel" placeholder="Telefone / telemóvel" required style="padding:13px 16px; border:1.5px solid #dde3e6; border-radius:10px; font-size:0.95rem; font-family:inherit;">
+      <input id="mcEmail" type="email" placeholder="E-mail (opcional)" style="padding:13px 16px; border:1.5px solid #dde3e6; border-radius:10px; font-size:0.95rem; font-family:inherit;">
+      <button type="submit" class="btn btn-navy" style="justify-content:center; margin-top:6px;">Deixar o meu contacto</button>
+      <p id="mcMsg" style="margin:0; font-size:0.88rem; font-weight:600; text-align:center;"></p>
+    </form>
+  </div>
+</div>
+<script>
+function abrirModalConsulta(){
+  document.getElementById('modalConsultaOverlay').style.display = 'flex';
+}
+function fecharModalConsulta(){
+  document.getElementById('modalConsultaOverlay').style.display = 'none';
+}
+function submitInteresseConsulta(e){
+  e.preventDefault();
+  const nome = document.getElementById('mcNome').value.trim();
+  const telefone = document.getElementById('mcTelefone').value.trim();
+  const email = document.getElementById('mcEmail').value.trim();
+  const msgEl = document.getElementById('mcMsg');
+  if(!nome || !telefone){
+    msgEl.textContent = 'Preencha o nome e o telefone.';
+    msgEl.style.color = '#c0392b';
+    return;
+  }
+  db.collection('interesse_consulta').add({
+    nome, telefone,
+    email: email || null,
+    criadoEm: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    msgEl.textContent = 'Obrigado! Entraremos em contacto assim que possível.';
+    msgEl.style.color = 'var(--teal)';
+    document.getElementById('mcNome').value = '';
+    document.getElementById('mcTelefone').value = '';
+    document.getElementById('mcEmail').value = '';
+    setTimeout(fecharModalConsulta, 2200);
+  }).catch(() => {
+    msgEl.textContent = 'Não foi possível enviar. Tente novamente.';
+    msgEl.style.color = '#c0392b';
+  });
+}
+</script>
 </body>
 </html>
