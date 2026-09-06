@@ -5,13 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Centro Veterinário Linda-a-Velha | Consultório Veterinário</title>
 <meta name="description" content="Cuidados veterinários próximos, preventivos e atentos em Linda-a-Velha para cães, gatos e outros animais de companhia.">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-DHE4H19WJS"></script>
+<!-- Google tag (gtag.js) — só carrega depois de consentimento (RGPD) -->
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-DHE4H19WJS');
+(function(){
+  var GA_ID = 'G-DHE4H19WJS';
+  function loadGA(){
+    if (window.__gaLoaded) return;
+    window.__gaLoaded = true;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){ dataLayer.push(arguments); };
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+  }
+  var consent = localStorage.getItem('cookie_consent');
+  if (consent === 'accepted') { loadGA(); }
+  window.addEventListener('DOMContentLoaded', function(){
+    if (localStorage.getItem('cookie_consent')) return;
+    var b = document.createElement('div');
+    b.id = 'cookieBanner';
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#002845;color:#fff;padding:16px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;font-family:Montserrat,sans-serif;font-size:0.9rem;box-shadow:0 -2px 12px rgba(0,0,0,.15);';
+    b.innerHTML = '<span style="max-width:520px;">Usamos cookies de análise (Google Analytics) para perceber como o site é usado. Pode aceitar ou recusar. <a href="privacidade.html" style="color:#9fd8dc;text-decoration:underline;">Saber mais</a></span>' +
+      '<span style="display:flex;gap:10px;">' +
+      '<button id="cookieDecline" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:999px;padding:8px 16px;cursor:pointer;font-family:inherit;font-size:0.85rem;">Recusar</button>' +
+      '<button id="cookieAccept" style="background:#00949c;color:#fff;border:none;border-radius:999px;padding:8px 16px;cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:600;">Aceitar</button>' +
+      '</span>';
+    document.body.appendChild(b);
+    document.getElementById('cookieAccept').onclick = function(){
+      localStorage.setItem('cookie_consent', 'accepted');
+      loadGA();
+      b.remove();
+    };
+    document.getElementById('cookieDecline').onclick = function(){
+      localStorage.setItem('cookie_consent', 'declined');
+      b.remove();
+    };
+  });
+})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
