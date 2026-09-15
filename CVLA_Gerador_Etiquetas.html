@@ -713,12 +713,28 @@ async function gerarPDF(){
   const pawPng = await getPawPng();
 
   const NAVY = [0,40,69], GRAY = [110,120,128], PPK_GRAY = [90,110,120];
-  const pageW = 210, marginX = 10, marginY = 10;
+  const pageW = 210, pageH = 297;
   const labelW = 55, labelH = 35;
   const cols = 3, rowsPerPage = 7, perPage = cols*rowsPerPage;
-  const gapX = (pageW - 2*marginX - cols*labelW) / (cols-1);
-  const gapY = 5;
+  const gapX = 2, gapY = 2;
+  const marginX = (pageW - (cols*labelW + (cols-1)*gapX)) / 2;
+  const marginY = Math.max(10, (pageH - (rowsPerPage*labelH + (rowsPerPage-1)*gapY)) / 2);
   const padX = 3.8;
+
+  function drawCutGuides(){
+    doc.setDrawColor(190,190,190);
+    doc.setLineWidth(0.15);
+    doc.setLineDashPattern([0.8, 0.8], 0);
+    for(let k=1; k<cols; k++){
+      const xg = marginX + k*labelW + (k-0.5)*gapX;
+      doc.line(xg, marginY - 2, xg, marginY + rowsPerPage*labelH + (rowsPerPage-1)*gapY + 2);
+    }
+    for(let k=1; k<rowsPerPage; k++){
+      const yg = marginY + k*labelH + (k-0.5)*gapY;
+      doc.line(marginX - 2, yg, marginX + cols*labelW + (cols-1)*gapX + 2, yg);
+    }
+    doc.setLineDashPattern([], 0);
+  }
 
   function barcodePng(code){
     const canvas = document.createElement('canvas');
@@ -795,10 +811,11 @@ async function gerarPDF(){
     doc.addImage(pawPng, 'PNG', x+labelW-padX-pawW, y+labelH-pawH-3.2, pawW, pawH);
   }
 
+  drawCutGuides();
   queue.forEach((item, i) => {
     const idxInPage = i % perPage;
     const page = Math.floor(i / perPage);
-    if(idxInPage === 0 && page > 0) doc.addPage();
+    if(idxInPage === 0 && page > 0){ doc.addPage(); drawCutGuides(); }
     const col = idxInPage % cols;
     const row = Math.floor(idxInPage / cols);
     const x = marginX + col*(labelW+gapX);
