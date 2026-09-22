@@ -1,0 +1,16 @@
+ATUALIZAÇÃO DO CENTRO VETERINÁRIO LINDA-A-VELHA — retirar a loja
+
+Ficheiros neste zip (substituem os do repositório):
+  index.html   página inicial, sem nenhuma referência à loja
+  admin.html   painel de gestão, só com Marcações, Sugestões, Galeria, Blog e Abertura
+               (as abas Pedidos, Stock, Clientes, Avaliações e Cupões ficaram escondidas)
+
+Depois de enviar estes dois ficheiros, apaguem do repositório:
+  loja.html
+  produtos-data.js
+  As imagens de marcas usadas só na loja (zoetis-logo.svg, msd-logo.svg, logo-krka.svg,
+  ownat-logo.svg, royalcanin-logo.webp, zolux-logo.png, schesir-logo.svg, ferribiella-logo.png)
+  — só apagar estas imagens depois de confirmar que não são usadas em mais nenhuma página.
+
+O painel (admin.html) continua ligado à mesma base de dados (Firebase) de sempre — é a mesma
+conta, os mesmos dados, só que agora mostra apenas o que é do consultório.

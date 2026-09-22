@@ -179,20 +179,20 @@
     </div>
 
     <div class="main-tabs">
-      <button class="active" id="mainTabPedidos" onclick="setMainTab('pedidos')">Pedidos</button>
-      <button id="mainTabStock" onclick="setMainTab('stock')">Stock</button>
-      <button id="mainTabMarcacoes" onclick="setMainTab('marcacoes')">Marcações</button>
-      <button id="mainTabClientes" onclick="setMainTab('clientes')">Clientes</button>
-      <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')">Avaliações</button>
+      <button id="mainTabPedidos" onclick="setMainTab('pedidos')" style="display:none;">Pedidos</button>
+      <button id="mainTabStock" onclick="setMainTab('stock')" style="display:none;">Stock</button>
+      <button class="active" id="mainTabMarcacoes" onclick="setMainTab('marcacoes')">Marcações</button>
+      <button id="mainTabClientes" onclick="setMainTab('clientes')" style="display:none;">Clientes</button>
+      <button id="mainTabAvaliacoes" onclick="setMainTab('avaliacoes')" style="display:none;">Avaliações</button>
       <button id="mainTabSugestoes" onclick="setMainTab('sugestoes')">Sugestões</button>
       <button id="mainTabGaleria" onclick="setMainTab('galeria')">Galeria</button>
-      <button id="mainTabCupoes" onclick="setMainTab('cupoes')">Cupões</button>
+      <button id="mainTabCupoes" onclick="setMainTab('cupoes')" style="display:none;">Cupões</button>
       <button id="mainTabBlog" onclick="setMainTab('blog')">Blog</button>
       <button id="mainTabAbertura" onclick="setMainTab('abertura')">Abertura</button>
       <a class="btn btn-outline-navy" style="margin-left:auto; align-self:center;" href="CVLA_Gerador_Etiquetas.html" target="_blank" rel="noopener">🏷️ Etiquetas</a>
     </div>
 
-    <div id="pedidosPanel">
+    <div id="pedidosPanel" style="display:none;">
       <div class="filter-bar">
         <button class="active" data-f="pendente" onclick="setFilter('pendente', this)">Pendentes</button>
         <button data-f="pronto" onclick="setFilter('pronto', this)">Prontos</button>
@@ -236,7 +236,7 @@
       <div id="avaliacoesList"></div>
     </div>
 
-    <div id="marcacoesPanel" style="display:none;">
+    <div id="marcacoesPanel">
       <div class="agenda-toggle-bar" id="agendaToggleBar">
         <span>Agenda de marcações online:</span>
         <button type="button" id="agendaToggleBtn" onclick="toggleAgendaAtiva()">A carregar...</button>
@@ -439,8 +439,8 @@ auth.onAuthStateChanged(user => {
   if (user && user.email === ADMIN_EMAIL) {
     document.getElementById('loginBox').style.display = 'none';
     document.getElementById('panel').style.display = 'block';
-    loadOrders();
-    loadStock();
+    loadMarcacoes();
+    loadSugestoes();
   } else {
     document.getElementById('loginBox').style.display = 'block';
     document.getElementById('panel').style.display = 'none';
