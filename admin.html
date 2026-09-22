@@ -570,7 +570,7 @@ function renderOrders() {
 
     const diasParado = o.criadoEm ? Math.floor((Date.now() - o.criadoEm.toDate().getTime()) / 86400000) : null;
     const parado = (o.estado === 'pendente' || o.estado === 'pronto') && diasParado !== null && diasParado >= DIAS_PARA_ALERTA;
-    const staleHtml = parado ? `<span class="pay-badge pay-badge-porpagar">⚠ Há ${diasParado} dias por levantar</span>` : '';
+    const staleHtml = parado ? `<span class="pay-badge pay-badge-porpagar">⚠ Há ${diasParado} dias por entregar</span>` : '';
 
     const wa = waLink(o.telefone);
     const contactHtml = `
