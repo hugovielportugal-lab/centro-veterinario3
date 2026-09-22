@@ -59,6 +59,7 @@
   .status-entregue { background: var(--bg-alt); color: var(--gray); }
   .status-cancelado { background: #fde3e3; color: #c0392b; }
   .order-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .admin-order-delivery { margin-top: 6px; font-size: 0.85rem; font-weight: 700; color: var(--navy); background: var(--blue-soft); display: inline-block; padding: 5px 12px; border-radius: var(--radius-pill); }
   .pay-badge { padding: 5px 12px; border-radius: var(--radius-pill); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
   .pay-badge-pago { background: var(--blue-soft); color: var(--teal); }
   .pay-badge-porpagar { background: #fde3e3; color: #c0392b; }
@@ -577,6 +578,10 @@ function renderOrders() {
       ${o.telefone ? ' · ' + (wa ? `<a class="contact-wa" href="${wa}" target="_blank" rel="noopener">💬 ${o.telefone}</a>` : o.telefone) : ' · sem telefone'}
       · ${data}
     `;
+    // Pedidos anteriores a esta funcionalidade não têm "metodoEntrega" gravado — assume-se levantamento na loja.
+    const entregaHtml = o.metodoEntrega === 'entrega'
+      ? `<div class="admin-order-delivery">🚚 Entrega em Linda-a-Velha${o.moradaEntrega ? ' — ' + o.moradaEntrega : ''}</div>`
+      : '';
 
     const history = getCustomerHistory(o);
     const historyOpen = openHistoryFor === o.id;
@@ -599,6 +604,7 @@ function renderOrders() {
           <div>
             <div class="order-client">${o.nome || o.email}</div>
             <div class="order-meta">${contactHtml}</div>
+            ${entregaHtml}
           </div>
           <div class="order-top-right">
             <span class="status-badge status-${o.estado}">${statusLabel(o.estado)}</span>

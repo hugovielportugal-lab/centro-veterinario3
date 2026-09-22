@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loja | Centro Veterinário Linda-a-Velha</title>
-<meta name="description" content="Encomende online e levante na loja: rações e acessórios do Centro Veterinário Linda-a-Velha.">
+<meta name="description" content="Encomende online: rações e acessórios do Centro Veterinário Linda-a-Velha. Levante na loja ou peça entrega em Linda-a-Velha.">
 <!-- Google tag (gtag.js) — só carrega depois de consentimento (RGPD) -->
 <script>
 (function(){
@@ -469,19 +469,19 @@
   <div class="wrap store-hero-inner">
     <span class="eyebrow">Loja</span>
     <h1>Escolhido pela nossa equipa clínica</h1>
-    <p class="store-hero-lead">A mesma ração, suplementos e cuidados que recomendamos em consulta, agora também online. Escolha os produtos, pague como preferir e venha levantar no Centro Veterinário Linda-a-Velha.</p>
+    <p class="store-hero-lead">A mesma ração, suplementos e cuidados que recomendamos, agora também online. Escolha os produtos, pague como preferir e levante na loja ou peça entrega em Linda-a-Velha.</p>
     <div class="store-hero-steps">
       <div class="store-hero-step"><span>1</span> Escolha os produtos</div>
-      <div class="store-hero-step"><span>2</span> Pague online ou na loja</div>
-      <div class="store-hero-step"><span>3</span> Levante no Centro Veterinário</div>
+      <div class="store-hero-step"><span>2</span> Pague no ato: em casa ou na loja</div>
+      <div class="store-hero-step"><span>3</span> Levante na loja ou receba em casa</div>
     </div>
   </div>
 </section>
 
 <section class="trust-strip">
   <div class="wrap trust-strip-grid">
-    <div class="trust-item"><span class="trust-icon">🐾</span> Levantamento gratuito na loja</div>
-    <div class="trust-item"><span class="trust-icon">💳</span> Pague online ou no levantamento</div>
+    <div class="trust-item"><span class="trust-icon">🚚</span> Entrega em Linda-a-Velha ou levantamento gratuito</div>
+    <div class="trust-item"><span class="trust-icon">💳</span> Pague em dinheiro, MB WAY ou cartão, no ato</div>
     <div class="trust-item"><span class="trust-icon">🩺</span> Escolhido pela nossa equipa clínica</div>
     <div class="trust-item"><span class="trust-icon">🎁</span> Promoções exclusivas para clientes</div>
   </div>
@@ -673,14 +673,20 @@
       Confirme o seu e-mail para poder finalizar a compra.
       <button onclick="resendVerification()">Reenviar e-mail de confirmação</button>
     </div>
-    <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
-    <div class="pay-method-select" id="payMethodSelect">
-      <span class="pay-method-label">Como prefere pagar?</span>
-      <label class="pay-method-opt"><input type="radio" name="payMethod" value="online" checked> Pagar agora online (MB WAY, Multibanco ou cartão)</label>
-      <label class="pay-method-opt"><input type="radio" name="payMethod" value="loja"> Pagar na loja, ao levantar</label>
+    <div class="pay-method-select" id="deliveryMethodSelect">
+      <span class="pay-method-label">Como quer receber?</span>
+      <label class="pay-method-opt"><input type="radio" name="deliveryMethod" value="levantamento" checked onchange="onDeliveryMethodChange()"> Levantar na loja (grátis)</label>
+      <label class="pay-method-opt" id="deliveryOptLabel"><input type="radio" name="deliveryMethod" value="entrega" id="deliveryRadio" onchange="onDeliveryMethodChange()"> Entrega em Linda-a-Velha (<span id="deliveryFeeLabel"></span>)</label>
     </div>
+    <p class="checkout-note" id="deliveryMinNote" style="display:none;"></p>
+    <div id="deliveryAddressWrap" style="display:none;">
+      <textarea id="ckMorada" rows="2" placeholder="Morada de entrega (rua, número, código-postal)" style="width:100%; padding:13px 16px; border:1.5px solid #dde3e6; border-radius:10px; font-size:0.92rem; font-family:inherit; resize:vertical;"></textarea>
+      <p class="checkout-note" style="margin-top:6px;">Entregamos só na zona de Linda-a-Velha. Fora desta zona, escolha "Levantar na loja".</p>
+    </div>
+    <input type="tel" id="ckPhone" placeholder="Telefone / WhatsApp">
+    <p class="checkout-note" id="payMethodNote" style="margin:2px 0 0;">Pagamento no ato: em dinheiro, MB WAY ou cartão, na entrega ou no levantamento.</p>
     <button class="btn btn-navy" id="confirmOrderBtn" style="justify-content:center;" onclick="submitOrder()">Confirmar pedido</button>
-    <p class="checkout-note">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.</p>
+    <p class="checkout-note" id="checkoutFinalNote">Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.</p>
   </div>
   <div class="payment-step" id="paymentStep">
     <div>
@@ -752,6 +758,50 @@ emailjs.init({ publicKey: "NJxFDw-frdjZmQFCD" });
 // O cliente escreve o valor total do pedido (mostrado no site) e paga por MB WAY, Multibanco ou cartão.
 // TODO: substituir por 'https://buy.stripe.com/xxxxxxxx' assim que o link estiver criado.
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/SUBSTITUIR_PELO_TEU_LINK';
+
+// Entrega em Linda-a-Velha. TODO: confirmar o valor da taxa de entrega com o Hugo (valor de exemplo).
+const DELIVERY_FEE = 3.5;
+const DELIVERY_MIN = 40;
+function currentDeliveryMethod() {
+  const el = document.querySelector('input[name="deliveryMethod"]:checked');
+  return el ? el.value : 'levantamento';
+}
+function onDeliveryMethodChange() {
+  const entrega = currentDeliveryMethod() === 'entrega';
+  document.getElementById('deliveryAddressWrap').style.display = entrega ? 'block' : 'none';
+  document.getElementById('checkoutFinalNote').textContent = entrega
+    ? 'Vamos avisar-vos por telefone/e-mail quando o pedido sair para entrega.'
+    : 'Vamos avisar-vos por telefone/e-mail quando o pedido estiver pronto para levantamento.';
+  renderCart();
+}
+document.addEventListener('DOMContentLoaded', function () {
+  const lbl = document.getElementById('deliveryFeeLabel');
+  if (lbl) lbl.textContent = DELIVERY_FEE.toFixed(2).replace('.', ',') + '€ · mín. ' + DELIVERY_MIN.toFixed(2).replace('.', ',') + '€';
+});
+// Verifica se o subtotal do carrinho (antes da taxa de entrega) atinge o mínimo para entrega em Linda-a-Velha.
+function cartSubtotal() {
+  return Object.keys(cart).reduce((s, k) => s + cart[k].price * cart[k].qty, 0);
+}
+function deliveryAllowed() {
+  return cartSubtotal() >= DELIVERY_MIN;
+}
+function updateDeliveryAvailability() {
+  const radio = document.getElementById('deliveryRadio');
+  const optLabel = document.getElementById('deliveryOptLabel');
+  const minNote = document.getElementById('deliveryMinNote');
+  if (!radio) return;
+  const allowed = deliveryAllowed();
+  radio.disabled = !allowed;
+  optLabel.style.opacity = allowed ? '1' : '0.5';
+  if (!allowed) {
+    if (radio.checked) { document.querySelector('input[name="deliveryMethod"][value="levantamento"]').checked = true; }
+    const falta = (DELIVERY_MIN - cartSubtotal()).toFixed(2).replace('.', ',');
+    minNote.textContent = `Falta ${falta}€ em produtos para a entrega ficar disponível (mínimo ${DELIVERY_MIN.toFixed(2).replace('.', ',')}€).`;
+    minNote.style.display = 'block';
+  } else {
+    minNote.style.display = 'none';
+  }
+}
 
 let authMode = 'login';
 let pendingCheckout = false;
@@ -1480,6 +1530,7 @@ function changeQty(key, delta) {
   renderCart();
 }
 function renderCart() {
+  updateDeliveryAvailability();
   const keys = Object.keys(cart);
   document.getElementById('cartCount').textContent = keys.reduce((s,k) => s + cart[k].qty, 0);
   const itemsEl = document.getElementById('cartItems');
@@ -1522,7 +1573,8 @@ function renderCart() {
   }
 
   const discount = calcularDesconto(subtotal, appliedCoupon);
-  const total = Math.max(0, subtotal - discount);
+  const deliveryFee = currentDeliveryMethod() === 'entrega' ? DELIVERY_FEE : 0;
+  const total = Math.max(0, subtotal - discount) + deliveryFee;
 
   couponAreaEl.innerHTML = appliedCoupon ? `
     <div class="cart-coupon-applied">
@@ -1538,16 +1590,18 @@ function renderCart() {
   `;
 
   totalEl.style.display = 'flex';
-  if (discount > 0) {
+  if (discount > 0 || deliveryFee > 0) {
     totalEl.innerHTML = `
       <div style="width:100%;">
         <div class="cart-subtotal-row"><span>Subtotal</span><span>${subtotal.toFixed(2)}€</span></div>
-        <div class="cart-discount-row"><span>Desconto</span><span>−${discount.toFixed(2)}€</span></div>
+        ${discount > 0 ? `<div class="cart-discount-row"><span>Desconto</span><span>−${discount.toFixed(2)}€</span></div>` : ''}
+        ${deliveryFee > 0 ? `<div class="cart-subtotal-row"><span>Entrega em Linda-a-Velha</span><span>${deliveryFee.toFixed(2)}€</span></div>` : ''}
         <div class="cart-total" style="margin:8px 0 0; padding:0;"><span>Total</span><span>${total.toFixed(2)}€</span></div>
       </div>`;
   } else {
     totalEl.innerHTML = `<span>Total</span><span>${total.toFixed(2)}€</span>`;
   }
+  checkoutBtn.textContent = currentDeliveryMethod() === 'entrega' ? 'Pedir entrega em Linda-a-Velha' : 'Pedir para levantar na loja';
   checkoutBtn.style.display = 'flex';
 }
 
@@ -1691,11 +1745,15 @@ function decrementStockForCart(cartSnapshot) {
 
 function submitOrder() {
   const phone = document.getElementById('ckPhone').value.trim();
-  const payMethod = document.querySelector('input[name="payMethod"]:checked').value;
+  const payMethod = 'loja'; // pagamento sempre no ato (dinheiro, MB WAY ou cartão), na entrega ou no levantamento
+  const deliveryMethod = currentDeliveryMethod();
+  const deliveryAddress = document.getElementById('ckMorada').value.trim();
   const user = auth.currentUser;
   if (!user) { showCheckout(); return; }
   if (!user.emailVerified) { alert('Precisa de confirmar o seu e-mail antes de finalizar a compra. Verifique a caixa de entrada, ou use o botão "Reenviar e-mail de confirmação".'); return; }
   if (!phone) { alert('Por favor preencha o telefone.'); return; }
+  if (deliveryMethod === 'entrega' && !deliveryAddress) { alert('Por favor preencha a morada de entrega.'); return; }
+  if (deliveryMethod === 'entrega' && !deliveryAllowed()) { alert('A entrega em Linda-a-Velha exige um mínimo de ' + DELIVERY_MIN.toFixed(2).replace('.', ',') + '€ em produtos.'); return; }
 
   // Verificação final: mesmo que o cupão tenha sido aplicado antes do login, impede reutilização por quem já o usou
   if (appliedCoupon && appliedCoupon.umaVezPorCliente) {
@@ -1709,11 +1767,11 @@ function submitOrder() {
       }
     }).catch(() => finalizarSubmitOrder(user, phone, payMethod));
   } else {
-    finalizarSubmitOrder(user, phone, payMethod);
+    finalizarSubmitOrder(user, phone, payMethod, deliveryMethod, deliveryAddress);
   }
 }
 
-function finalizarSubmitOrder(user, phone, payMethod) {
+function finalizarSubmitOrder(user, phone, payMethod, deliveryMethod, deliveryAddress) {
   const cartSnapshot = JSON.parse(JSON.stringify(cart));
   const items = Object.keys(cart).map(key => {
     const item = cart[key];
@@ -1721,7 +1779,8 @@ function finalizarSubmitOrder(user, phone, payMethod) {
   });
   const subtotal = items.reduce((s, it) => s + it.preco * it.quantidade, 0);
   const discount = calcularDesconto(subtotal, appliedCoupon);
-  const total = Math.max(0, subtotal - discount);
+  const deliveryFee = deliveryMethod === 'entrega' ? DELIVERY_FEE : 0;
+  const total = Math.max(0, subtotal - discount) + deliveryFee;
   const productIds = [...new Set(Object.keys(cart).map(key => parseInt(key.split('_')[0], 10)))];
   const cupomUsado = appliedCoupon; // guarda referência, porque appliedCoupon é limpo mais abaixo
   decrementStockForCart(cartSnapshot).then(() => db.collection('pedidos').add({
@@ -1737,6 +1796,9 @@ function finalizarSubmitOrder(user, phone, payMethod) {
     estado: 'pendente',
     pago: false,
     metodoPagamento: payMethod,
+    metodoEntrega: deliveryMethod,
+    taxaEntrega: deliveryFee,
+    moradaEntrega: deliveryMethod === 'entrega' ? deliveryAddress : '',
     criadoEm: firebase.firestore.FieldValue.serverTimestamp()
   })).then((docRef) => {
     // Regista "compra verificada" por produto, para permitir avaliações mais tarde
@@ -1758,7 +1820,7 @@ function finalizarSubmitOrder(user, phone, payMethod) {
       order_items: itemsText,
       order_total: total.toFixed(2)
     }).catch(err => console.error('Falha ao enviar notificação por e-mail:', err));
-    showPaymentStep(docRef.id, total, payMethod);
+    showPaymentStep(docRef.id, total, payMethod, deliveryMethod);
     cart = {};
     appliedCoupon = null;
     saveCart();
@@ -1776,21 +1838,15 @@ function shortOrderRef(id) {
   return id.slice(-6).toUpperCase();
 }
 
-function showPaymentStep(orderId, total, payMethod) {
+function showPaymentStep(orderId, total, payMethod, deliveryMethod) {
   document.getElementById('checkoutForm').classList.remove('open');
   const ref = shortOrderRef(orderId);
   document.getElementById('payOrderId').textContent = ref;
   document.getElementById('payTotal').textContent = 'Total: ' + total.toFixed(2) + '€';
-  const payBtn = document.getElementById('payNowBtn');
-  const noteEl = document.getElementById('paymentNote');
-  if (payMethod === 'online') {
-    payBtn.style.display = 'flex';
-    payBtn.href = `${STRIPE_PAYMENT_LINK}?client_reference_id=${ref}`;
-    noteEl.textContent = 'Ao clicar, escreva o valor exato indicado acima na página de pagamento (MB WAY, Multibanco ou cartão).';
-  } else {
-    payBtn.style.display = 'none';
-    noteEl.textContent = 'Pedido confirmado! Pode pagar em dinheiro ou MB WAY diretamente na loja, no momento do levantamento.';
-  }
+  document.getElementById('payNowBtn').style.display = 'none';
+  document.getElementById('paymentNote').textContent = deliveryMethod === 'entrega'
+    ? 'Pedido confirmado! Pague em dinheiro, MB WAY ou cartão diretamente ao estafeta, no momento da entrega.'
+    : 'Pedido confirmado! Pague em dinheiro, MB WAY ou cartão diretamente na loja, no momento do levantamento.';
   document.getElementById('paymentStep').classList.add('open');
 }
 
