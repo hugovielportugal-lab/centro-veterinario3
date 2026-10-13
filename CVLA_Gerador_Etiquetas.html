@@ -592,6 +592,25 @@ function removeItem(i){
   renderQueue();
 }
 
+function editPrice(i){
+  const item = queue[i];
+  if(!item) return;
+  const currentStr = item.pvp.toFixed(2).replace('.', ',');
+  const input = prompt('Novo preço para "'+item.desc+'" (€):', currentStr);
+  if(input === null) return;
+  const newPrice = parseFloat(input.trim().replace(',', '.'));
+  if(isNaN(newPrice) || newPrice <= 0){
+    alert('Preço inválido.');
+    return;
+  }
+  if(item.unitPrice){
+    const weight = item.pvp / item.unitPrice;
+    if(weight > 0){ item.unitPrice = newPrice / weight; }
+  }
+  item.pvp = newPrice;
+  renderQueue();
+}
+
 function clearQueue(){
   if(queue.length && !confirm('Limpar todas as etiquetas da fila?')) return;
   queue = [];
@@ -617,7 +636,7 @@ function renderQueue(){
       <div class="label-name-block" id="nameBlock${i}"><span id="nameText${i}">${item.desc}</span></div>
       <div class="label-body">
         <div class="label-price-row">
-          <span class="label-price" id="priceText${i}">${item.pvp.toFixed(2).replace('.',',')} €</span>
+          <span class="label-price" id="priceText${i}" onclick="editPrice(${i})" title="Clique para editar o preço" style="cursor:pointer;">${item.pvp.toFixed(2).replace('.',',')} €</span>
           ${item.unitPrice ? `<span class="label-ppk">${item.unitPrice.toFixed(2).replace('.',',')} €/${item.unitLabel}</span>` : ''}
         </div>
         <div class="label-iva">IVA incluído</div>
